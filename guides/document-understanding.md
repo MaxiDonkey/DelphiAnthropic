@@ -72,21 +72,21 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    with Generation do
-      Params
-        .Model(ModelName)
-        .MaxTokens(MaxTokens)
-        .Messages( MessageParts
-            .User( ContentParts
-                .AddImage(base64, mimeType)
-                .AddImage(ImageUrl)
-                .AddText(Prompt)
-            )
-        )
-        //.Stream;  //Optional: only when streaming mode
-  end;   
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( ContentParts
+                  .AddImage(base64, mimeType)
+                  .AddImage(ImageUrl)
+                  .AddText(Prompt)
+              )
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;   
 ```
 
 - The `Generation` helper record is available in the `Anthropic.Helpers.pas` unit. This unit contains several helper classes designed to simplify the construction of JSON structures.
@@ -105,19 +105,19 @@ To avoid repeatedly re-encoding recurring images, use the Files API.
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    with Generation do
-      Params
-        .Model(ModelName)
-        .MaxTokens(MaxTokens)
-        .Messages( MessageParts
-            .User( ContentParts
-                .AddImage(FileId)
-                .AddText(Prompt)
-            )
-        )
-  end; 
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( ContentParts
+                  .AddImage(FileId)
+                  .AddText(Prompt)
+              )
+          )
+    end; 
 ```
 
 <br>

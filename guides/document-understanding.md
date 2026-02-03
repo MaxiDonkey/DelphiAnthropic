@@ -44,7 +44,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
         .MaxTokens(MaxTokens)
         .Messages( Generation.MessageParts
           .User( Generation.ContentParts
-              .AddImage(base64, mimeType)
+              .AddImage(Base64, MimeType)
               .AddText(Prompt)
           )
         )
@@ -81,7 +81,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
           .MaxTokens(MaxTokens)
           .Messages( MessageParts
               .User( ContentParts
-                  .AddImage(base64, mimeType)
+                  .AddImage(Base64, MimeType)
                   .AddImage(ImageUrl)
                   .AddText(Prompt)
               )

@@ -209,7 +209,6 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 
   var FilePath := '..\..\media\File_Search_file.pdf';
   var Base64 := TMediaCodec.EncodeBase64(FilePath);
-  var MimeType := 'application/pdf';
 
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1000;

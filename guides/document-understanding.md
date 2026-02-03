@@ -36,19 +36,19 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 
   //JSON payload generation
   var Params: TProc<TChatParams> :=
-        procedure (Params: TChatParams)
-        begin
-          Params
-            .Model(ModelName)
-            .MaxTokens(MaxTokens)
-            .Messages( Generation.MessageParts
-              .User( Generation.ContentParts
-                  .AddImage(base64, mimeType)
-                  .AddText(Prompt)
-              )
-            )
-            //.Stream;  //Optional: only when streaming mode
-        end;
+    procedure (Params: TChatParams)
+    begin
+      Params
+        .Model(ModelName)
+        .MaxTokens(MaxTokens)
+        .Messages( Generation.MessageParts
+          .User( Generation.ContentParts
+              .AddImage(base64, mimeType)
+              .AddText(Prompt)
+          )
+        )
+        //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 - The `Generation` helper record provides a convenient way to add various types of inputs, including images and documents. It is also possible to supply only a document URI, without embedding the content itself. 
@@ -213,20 +213,20 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-        procedure (Params: TChatParams)
-        begin
-          with Generation do
-            Params
-              .Model(ModelName)
-              .MaxTokens(MaxTokens)
-              .Messages( MessageParts
-                  .User( ContentParts
-                      .AddPDF(Base64)
-                      .AddText(Prompt)
-                  )
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( ContentParts
+                  .AddPDF(Base64)
+                  .AddText(Prompt)
               )
-              //.Stream;  //Optional: only when streaming mode
-        end;
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 <br>
@@ -243,20 +243,20 @@ When PDF files come from a local system or when no URL is available, they must b
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-        procedure (Params: TChatParams)
-        begin
-          with Generation do
-            Params
-              .Model(ModelName)
-              .MaxTokens(MaxTokens)
-              .Messages( MessageParts
-                  .User( ContentParts
-                      .AddPDF(FileId)
-                      .AddText(Prompt)
-                  )
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( ContentParts
+                  .AddPDF(FileId)
+                  .AddText(Prompt)
               )
-              //.Stream;  //Optional: only when streaming mode
-        end;
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 <br>
@@ -273,20 +273,20 @@ When PDF files are reused or when you want to eliminate repeated encoding costs,
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-        procedure (Params: TChatParams)
-        begin
-          with Generation do
-            Params
-              .Model(ModelName)
-              .MaxTokens(MaxTokens)
-              .Messages( MessageParts
-                  .User( ContentParts
-                      .AddPDF(PdfUrl)
-                      .AddText(Prompt)
-                  )
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( ContentParts
+                  .AddPDF(PdfUrl)
+                  .AddText(Prompt)
               )
-              //.Stream;  //Optional: only when streaming mode
-        end;
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 <br>

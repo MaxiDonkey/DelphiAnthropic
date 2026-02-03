@@ -30,6 +30,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
   var ImageLocation := '..\..\media\Invoice.png';
   var Base64 := TMediaCodec.EncodeBase64(ImageLocation);
   var MimeType := TMediaCodec.GetMimeType(ImageLocation);
+
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1024;
   var Prompt := 'Describe the image.';
@@ -98,7 +99,10 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 To avoid repeatedly re-encoding recurring images, use the Files API.
 
 ```pascal
+  //uses Anthropic, Anthropic.Types, Anthropic.Helpers;
+
   var FileId := 'file_123abc';
+
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1024;
   var Prompt := 'prompt value';
@@ -201,7 +205,7 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 ### Passing PDF data inline
 
 ```pascal
-   //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
+  //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
 
   var FilePath := '..\..\media\File_Search_file.pdf';
   var Base64 := TMediaCodec.EncodeBase64(FilePath);
@@ -236,7 +240,10 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 When PDF files come from a local system or when no URL is available, they must be sent directly.
 
 ```pascal
+  //uses Anthropic, Anthropic.Types, Anthropic.Helpers;
+
   var FileId := 'file_456efg';
+
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1024;
   var Prompt := 'Prompt value';
@@ -266,7 +273,10 @@ When PDF files come from a local system or when no URL is available, they must b
 When PDF files are reused or when you want to eliminate repeated encoding costs, it’s best to upload them through the Files API.
 
 ```pascal
+  //uses Anthropic, Anthropic.Types, Anthropic.Helpers;
+
   var PdfUrl := 'https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf';
+
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1024;
   var Prompt := 'Prompt value';
@@ -300,6 +310,7 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
 
   var PDFUrl := 'https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf';
+
   var ModelName := 'claude-sonnet-4-5';
   var MaxTokens := 1000;
   var Prompt := 'What is this document about?';

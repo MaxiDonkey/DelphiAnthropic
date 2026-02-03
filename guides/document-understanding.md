@@ -5,7 +5,7 @@ Multimodal data may be supplied inline as `base64-encoded` content or via the Fi
 - [Document (PDF) understanding](#document-pdf-understanding)
 ___
 
->[!NOTE]
+>[!IMPORTANT]
 > The code snippets will exclusively refer to the `procedure (Params: TChatParams)` (the message payload), as introduced in the sections covering [non-streamed](content-generation.md#content-generation-non-streamed) and [streamed](content-generation-sse.md#content-generation-sse-streaming) generation.
 
 <br>
@@ -313,7 +313,7 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
         Params
           .Model(ModelName)
           .MaxTokens(MaxTokens)
-          .Messages(
+          .Messages( 
             Format(
               '''
               [

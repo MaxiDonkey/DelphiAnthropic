@@ -138,13 +138,13 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    with Generation do
-      Params
-        .Model(ModelName)
-        .MaxTokens(MaxTokens)
-        .Messages(
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages(
             Format(
               '''
               [
@@ -168,9 +168,9 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
               ]
               ''',
               [Base64, Prompt])
-        )
-        //.Stream;  //Optional: only when streaming mode
-  end;
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 <br>
@@ -307,13 +307,13 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
 
   //JSON payload generation
   var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    with Generation do
-      Params
-        .Model(ModelName)
-        .MaxTokens(MaxTokens)
-        .Messages(
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages(
             Format(
               '''
               [
@@ -334,9 +334,9 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
               ]
               ''',
               [PDFUrl, Prompt])
-        )
-        //.Stream;  //Optional: only when streaming mode
-  end;
+          )
+          //.Stream;  //Optional: only when streaming mode
+    end;
 ```
 
 ### PDF Size and Processing Limits

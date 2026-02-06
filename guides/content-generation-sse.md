@@ -54,14 +54,13 @@ When you want a straightforward, immediate consumption of the SSE stream—no pr
   //  Increase the scope of Client by declaring it in FormCreate.
   //  var Client := TAnthropicFactory.CreateInstance(My_Anthropic_Key);
 
-  var ModelName := 'claude-sonnet-4-5';
-  var MaxTokens := 16000;
-  var ThinkingBudget := 6000;
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 2048;
   var SystemPrompt := 'You are an expert in mathematics topology';
   var Prompt := 'Can we find accumulation points in a discrete topology?';
 
   //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -72,9 +71,7 @@ When you want a straightforward, immediate consumption of the SSE stream—no pr
           .Messages( MessageParts
             .User( Prompt )
           )
-          .Thinking( CreateThinkingConfig(True)
-            .BudgetTokens(ThinkingBudget)
-          )
+          .Thinking( CreateThinkingConfig('adaptive') )
           .Stream;
     end;   
 
@@ -112,26 +109,25 @@ Important: this example is asynchronous (promise).
   var Prompt := 'From which version of Delphi were multi-line strings introduced?';
 
   //JSON payload generation
-  var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    Params
-      .Model(ModelName)
-      .MaxTokens(MaxTokens)
-      .Messages( Generation.MessageParts
-          .User( Prompt )
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      Params
+        .Model(ModelName)
+        .MaxTokens(MaxTokens)
+        .Messages( Generation.MessageParts
+            .User( Prompt )
         )
-      .Stream;
-  end;
+        .Stream;
+    end;
 
   // Asynchronous promise example (mute: no live callbacks)
   var Promise := Client.Chat.AsyncAwaitCreateStream(Payload);
 
   Promise
-    .&Then<TEventData>(
-      function (Value: TEventData): TEventData
+    .&Then(
+      procedure (Value: TEventData)
       begin
-        Result := Value;
         ShowMessage(Value.Id);
         ShowMessage(Value.Text);
       end)
@@ -155,7 +151,7 @@ Compared to the “mute” mode, this variant adds progressive tracking through 
 
 **Recommended split**
 - Session context (`TPromiseChatStream`): tracking logic.
-- Payload (`TProc<TChatParams>`): JSON request construction.
+- Payload (`TChatParamProc`): JSON request construction.
 
   ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.Tutorial.VCL (*or Anthropic.Tutorial.FMX*);
@@ -169,23 +165,23 @@ Compared to the “mute” mode, this variant adds progressive tracking through 
   var Prompt := 'From which version of Delphi were multi-line strings introduced?';
 
   //JSON payload generation
-  var Payload: TProc<TChatParams> :=
-  procedure (Params: TChatParams)
-  begin
-    with Generation do
-      Params
-        .Model(ModelName)
-        .MaxTokens(MaxTokens)
-        .Messages( MessageParts
-            .User( Prompt )
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt )
           )
-        .Thinking( CreateThinkingConfig(True)
-            .BudgetTokens(ThinkingBudget)
+          .Thinking( CreateThinkingConfig('enabled')
+              .BudgetTokens(ThinkingBudget)
           )
-        .Stream;
-  end;
+          .Stream;
+    end;
 
-  var SessionCallbacks: TFunc<TPromiseChatStream> :=
+  var SessionCallbacks: TSessionCallbacksStream :=
       function : TPromiseChatStream
       begin
         Result.Sender := TutorialHub;
@@ -193,6 +189,7 @@ Compared to the “mute” mode, this variant adds progressive tracking through 
         Result.OnProgress := DisplayStream;
         Result.OnDoCancel := DoCancellation;
         Result.OnCancellation := DoCancellationStream;
+        Result.OnError := DisplayPromise;
       end;
 
   //Asynchronous promise example
@@ -239,7 +236,7 @@ Compared to the “mute” mode, this variant adds progressive tracking through 
   var Prompt := 'From which version of Delphi were multi-line strings introduced?';
 
   //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  var Payload: TChatParamProc :=
   procedure (Params: TChatParams)
   begin
     with Generation do
@@ -248,10 +245,10 @@ Compared to the “mute” mode, this variant adds progressive tracking through 
         .MaxTokens(MaxTokens)
         .Messages( MessageParts
             .User( Prompt )
-          )
-        .Thinking( CreateThinkingConfig(True)
+        )
+        .Thinking( CreateThinkingConfig('enabled')
             .BudgetTokens(ThinkingBudget)
-          )
+        )
         .Stream;
   end;
 
@@ -299,6 +296,43 @@ The `AsyncAwait`... variants return a `TPromise<TEventData>`. Beyond streaming, 
 
 - Example: chaining two asynchronous operations
 
+  #### Parameters
+
+  ```pascal
+  var ModelName := 'claude-sonnet-4-5';
+  var MaxTokens := 2048;
+  var Prompt := 'Write a short story about a magic backpack.';
+
+  //JSON payload generation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .MaxTokens(MaxTokens)
+          .Stream;
+    end;	
+
+  var EventCallbacks := TEventEngineManagerFactory.CreateInstance(
+    function : TStreamEventCallBack
+    begin
+      Result.Sender := TutorialHub;
+      Result.OnMessageStart := DisplayMessageStart;
+      Result.OnMessageDelta := DisplayMessageDelta;
+      Result.OnMessageStop := DisplayMessageStop;
+      Result.OnContentStart := DisplayContentStart;
+      Result.OnContentDelta := DisplayContentDelta;
+      Result.OnContentStop := DisplayContentStop;
+      Result.OnError := DisplayStreamError;
+    end); 
+  ```
+
+  #### Processing
+
   ```pascal
   // Asynchronous generation (promise-based)
   var Promise := Client.Chat.AsyncAwaitCreateStream(Payload, EventCallbacks);
@@ -307,7 +341,7 @@ The `AsyncAwait`... variants return a `TPromise<TEventData>`. Beyond streaming, 
     .&Then(
       function (First: TEventData): TPromise<TEventData>
       begin
-        // Second promise
+        // Second promise: Must be mute - no Callback
         Result := Client.Chat.AsyncAwaitCreateStream(
           procedure (Params: TChatParams)
           begin
@@ -317,7 +351,7 @@ The `AsyncAwait`... variants return a `TPromise<TEventData>`. Beyond streaming, 
                  .MaxTokens(MaxTokens)
                  .Messages( MessageParts
                      .User( 'Summarize the following answer: ' + First.Text )
-                   )
+                 )
                  .Stream;
           end);
       end)

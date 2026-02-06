@@ -58,7 +58,7 @@ Use the synchronous API when:
      var MaxTokens := 1000;
 
      //JSON payload
-     var Payload: TProc<TChatParams> :=
+     var Payload: TChatParamProc :=
         procedure (Params: TChatParams)
         begin
           Params
@@ -122,7 +122,7 @@ The asynchronous API:
     var Prompt := 'Describe the image';
 
     //JSON payload generation
-    var Payload: TProc<TChatParams> :=
+    var Payload: TChatParamProc :=
       procedure (Params: TChatParams)
       begin
         with Generation do
@@ -191,7 +191,7 @@ Because `AsyncAwaitCreate` returns a `TPromise<TChat>`, it can be used as a buil
       var Prompt := 'Write a short story about a magic backpack.';
 
       //JSON payload generation
-      var Payload: TProc<TChatParams> :=
+      var Payload: TChatParamProc :=
         procedure (Params: TChatParams)
         begin
           with Generation do

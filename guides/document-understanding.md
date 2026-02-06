@@ -35,8 +35,8 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
   var MaxTokens := 1024;
   var Prompt := 'Describe the image.';
 
-  //JSON payload generation
-  var Params: TProc<TChatParams> :=
+  //JSON payload creation
+  var Params: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       Params
@@ -71,8 +71,8 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
   var MaxTokens := 1024;
   var Prompt := 'Compare images';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -107,8 +107,8 @@ To avoid repeatedly re-encoding recurring images, use the Files API.
   var MaxTokens := 1024;
   var Prompt := 'prompt value';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -140,8 +140,8 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
   var MaxTokens := 1024;
   var Prompt := 'Describe the image.';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -214,8 +214,8 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
   var MaxTokens := 1000;
   var Prompt := 'What is this document about?';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -247,8 +247,8 @@ When PDF files come from a local system or when no URL is available, they must b
   var MaxTokens := 1024;
   var Prompt := 'Prompt value';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -280,8 +280,8 @@ When PDF files are reused or when you want to eliminate repeated encoding costs,
   var MaxTokens := 1024;
   var Prompt := 'Prompt value';
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do
@@ -315,8 +315,8 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
   var Prompt := 'What is this document about?';
 
 
-  //JSON payload generation
-  var Payload: TProc<TChatParams> :=
+  //JSON payload creation
+  var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
       with Generation do

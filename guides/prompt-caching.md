@@ -62,6 +62,17 @@ This option is enabled by explicitly setting `ttl` within `cache_control`.
 >The 1-hour cache is better suited for less frequent prompts, latency-sensitive workflows, or to optimize rate limits (cache hits do not count against rate limits).
 >Both options have similar latency characteristics, with a noticeable improvement in time to first token for long content.
 
+>[!IMPORTANT]
+>**Mixing cache TTLs (1h + 5m)**
+>
+>You may mix `ttl: "1h"` and the default 5-minute cache within the same request.  
+>When doing so, place the **1-hour cached blocks first**, then the 5-minute cached blocks (otherwise the longer TTL may not be applied as expected).
+
+>[!NOTE]
+>**Rate limits**
+>
+>For most models, cached input tokens do not count toward rate limits on cache hits.  
+>Check the official rate-limits page for model-specific exceptions.
 
 #### JSON Payload creation - 1h system caching
 ```pascal
@@ -105,6 +116,13 @@ This option is enabled by explicitly setting `ttl` within `cache_control`.
 Caching only applies to prompts that exceed a model-specific minimum token threshold. Shorter prompts are never cached, even if marked with cache_control, and are processed normally.
 A cache entry becomes available only after the first response has started; for parallel requests, you must wait for that initial response before issuing subsequent ones.
 Currently, only the ephemeral cache type is supported, with a default time-to-live of 5 minutes.
+
+>[!IMPORTANT]
+>**Cache lookup window & breakpoints**
+>
+>- Cache hits are evaluated using a limited lookback window (up to the last **20 content blocks** before each `cache_control` breakpoint).
+>- A single request can define up to **4 cache breakpoints** (e.g., tools, system, RAG context, conversation).
+
 
 >[!NOTE]
 > - 4096 tokens for Claude Opus 4.6 and Claude Opus 4.5
@@ -217,7 +235,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
       end;
   ```
 
-- JSON Result
+- JSON Payload generated
   ```json
   {
         "model": "claude-opus-4-6",
@@ -318,7 +336,8 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
       end;  
   ```
 
-- JSON Result
+- JSON Payload generated
+
   ```json
       {
         "model": "claude-opus-4-6",
@@ -354,6 +373,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 ## PDF Caching
 
 - Set parameters
+
   ```pascal
     var Document := '..\..\..\media\File_Search_file.pdf'; // The document size must be at least 4096 to be cached.
     var Base64 := TMediaCodec.EncodeBase64(Document);
@@ -364,6 +384,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
   ```
 
 - JSON Payload creation - document caching
+
   ```pascal
     //JSON payload creation
     var Payload: TChatParamProc :=
@@ -388,7 +409,8 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
       end;
   ```
 
-- JSON Result
+- JSON Payload generated
+
   ```json
   {
         "model": "claude-opus-4-6",
@@ -468,7 +490,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
       end;
   ```
 
-- JSON Result
+- JSON Payload generated
   ```json
   {
           "model": "claude-opus-4-6",
@@ -516,3 +538,239 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
 ## Putting it all together: Multiple cache breakpoints
 
+- Set parameters
+
+  ```pascal
+    var ModelName := 'claude-opus-4-6';
+      var MaxTokens := 1024;
+      var Prompt := 'What is the weather and time in New York?';
+
+      var SearchDocumentName := 'search_documents';
+      var SearchDocumentDescription := 'Search through the knowledge base';
+      var SearchDocument :=
+        '''
+        {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query"
+                }
+            },
+            "required": ["query"]
+        }
+        ''';
+
+      var GetDocumentName := 'get_document';
+      var GetDocumentDescription := 'Retrieve a specific document by ID';
+      var GetDocument :=
+        '''
+        {
+            "type": "object",
+            "properties": {
+                "doc_id": {
+                    "type": "string",
+                    "description": "Document ID"
+                }
+            },
+            "required": ["doc_id"]
+        }
+        ''';
+
+      var SystemPrompt1 := 'You are a helpful research assistant with access to a document knowledge base.\n\n# Instructions\n- Always search for relevant documents before answering\n- Provide citations for your sources\n- Be objective and accurate in your responses\n- If multiple documents contain relevant information, synthesize them\n- Acknowledge when information is not available in the knowledge base';
+      var SystemPrompt2 := '# Knowledge Base Context\n\nHere are the relevant documents for this conversation:\n\n## Document 1: Solar System Overview\nThe solar system consists of the Sun and all objects that orbit it...\n\n## Document 2: Planetary Characteristics\nEach planet has unique features. Mercury is the smallest planet...\n\n## Document 3: Mars Exploration\nMars has been a target of exploration for decades...\n\n[Additional documents...]';
+
+  ```
+
+- JSON Payload creation - document caching
+
+  ```pascal
+    //JSON payload Creation
+      var Payload: TChatParamProc :=
+        procedure (Params: TChatParams)
+        begin
+          with Generation do
+            Params
+              .Model(ModelName)
+              .MaxTokens(MaxTokens)
+              .Tools( ToolParts
+                  .Add( Tool.CreateToolCustom
+                      .Name( SearchDocumentName )
+                      .Description( SearchDocumentDescription )
+                      .InputSchema( SearchDocument )
+                  )
+                  .Add( Tool.CreateToolCustom
+                      .Name( GetDocumentName )
+                      .Description( GetDocumentDescription )
+                      .InputSchema( GetDocument )
+                      .CacheControl( Cache
+                          .AddCacheControl  //Tool caching '5m' by default
+                      )
+                  )
+              )
+              .System( TextBlockParts
+                  .Add( CreateTextBlock
+                      .Text(SystemPrompt1)
+                      .CacheControl( Cache
+                          .AddCacheControl  //System caching '5m' by default
+                      )
+                  )
+                  .Add( CreateTextBlock
+                      .Text(SystemPrompt2)
+                      .CacheControl( Cache
+                          .AddCacheControl  //System caching '5m' by default
+                      )
+                  )
+              )
+              .Messages( MessageParts
+                  .User( 'Can you search for information about Mars rovers?')
+                  .Assistant( ContentParts
+                      .Add( Context.CreateToolUse
+                          .Id('tool_1')
+                          .Name('search_documents')
+                          .Input('{"query": "Mars rovers"}')
+                      )
+                  )
+                  .User( ContentParts
+                      .Add( Context.CreateToolResult
+                          .ToolUseId('tool_1')
+                          .Content('Found 3 relevant documents: Document 3 (Mars Exploration), Document 7 (Rover Technology), Document 9 (Mission History)')
+                      )
+                  )
+                  .Assistant( ContentParts
+                      .AddText('I found 3 relevant documents about Mars rovers. Let me get more details from the Mars Exploration document.')
+                  )
+                  .User( ContentParts
+                      .AddText( CreateTextBlock
+                          .Text('Yes, please tell me about the Perseverance rover specifically.')
+                          .CacheControl( Cache
+                              .AddCacheControl  //text caching '5m' by default
+                          )
+                      )
+                  )
+              )
+        end;
+  ```
+
+This example demonstrates the use of four independent cache breakpoints (tools, instructions, RAG context, and conversation history) to optimize different parts of the prompt.
+Each segment can be reused or invalidated independently depending on what changes (user message, RAG documents, conversation, etc.), maximizing flexibility and efficiency.
+
+On the first request, all segments are cached; on subsequent requests, only new tokens are processed, while the rest are read from cache.
+
+This pattern is particularly well suited for RAG applications with large document contexts, multi-tool agent systems, and long-running conversations that require persistent context, while enabling fine-grained optimization of cost and latency.
+
+<br>
+
+- JSON Payload generated
+
+  ```json
+    {
+        "model": "claude-opus-4-6",
+        "max_tokens": 1024,
+        "tools": [
+            {
+                "type": "custom",
+                "name": "search_documents",
+                "description": "Search through the knowledge base",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ]
+                }
+            },
+            {
+                "type": "custom",
+                "name": "get_document",
+                "description": "Retrieve a specific document by ID",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "doc_id": {
+                            "type": "string",
+                            "description": "Document ID"
+                        }
+                    },
+                    "required": [
+                        "doc_id"
+                    ]
+                },
+                "cache_control": {
+                    "type": "ephemeral"
+                }
+            }
+        ],
+        "system": [
+            {
+                "type": "text",
+                "text": "You are a helpful research assistant with access to a document knowledge base.\\n\\n# Instructions\\n- Always search for relevant documents before answering\\n- Provide citations for your sources\\n- Be objective and accurate in your responses\\n- If multiple documents contain relevant information, synthesize them\\n- Acknowledge when information is not available in the knowledge base",
+                "cache_control": {
+                    "type": "ephemeral"
+                }
+            },
+            {
+                "type": "text",
+                "text": "# Knowledge Base Context\\n\\nHere are the relevant documents for this conversation:\\n\\n## Document 1: Solar System Overview\\nThe solar system consists of the Sun and all objects that orbit it...\\n\\n## Document 2: Planetary Characteristics\\nEach planet has unique features. Mercury is the smallest planet...\\n\\n## Document 3: Mars Exploration\\nMars has been a target of exploration for decades...\\n\\n[Additional documents...]",
+                "cache_control": {
+                    "type": "ephemeral"
+                }
+            }
+        ],
+        "messages": [
+            {
+                "role": "user",
+                "content": "Can you search for information about Mars rovers?"
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": "tool_1",
+                        "name": "search_documents",
+                        "input": {
+                            "query": "Mars rovers"
+                        }
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": "tool_1",
+                        "content": "Found 3 relevant documents: Document 3 (Mars Exploration), Document 7 (Rover Technology), Document 9 (Mission History)"
+                    }
+                ]
+            },
+            {
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "I found 3 relevant documents about Mars rovers. Let me get more details from the Mars Exploration document."
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Yes, please tell me about the Perseverance rover specifically.",
+                        "cache_control": {
+                            "type": "ephemeral"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+  ```

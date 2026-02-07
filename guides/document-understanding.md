@@ -269,7 +269,8 @@ When PDF files come from a local system or when no URL is available, they must b
 
 ### Passing PDF by URL
 
-When PDF files are reused or when you want to eliminate repeated encoding costs, it’s best to upload them through the Files API.
+When a public URL is available, you can reference the PDF directly without uploading it.
+Use this when the document is reused or when no stable public URL is available.
 
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers;
@@ -350,7 +351,7 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
 ```
 
 ### PDF Size and Processing Limits
-Anthropic supports PDF documents up to **32 MB** in size or a maximum of **100 pages**. These limits apply to both inline submissions and uploads performed through the Files API. Each document page is internally accounted for as **258 tokens**.
+Anthropic supports PDF documents up to **32 MB** in size or a maximum of **100 pages**. These limits apply to both inline submissions and uploads performed through the Files API. Each document page is internally accounted for as **Token usage depends on extracted text and per-page image conversion; expect ~1,500–3,000 tokens/page depending on density.**.
 
 See [official documentation](https://platform.claude.com/docs/fr/build-with-claude/pdf-support).
 

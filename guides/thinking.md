@@ -5,6 +5,8 @@ Reasoning refers to the model’s ability to engage in internal analysis of vary
 - [Extended Reasoning](#extended-reasoning)
 - [Adaptive Reasoning](#adaptive-reasoning)
 - [Effort](#effort)
+- [Quick Selection Guide](#quick-selection-guide)
+- [Practical Notes](#practical-notes)
 
 ___
 
@@ -39,7 +41,7 @@ The conclusions derived from this analysis are then used to produce the user-fac
 }
 ```
 
-See [official documentation](https://platform.claude.com/docs/fr/build-with-claude/extended-thinking#comment-fonctionne-la-reflexion-etendue)
+See [official documentation](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)
 
 <br>
 
@@ -151,18 +153,18 @@ This mode is now the ***recommended approach*** on ***Claude Opus 4.6***: it del
 
 ## Effort
 
-The ***effort*** parameter is a ***global control over token expenditure***, affecting:
+#### The ***effort*** parameter is a ***global control over token expenditure***, affecting:
 - the depth of reasoning,
 - the length and richness of responses,
 - the number and complexity of tool calls.
 
-Unlike a strict token budget, effort is a ***behavioral signal***:
+#### Unlike a strict token budget, effort is a ***behavioral signal***:
 - *low* prioritizes speed and cost,
 - *medium* seeks a balance,
 - *high* (default) maximizes quality,
 - *max* (Opus 4.6 only) removes all capacity constraints.
 
-On Opus 4.6, effort becomes the ***primary control lever*** for reasoning when combined with adaptive reasoning, progressively replacing explicit reasoning token budgets.
+On `Opus 4.6`, **effort** becomes the ***primary control lever*** for reasoning when combined with adaptive reasoning, progressively replacing explicit reasoning token budgets.
 
 <br>
 
@@ -214,4 +216,49 @@ On Opus 4.6, effort becomes the ***primary control lever*** for reasoning when c
   }
   ```
 
-See [Official Documentation](https://platform.claude.com/docs/fr/build-with-claude/effort)
+See [Official Documentation](https://platform.claude.com/docs/en/build-with-claude/effort)
+
+<br>
+
+## Quick Selection Guide
+
+Choosing the right reasoning mode for your use case
+
+- **Extended Reasoning (deprecated)**
+  Use only for:
+  - backward compatibility with existing pipelines,
+  - controlled experiments where explicit reasoning traceability is required.
+  - High cost, manual budget management, not recommended for new systems.
+- **Adaptive Reasoning (recommended)**
+  Default choice for:
+  - tasks with variable complexity,
+  - agentic workflows with tool calls,
+  - reducing over- or under-reasoning.
+    Dynamic allocation, stronger multi-turn robustness.
+- **Adaptive Reasoning + Effort**
+  - `effort=low`: simple Q&A, strict latency or cost constraints.
+  - `effort=medium`: general-purpose assistants, standard interactive use.
+  - `effort=high` (default): serious analytical tasks.
+  - `effort=max` (Opus 4.6 only): research, mathematics, complex planning, exhaustive exploration.
+
+<br>
+
+## Practical Notes
+
+**Implementation best practices**
+- **Avoid over-constraining reasoning**
+  Do not combine explicit token budgets with behavioral signals (effort): let the model arbitrate.
+- **Prefer adaptive reasoning in production**
+  Better generational stability, less manual tuning, more predictable behavior under load.
+- **Extended reasoning ≠ visible quality**
+  More internal tokens do not necessarily translate into better user-facing answers.
+- **Effort is a global control lever**
+  It simultaneously affects:
+  - reasoning depth,
+  - output length,
+  - frequency and complexity of tool calls.
+- **Prompt caching**
+  Particularly effective with adaptive reasoning on long or recurring contexts.
+- **API design guideline**
+  For Opus 4.6:
+  > Adaptive reasoning combined with a well-calibrated effort setting cleanly replaces manual reasoning management.

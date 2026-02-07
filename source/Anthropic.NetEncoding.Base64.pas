@@ -67,6 +67,17 @@ implementation
 uses
   System.StrUtils;
 
+function CleanBase64String(const ABase64: string): string;
+begin
+  // Remove non valid chars
+  Result := ABase64;
+  Result := StringReplace(Result, #13, '', [rfReplaceAll]);
+  Result := StringReplace(Result, #10, '', [rfReplaceAll]);
+  Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
+  Result := StringReplace(Result, #9, '', [rfReplaceAll]);
+end;
+
+
 function EncodeBase64(FileLocation : string): string;
 begin
   if not FileExists(FileLocation) then
@@ -82,7 +93,7 @@ begin
     {$ELSE}
     TNetEncoding.Base64.Encode(Stream, StreamOutput);
     {$ENDIF}
-    Result := StreamOutput.DataString;
+    Result := CleanBase64String( StreamOutput.DataString );
   finally
     Stream.Free;
     StreamOutput.Free;

@@ -111,7 +111,7 @@ begin
     {$IF RTLVersion >= 35.0}
     Result := TNetEncoding.Base64String.EncodeBytesToString(DataBytes);
     {$ELSE}
-    Result := TNetEncoding.Base64.EncodeBytesToString(ImageBytes);
+    Result := TNetEncoding.Base64.EncodeBytesToString(DataBytes);
     {$ENDIF}
   finally
     HttpClient.Free;

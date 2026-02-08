@@ -55,7 +55,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
     var BudgetTokens := 10000;
     var Prompt := 'Are there an infinite number of prime numbers such that n mod 4 == 3?';
 
-    //JSON payload generation
+    //JSON payload creation
     var Payload: TChatParamProc :=
       procedure (Params: TChatParams)
       begin
@@ -110,7 +110,7 @@ This mode is now the ***recommended approach*** on ***Claude Opus 4.6***: it del
     var MaxTokens := 16000;
     var Prompt := 'Explain why the sum of two even numbers is always even.';
 
-    //JSON payload generation
+    //JSON payload creation
     var Payload: TChatParamProc :=
       procedure (Params: TChatParams)
       begin
@@ -177,7 +177,7 @@ On `Opus 4.6`, **effort** becomes the ***primary control lever*** for reasoning 
     var MaxTokens := 16000;
     var Prompt := 'Can we find accumulation points in a discrete topology?';
 
-    //JSON payload generation
+    //JSON payload creation
     var Payload: TChatParamProc :=
       procedure (Params: TChatParams)
       begin

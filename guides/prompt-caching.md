@@ -98,7 +98,7 @@ This option is enabled by explicitly setting `ttl` within `cache_control`.
               .Add( CreateTextBlock
                   .Text(SystemPrompt2)
                   .CacheControl( Cache
-                      .AddCacheControl('1h')  //'5m' for 5 minutes
+                      .AddCacheControl('1h')  
                   )
               )
           )

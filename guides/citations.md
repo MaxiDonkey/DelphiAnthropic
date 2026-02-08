@@ -106,8 +106,6 @@ The selected document type determines the ***granularity*** of the citations: se
     var DocumentContext := 'Context about the document that will not be cited from';
     var DocumentTitle := 'Document Title';
 
-    StartRun(Prompt);
-
     //JSON payload generation
     var Payload: TChatParamProc :=
       procedure (Params: TChatParams)
@@ -129,8 +127,6 @@ The selected document type determines the ***granularity*** of the citations: se
                     .AddText( Prompt )
                 )
             );
-
-        TutorialHub.JSONRequest := Params.ToFormat();
       end;
   ```
 

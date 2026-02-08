@@ -173,6 +173,107 @@ The model can’t invent parameters or pass incorrectly typed values.
 **This makes multi-step agents more robust:** each function receives valid inputs without extra guardrails.
 It’s a key building block for ***reliable agentic systems*** at scale.
 
+- Example:
+  For example, if a booking system expects a `passengers` field of type integer, without strict mode the model may return a textual value like `"two"` or a string such as `"2"`. When `strict: true` is enabled, the value is always a valid integer, for instance `passengers: 2`.
+
+<br>
+
+### Implementation
+
+- JSON Payload creation 
+
+  ```pascal
+    var ModelName := 'claude-opus-4-6';
+    var MaxTokens := 1024;
+    var Prompt := 'What is the weather in San Francisco?';
+
+    // Schema Payload creation using TSchemaParams class
+    var GetWeather := TSchemaParams.New
+      .&Type('object')
+      .Properties( TJSONObject.Create
+         .AddPair('location', TJSONObject.Create
+             .AddPair('type', 'string')
+             .AddPair('description', 'The city and state, e.g. San Francisco, CA')
+         )
+         .AddPair('unit', TJSONObject.Create
+             .AddPair('type', 'string')
+             .AddPair('enum', TJSONArray.Create
+                 .Add('celsius')
+                 .Add('fahrenheit'))
+         )
+      )
+      .Required(['location'])
+      .AdditionalProperties(False);
+
+    //JSON payload generation
+    var Payload: TChatParamProc :=
+      procedure (Params: TChatParams)
+      begin
+        with Generation do
+          Params
+            .Model(ModelName)
+            .MaxTokens(MaxTokens)
+            .Messages( MessageParts
+                .User( Prompt )
+            )
+            .Tools( ToolParts
+                .Add( Tool.CreateToolCustom
+                    .Name('get_weather')
+                    .Description('Get the current weather in a given location')
+                    .Strict(True)  // Strict tool use
+                    .InputSchema(GetWeather)
+                )
+            );
+      end;
+  ```
+
+- JSON Payload generated
+
+  ```json
+  {
+      "model": "claude-opus-4-6",
+      "max_tokens": 1024,
+      "messages": [
+          {
+              "role": "user",
+              "content": "What is the weather in San Francisco?"
+          }
+      ],
+      "tools": [
+          {
+              "type": "custom",
+              "name": "get_weather",
+              "description": "Get the current weather in a given location",
+              "strict": true,
+              "input_schema": {
+                  "type": "object",
+                  "properties": {
+                      "location": {
+                          "type": "string",
+                          "description": "The city and state, e.g. San Francisco, CA"
+                      },
+                      "unit": {
+                          "type": "string",
+                          "enum": [
+                              "celsius",
+                              "fahrenheit"
+                          ]
+                      }
+                  },
+                  "required": [
+                      "location"
+                  ],
+                  "additionalProperties": false
+              }
+          }
+      ]
+  }
+  ```
+
+<br>
+
+See [Official Documentation](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#strict-tool-use)
+
 <br>
 
 ## Using both features together
@@ -182,6 +283,137 @@ JSON outputs and strict tool use are complementary:
 - strict tool use controls the validity of intermediate tool calls.
 
 Together, they enable agents that can orchestrate tools with schema-safe parameters while returning a final, structured result that applications can consume directly.
+
+<br>
+
+- JSON Payload creation 
+
+  ```pascal
+    var ModelName := 'claude-opus-4-6';
+    var MaxTokens := 1024;
+    var Prompt := 'Help me plan a trip to Paris for next month';
+
+    // Schema Payload creation using TSchemaParams class
+    var SchemaPayload := TSchemaParams.New
+      .&Type('object')
+      .Properties( TJSONObject.Create
+         .AddPair('summary', TJSONObject.Create
+             .AddPair('type', 'string')
+         )
+         .AddPair('next_steps', TJSONObject.Create
+             .AddPair('type', 'array')
+             .AddPair('items', TJSONObject.Create.AddPair('type', 'string'))
+         )
+      )
+      .Required(['summary', 'next_steps'])
+      .AdditionalProperties(False);
+
+    var SearchFlightsSchema := TSchemaParams.New
+      .&Type('object')
+      .Properties( TJSONObject.Create
+         .AddPair('destination', TJSONObject.Create
+             .AddPair('type', 'string')
+         )
+         .AddPair('date', TJSONObject.Create
+             .AddPair('type', 'string')
+             .AddPair('format', 'date')
+         )
+      )
+      .Required(['destination', 'date'])
+      .AdditionalProperties(False);
+
+    //JSON payload generation
+    var Payload: TChatParamProc :=
+      procedure (Params: TChatParams)
+      begin
+        with Generation do
+          Params
+            .Model(ModelName)
+            .MaxTokens(MaxTokens)
+            .Messages( MessageParts
+                .User( Prompt )
+            )
+            .OutputConfig( CreateOutputConfig
+                .Format( CreateFormat
+                    .Schema( SchemaPayload )
+                )
+            )
+            .Tools( ToolParts
+                .Add( Tool.CreateToolCustom
+                    .Name('search_flights')
+                    .Strict(True)
+                    .InputSchema( SearchFlightsSchema )
+                )
+            );
+      end; 
+  ```
+
+- JSON Payload generated
+
+  ```json
+  {
+      "model": "claude-opus-4-6",
+      "max_tokens": 1024,
+      "messages": [
+          {
+              "role": "user",
+              "content": "Help me plan a trip to Paris for next month"
+          }
+      ],
+      "output_config": {
+          "format": {
+              "type": "json_schema",
+              "schema": {
+                  "type": "object",
+                  "properties": {
+                      "summary": {
+                          "type": "string"
+                      },
+                      "next_steps": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      }
+                  },
+                  "required": [
+                      "summary",
+                      "next_steps"
+                  ],
+                  "additionalProperties": false
+              }
+          }
+      },
+      "tools": [
+          {
+              "type": "custom",
+              "name": "search_flights",
+              "strict": true,
+              "input_schema": {
+                  "type": "object",
+                  "properties": {
+                      "destination": {
+                          "type": "string"
+                      },
+                      "date": {
+                          "type": "string",
+                          "format": "date"
+                      }
+                  },
+                  "required": [
+                      "destination",
+                      "date"
+                  ],
+                  "additionalProperties": false
+              }
+          }
+      ]
+  }
+  ```
+
+<br>
+
+See [Official Documentation](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#using-both-features-together)
 
 <br>
 
@@ -199,6 +431,23 @@ Finally, structured outputs can add first-use latency due to grammar compilation
 
 ## Quick Selection Guide
 
+Use JSON outputs when you need a guaranteed response format for downstream consumption (parsing, storage, API responses), but no external actions.
+
+Use strict tool use when the primary risk is invalid function inputs in an agent workflow, even if the final response is free-form.
+
+Use both together when building production-grade agents that must:
+- call tools with fully validated parameters, and
+- return a final result that is immediately machine-consumable.
+
+Rule of thumb:
+> JSON outputs protect what the model says; strict tool use protects what the model does.
+
 <br>
 
 ## Practical Notes
+
+- Treat schemas as **interfaces**, not validation logic: keep them minimal and composable.
+- Expect first-request latency when introducing or modifying schemas due to grammar compilation; reuse schemas to benefit from caching.
+- Avoid over-constraining early prototypes: schema complexity grows faster than agent reliability.
+- Always plan for **non-schema exits** (refusals, token limits) in production control flow.
+- When debugging agent behavior, temporarily disable one constraint (JSON or strict tools) to localize failure modes.

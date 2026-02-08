@@ -118,7 +118,7 @@ The selected document type determines the ***granularity*** of the citations: se
             .MaxTokens(MaxTokens)
             .Messages( MessageParts
                 .User( ContentParts
-                    .AddTextPlain( CreateDocumentBlock
+                    .AddPDF( CreateDocumentBlock
                          .Source( Document.Base64PDF
                              .Data( Base64 )
                          )

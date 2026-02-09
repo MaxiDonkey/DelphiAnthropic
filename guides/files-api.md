@@ -102,4 +102,4 @@ These operations are free of charge and independent from the token-based billing
 - Treat format conversion as a client-side responsibility for unsupported document types.
 
 >[!IMPORTANT]
-> SDK wrappers automatically add the files-api-2025-04-14 beta header for all Files API operations.
+> SDK wrappers automatically add the `files-api-2025-04-14` beta header for all Files API operations.

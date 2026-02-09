@@ -96,7 +96,7 @@ The selected document type determines the ***granularity*** of the citations: se
 - JSON Payload creation - using citations 
 
   ```pascal
-    var Document := '..\..\..\media\File_Search_file.pdf';
+    var Document := '..\media\File_Search_file.pdf';
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
     var ModelName := 'claude-opus-4-6';

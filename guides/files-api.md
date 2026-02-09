@@ -23,7 +23,7 @@ Key constraints include a 500 MB maximum file size, 100 GB total storage per org
   // uses Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.Async.Promise; 
   // Client: IAnthropic;
 
-  var FilePath := '..\..\..\media\File_Search_file.pdf';
+  var FilePath := '..\media\File_Search_file.pdf';
 
   // MultipartFormData payload creation
   var Payload: TUploadParamProc :=

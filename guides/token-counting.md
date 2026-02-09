@@ -124,7 +124,7 @@ ___
 
 - JSON Payload creation
   ```pascal
-    var Document := '..\..\..\media\Invoice.png';
+    var Document := '..\media\Invoice.png';
     var Base64 := TMediaCodec.EncodeBase64(Document);
     var MimeType := TMediaCodec.GetMimeType(Document);
 
@@ -191,7 +191,7 @@ ___
 
 - JSON Payload creation
   ```pascal
-    var Document := '..\..\..\media\File_Search_file.pdf';
+    var Document := '..\media\File_Search_file.pdf';
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
     var ModelName := 'claude-opus-4-6';

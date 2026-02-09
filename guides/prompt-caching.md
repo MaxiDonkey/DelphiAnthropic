@@ -302,7 +302,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
 - Set parameters
   ```pascal
-    var Document := '..\..\..\media\MyImage.png';  // The image size must be at least 4096 to be cached.
+    var Document := '..\media\MyImage.png';  // The image size must be at least 4096 to be cached.
     var Base64 := TMediaCodec.EncodeBase64(Document);
     var MimeType := TMediaCodec.GetMimeType(Document);
 
@@ -375,7 +375,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 - Set parameters
 
   ```pascal
-    var Document := '..\..\..\media\File_Search_file.pdf'; // The document size must be at least 4096 to be cached.
+    var Document := '..\media\File_Search_file.pdf'; // The document size must be at least 4096 to be cached.
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
     var ModelName := 'claude-opus-4-6';

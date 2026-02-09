@@ -113,7 +113,7 @@ The asynchronous API:
     //  In the asynchronous case, increase the scope of Client by declaring it in FormCreate.
     //  var Client := TAnthropicFactory.CreateInstance(My_Anthropic_Key);
 
-    var Document := '..\..\media\Invoice.png';
+    var Document := '..\media\Invoice.png';
     var base64 := TMediaCodec.EncodeBase64(Document);
     var mimeType := TMediaCodec.GetMimeType(Document);
 

@@ -27,7 +27,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
 
-  var ImageLocation := '..\..\media\Invoice.png';
+  var ImageLocation := '..\media\Invoice.png';
   var Base64 := TMediaCodec.EncodeBase64(ImageLocation);
   var MimeType := TMediaCodec.GetMimeType(ImageLocation);
 
@@ -63,7 +63,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 
   var ImageUrl := 'https://assets.visitorscoverage.com/production/wp-content/uploads/2024/04/AdobeStock_626542468-min-1024x683.jpeg'; 
 
-  var ImageLocation := '..\..\media\Invoice.png';
+  var ImageLocation := '..\media\Invoice.png';
   var Base64 := TMediaCodec.EncodeBase64(ImageLocation);
   var MimeType := TMediaCodec.GetMimeType(ImageLocation);
 
@@ -133,7 +133,7 @@ With Delphi versions 12 and later, it is possible to use multiline strings, whic
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
 
-  var ImageLocation := '..\..\media\Invoice.png';
+  var ImageLocation := '..\media\Invoice.png';
   var Base64 := TMediaCodec.EncodeBase64(ImageLocation);
 
   var ModelName := 'claude-sonnet-4-5';
@@ -207,7 +207,7 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers; 
 
-  var FilePath := '..\..\media\File_Search_file.pdf';
+  var FilePath := '..\media\File_Search_file.pdf';
   var Base64 := TMediaCodec.EncodeBase64(FilePath);
 
   var ModelName := 'claude-sonnet-4-5';

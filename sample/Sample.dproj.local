@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2025/10/21 14:10:40.000.080,=C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Unit1.pas</Transaction>
+    <Transaction>2025/11/29 16:16:18.000.684,=C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Unit1.pas</Transaction>
+    <Transaction>2026/02/04 02:44:17.000.424,=C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Unit1.pas</Transaction>
+    <Transaction>2026/02/04 02:47:07.000.902,C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Unit1.pas=D:\2025-developpement\Antropic\sample\Main.pas</Transaction>
+    <Transaction>2026/02/04 02:47:07.000.902,C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Unit1.fmx=D:\2025-developpement\Antropic\sample\Main.fmx</Transaction>
+    <Transaction>2026/02/04 02:47:32.000.449,C:\Users\Pascal\Documents\Embarcadero\Studio\Projets\Project1.dproj=D:\2025-developpement\Antropic\sample\Sample.dproj</Transaction>
+    <Transaction>2026/02/10 13:47:42.754,=D:\2025-developpement\Antropic\sample\Unit1.pas</Transaction>
+    <Transaction>2026/02/10 13:49:00.036,D:\2025-developpement\Antropic\source\Anthropic.JSONL.pas=D:\2025-developpement\Antropic\sample\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>

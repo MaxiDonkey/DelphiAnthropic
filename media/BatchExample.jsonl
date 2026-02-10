@@ -1,0 +1,2 @@
+{ "custom_id": "my-first-request","params":{"model":"claude-sonnet-4-5", "max_tokens":  1024,"messages":[{"role":"user","content":"Hello, world"}]}}
+{"custom_id":"my-second-request",  "params":{"model":"claude-sonnet-4-5","max_tokens":1024,"messages":[{"role":"user","content":"Hi again, friend"}]}}

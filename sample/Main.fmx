@@ -1,0 +1,1674 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 777
+  ClientWidth = 1108
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnCloseQuery = FormCloseQuery
+  DesignerMasterStyle = 0
+  object Panel2: TPanel
+    Align = Client
+    Size.Width = 698.000000000000000000
+    Size.Height = 777.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object Memo1: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      ReadOnly = True
+      StyledSettings = [Family, Style, FontColor]
+      TextSettings.Font.Size = 14.000000000000000000
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Margins.Left = 6.000000000000000000
+      Margins.Top = 6.000000000000000000
+      Margins.Right = 6.000000000000000000
+      Margins.Bottom = 6.000000000000000000
+      Position.X = 4.000000000000000000
+      Position.Y = 38.000000000000000000
+      Size.Width = 690.000000000000000000
+      Size.Height = 617.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 6
+      Viewport.Width = 686.000000000000000000
+      Viewport.Height = 613.000000000000000000
+    end
+    object Memo2: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      ReadOnly = True
+      StyledSettings = [Family, Style, FontColor]
+      TextSettings.Font.Size = 14.000000000000000000
+      Anchors = [akLeft, akRight, akBottom]
+      Position.X = 8.000000000000000000
+      Position.Y = 658.000000000000000000
+      Size.Width = 682.000000000000000000
+      Size.Height = 81.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      Viewport.Width = 678.000000000000000000
+      Viewport.Height = 77.000000000000000000
+    end
+    object Button1: TButton
+      Anchors = [akRight, akBottom]
+      Position.X = 560.000000000000000000
+      Position.Y = 747.000000000000000000
+      Size.Width = 130.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'Cancel'
+      TextSettings.Trimming = None
+    end
+    object ButtonUndo: TButton
+      StyledSettings = [FontColor]
+      Position.X = 2.000000000000000000
+      Position.Y = 2.000000000000000000
+      Size.Width = 39.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = #59461
+      TextSettings.Font.Family = 'Segoe MDL2 Assets'
+      TextSettings.Font.Size = 16.000000000000000000
+      TextSettings.Font.StyleExt = {00070000000000000004000000}
+      TextSettings.Trimming = None
+      OnClick = ButtonUndoClick
+    end
+    object ButtonFinger: TButton
+      StyledSettings = [FontColor]
+      Position.X = 49.000000000000000000
+      Position.Y = 2.000000000000000000
+      Size.Width = 39.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = #59688
+      TextSettings.Font.Family = 'Segoe MDL2 Assets'
+      TextSettings.Font.Size = 22.000000000000000000
+      TextSettings.Trimming = None
+      OnClick = ButtonFingerClick
+    end
+    object ButtonMainMenu: TButton
+      StyledSettings = [FontColor]
+      Position.X = 96.000000000000000000
+      Position.Y = 2.000000000000000000
+      Size.Width = 39.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = #59326
+      TextSettings.Font.Family = 'Segoe MDL2 Assets'
+      TextSettings.Font.Size = 22.000000000000000000
+      TextSettings.Trimming = None
+      OnClick = ButtonMainMenuClick
+    end
+  end
+  object Splitter2: TSplitter
+    Align = Right
+    Cursor = crHSplit
+    MinSize = 400.000000000000000000
+    Position.X = 698.000000000000000000
+    Size.Width = 6.000000000000000000
+    Size.Height = 777.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object Panel1: TPanel
+    Align = Right
+    Position.X = 704.000000000000000000
+    Size.Width = 404.000000000000000000
+    Size.Height = 777.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object Panel4: TPanel
+      Align = Top
+      HitTest = False
+      Size.Width = 404.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'pushpanel'
+      TabOrder = 1
+      object Text1: TText
+        Anchors = [akTop]
+        Position.X = -2.007317066192627000
+        Position.Y = 6.000000000000000000
+        Size.Width = 409.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        Text = '{section}'
+        TextSettings.Font.Size = 17.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claGoldenrod
+        TextSettings.WordWrap = False
+      end
+      object Label6: TLabel
+        Align = Left
+        Cursor = crHandPoint
+        StyledSettings = [Style, FontColor]
+        HitTest = True
+        Size.Width = 137.000000000000000000
+        Size.Height = 33.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Family = 'Segoe MDL2 Assets'
+        TextSettings.Font.Size = 18.000000000000000000
+        Text = #59759
+        TabOrder = 1
+        OnClick = Label6Click
+      end
+      object Label7: TLabel
+        Align = Right
+        Cursor = crHandPoint
+        StyledSettings = [Style, FontColor]
+        HitTest = True
+        Position.X = 268.000000000000000000
+        Size.Width = 136.000000000000000000
+        Size.Height = 33.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Family = 'Segoe MDL2 Assets'
+        TextSettings.Font.Size = 18.000000000000000000
+        TextSettings.HorzAlign = Trailing
+        Text = #59760
+        TabOrder = 0
+        OnClick = Label7Click
+      end
+    end
+    object TabControl1: TTabControl
+      Align = Client
+      Size.Width = 404.000000000000000000
+      Size.Height = 744.000000000000000000
+      Size.PlatformDefault = False
+      TabIndex = 4
+      TabOrder = 0
+      TabPosition = Dots
+      OnChange = TabControl1Change
+      Sizes = (
+        404s
+        744s
+        404s
+        744s
+        404s
+        744s
+        404s
+        744s
+        404s
+        744s)
+      object TabItem8: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = False
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem1'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label53: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 216.000000000000000000
+          Position.Y = 706.000000000000000000
+          Size.Width = 189.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          OnClick = Label7Click
+        end
+        object Panel7: TPanel
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Position.X = -4.000000000000000000
+          Position.Y = -7.000000000000000000
+          Size.Width = 408.000000000000000000
+          Size.Height = 713.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          object Panel10: TPanel
+            Align = Top
+            Size.Width = 408.000000000000000000
+            Size.Height = 391.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 2
+            object Memo3: TMemo
+              Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+              DataDetectorTypes = []
+              ReadOnly = True
+              StyledSettings = [Family, Style, FontColor]
+              TextSettings.Font.Size = 14.000000000000000000
+              TextSettings.WordWrap = True
+              Align = Client
+              Margins.Left = 6.000000000000000000
+              Margins.Top = 6.000000000000000000
+              Margins.Right = 6.000000000000000000
+              Margins.Bottom = 6.000000000000000000
+              Size.Width = 396.000000000000000000
+              Size.Height = 351.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 0
+              Viewport.Width = 392.000000000000000000
+              Viewport.Height = 347.000000000000000000
+            end
+            object Panel11: TPanel
+              Align = Top
+              Size.Width = 408.000000000000000000
+              Size.Height = 28.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 1
+              object Text4: TText
+                Position.X = 6.000000000000000000
+                Position.Y = 8.000000000000000000
+                Size.Width = 145.000000000000000000
+                Size.Height = 17.000000000000000000
+                Size.PlatformDefault = False
+                Text = ' Payload'
+                TextSettings.HorzAlign = Leading
+              end
+            end
+          end
+          object Panel12: TPanel
+            Align = Client
+            Size.Width = 408.000000000000000000
+            Size.Height = 316.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 3
+            object Memo4: TMemo
+              Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+              DataDetectorTypes = []
+              ReadOnly = True
+              StyledSettings = [Family, Style, FontColor]
+              TextSettings.Font.Size = 14.000000000000000000
+              Align = Client
+              Margins.Left = 6.000000000000000000
+              Margins.Top = 6.000000000000000000
+              Margins.Right = 6.000000000000000000
+              Margins.Bottom = 6.000000000000000000
+              Size.Width = 396.000000000000000000
+              Size.Height = 276.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 2
+              Viewport.Width = 392.000000000000000000
+              Viewport.Height = 272.000000000000000000
+            end
+            object Panel13: TPanel
+              Align = Top
+              Size.Width = 408.000000000000000000
+              Size.Height = 28.000000000000000000
+              Size.PlatformDefault = False
+              TabOrder = 1
+              object Text5: TText
+                Position.X = 6.000000000000000000
+                Position.Y = 8.000000000000000000
+                Size.Width = 145.000000000000000000
+                Size.Height = 17.000000000000000000
+                Size.PlatformDefault = False
+                Text = ' Result'
+                TextSettings.HorzAlign = Leading
+              end
+            end
+          end
+          object Splitter3: TSplitter
+            Align = Top
+            Cursor = crVSplit
+            MinSize = 150.000000000000000000
+            Position.Y = 391.000000000000000000
+            Size.Width = 408.000000000000000000
+            Size.Height = 6.000000000000000000
+            Size.PlatformDefault = False
+          end
+        end
+      end
+      object TabItem1: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = False
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem1'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label1: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 22.000000000000000000
+          Position.Y = 56.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Using the Messages API'
+          TabOrder = 20
+          OnClick = Label1Click
+        end
+        object Label8: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 711.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          OnClick = Label6Click
+        end
+        object Label9: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 253.000000000000000000
+          Position.Y = 711.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Label10: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 22.000000000000000000
+          Position.Y = 81.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Capabilities'
+          TabOrder = 19
+          OnClick = Label10Click
+        end
+        object Label13: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 22.000000000000000000
+          Position.Y = 106.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'API Files'
+          TabOrder = 18
+          OnClick = Label13Click
+        end
+        object Label14: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 22.000000000000000000
+          Position.Y = 131.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Batch processing'
+          TabOrder = 17
+          OnClick = Label14Click
+        end
+        object Label16: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 30.000000000000000000
+          Position.Y = 230.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Beta'
+          TabOrder = 15
+        end
+        object Label17: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 30.000000000000000000
+          Position.Y = 280.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Agent Skills'
+          TabOrder = 13
+        end
+        object Label18: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 30.000000000000000000
+          Position.Y = 305.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'MCP in the API'
+          TabOrder = 12
+        end
+        object Label19: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 30.000000000000000000
+          Position.Y = 255.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Tools'
+          TabOrder = 14
+        end
+        object Label20: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 30.000000000000000000
+          Position.Y = 393.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Set the API key'
+          TabOrder = 11
+          OnClick = Label20Click
+        end
+        object Label41: TLabel
+          Anchors = [akTop]
+          Cursor = crHandPoint
+          StyledSettings = [Family]
+          HitTest = True
+          Position.X = 22.000000000000000000
+          Position.Y = 156.000000000000000000
+          Size.Width = 359.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 14.000000000000000000
+          TextSettings.Font.StyleExt = {04040000000000000004000000}
+          TextSettings.FontColor = claCornflowerblue
+          TextSettings.HorzAlign = Center
+          Text = 'Models'
+          TabOrder = 16
+          OnClick = Label14Click
+        end
+      end
+      object TabItem9: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = False
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem2'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label59: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 706.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 1
+          OnClick = Label6Click
+        end
+        object Label60: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 261.000000000000000000
+          Position.Y = 706.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Layout3: TLayout
+          Anchors = [akTop]
+          Position.X = 2.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 145.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+          object Label54: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Text generation'
+            TabOrder = 4
+          end
+          object Button3: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Synchronous create'
+            TextSettings.Trimming = None
+            OnClick = Button3Click
+          end
+          object Button4: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Asynchronous create'
+            TextSettings.Trimming = None
+            OnClick = Button4Click
+          end
+          object Button2: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 16
+            Text = 'Asynchronous orchestration'
+            TextSettings.Trimming = None
+            OnClick = Button2Click
+          end
+          object Label3: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 26.000000000000000000
+            Position.Y = 118.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 22
+            OnClick = Label3Click
+          end
+        end
+        object Z: TLayout
+          Anchors = [akTop]
+          Position.X = 2.000000000000000000
+          Position.Y = 151.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 178.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+          object Label2: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Text generation streamed'
+            TabOrder = 3
+          end
+          object Button5: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 33.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 11
+            Text = 'Synchronous stream'
+            TextSettings.Trimming = None
+            OnClick = Button5Click
+          end
+          object Button6: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 63.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 14
+            Text = 'Asynchronous stream - session callbacks'
+            TextSettings.Trimming = None
+            OnClick = Button6Click
+          end
+          object Button7: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 93.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 13
+            Text = 'Asynchronous stream - events callbacks'
+            TextSettings.Trimming = None
+            OnClick = Button7Click
+          end
+          object Button8: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 123.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 12
+            Text = 'Asynchronous stream orchestration'
+            TextSettings.Trimming = None
+            OnClick = Button8Click
+          end
+          object Label4: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 22.000000000000000000
+            Position.Y = 153.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 18
+            OnClick = Label4Click
+          end
+        end
+        object Layout4: TLayout
+          Anchors = [akTop]
+          Position.X = 2.000000000000000000
+          Position.Y = 329.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 96.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          object Label5: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 8.000000000000000000
+            Size.Width = 371.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Practical patterns and examples'
+            TabOrder = 2
+          end
+          object Button9: TButton
+            Anchors = [akTop]
+            Position.X = 83.000000000000000000
+            Position.Y = 33.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 9
+            Text = 'Multiple conversational turns'
+            TextSettings.Trimming = None
+            OnClick = Button9Click
+          end
+          object Button10: TButton
+            Anchors = [akTop]
+            Position.X = 83.000000000000000000
+            Position.Y = 63.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 8
+            Text = 'Putting words in Claude'#39's mouth'
+            TextSettings.Trimming = None
+            OnClick = Button10Click
+          end
+        end
+        object Layout5: TLayout
+          Anchors = [akTop]
+          Position.X = 2.000000000000000000
+          Position.Y = 422.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 187.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          object Label21: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Document understanding'
+            TabOrder = 1
+          end
+          object Button11: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 33.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 6
+            Text = 'Vision - inline data'
+            TextSettings.Trimming = None
+            OnClick = Button11Click
+          end
+          object Button12: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 63.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 3
+            Text = 'Vision - URL-referenced image'
+            TextSettings.Trimming = None
+            OnClick = Button12Click
+          end
+          object Button13: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 93.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 5
+            Text = 'PDF support - inline data'
+            TextSettings.Trimming = None
+            OnClick = Button13Click
+          end
+          object Button14: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 123.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 4
+            Text = 'PDF support - URL-based PDF'
+            TextSettings.Trimming = None
+            OnClick = Button14Click
+          end
+          object Label22: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 22.000000000000000000
+            Position.Y = 153.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 9
+            OnClick = Label22Click
+          end
+        end
+      end
+      object TabItem2: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = False
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem2'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label11: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 703.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          OnClick = Label6Click
+        end
+        object Label12: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 253.000000000000000000
+          Position.Y = 703.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Layout1: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 89.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 22
+          object Button15: TButton
+            Anchors = [akTop]
+            Position.X = 60.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'Using cache_control*'
+            TextSettings.Trimming = None
+            OnClick = Button15Click
+          end
+          object Button16: TButton
+            Anchors = [akTop]
+            Position.X = 201.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = '1-hour cache duration*'
+            TextSettings.Trimming = None
+            OnClick = Button16Click
+          end
+          object Label24: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Prompt caching (payload examples)'
+            TabOrder = 5
+          end
+          object Label26: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 22
+            OnClick = Label26Click
+          end
+        end
+        object Layout2: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 96.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 120.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 21
+          object Label25: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Thinking && Effort'
+            TabOrder = 4
+          end
+          object Button17: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Extended Reasoning'
+            TextSettings.Trimming = None
+            OnClick = Button17Click
+          end
+          object Button18: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'Adaptive Reasoning'
+            TextSettings.Trimming = None
+            OnClick = Button18Click
+          end
+          object Label27: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 22
+            OnClick = Label27Click
+          end
+        end
+        object Layout6: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 215.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 145.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 18
+          object Label28: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Structured outputs'
+            TabOrder = 4
+          end
+          object Button19: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'JSON outputs schema'
+            TextSettings.Trimming = None
+            OnClick = Button19Click
+          end
+          object Button20: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Strict tool use'
+            TextSettings.Trimming = None
+            OnClick = Button20Click
+          end
+          object Label29: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 23
+            OnClick = Label29Click
+          end
+          object Button21: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'Using both features together'
+            TextSettings.Trimming = None
+            OnClick = Button21Click
+          end
+        end
+        object Layout7: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 359.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 146.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 17
+          object Label30: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Citations - RAG'
+            TabOrder = 4
+          end
+          object Button22: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Activating citations (text/plain)'
+            TextSettings.Trimming = None
+            OnClick = Button22Click
+          end
+          object Label31: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 23
+            OnClick = Label31Click
+          end
+          object Button23: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Using caching && citations*'
+            TextSettings.Trimming = None
+            OnClick = Button23Click
+          end
+          object Button24: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'Activating citations (PDF)'
+            TextSettings.Trimming = None
+            OnClick = Button24Click
+          end
+        end
+        object Layout8: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 505.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 144.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 20
+          object Label32: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Token counting'
+            TabOrder = 4
+          end
+          object Button25: TButton
+            Anchors = [akTop]
+            Position.X = 62.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'Basic message'
+            TextSettings.Trimming = None
+            OnClick = Button25Click
+          end
+          object Label33: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 25
+            OnClick = Label33Click
+          end
+          object Button26: TButton
+            Anchors = [akTop]
+            Position.X = 201.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'with tools'
+            TextSettings.Trimming = None
+            OnClick = Button26Click
+          end
+          object Button27: TButton
+            Anchors = [akTop]
+            Position.X = 60.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'with images'
+            TextSettings.Trimming = None
+            OnClick = Button27Click
+          end
+          object Button28: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'with extended thinking'
+            TextSettings.Trimming = None
+            OnClick = Button28Click
+          end
+          object Button29: TButton
+            Anchors = [akTop]
+            Position.X = 201.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 131.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'with PDF'
+            TextSettings.Trimming = None
+            OnClick = Button29Click
+          end
+        end
+        object Layout9: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 647.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 49.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 19
+          object Label15: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Fast mode (research preview)'
+            TabOrder = 4
+          end
+          object Label23: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 20
+            OnClick = Label23Click
+          end
+        end
+      end
+      object TabItem3: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = True
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem3'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label34: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 703.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          OnClick = Label6Click
+        end
+        object Label35: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 253.000000000000000000
+          Position.Y = 703.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Layout10: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 257.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 23
+          object Label36: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Files API'
+            TabOrder = 5
+          end
+          object Button30: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 23
+            Text = 'Uploading a file'
+            TextSettings.Trimming = None
+            OnClick = Button30Click
+          end
+          object Button31: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 22
+            Text = 'Using a file in messages'
+            TextSettings.Trimming = None
+            OnClick = Button31Click
+          end
+          object Label37: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 229.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 27
+            OnClick = Label37Click
+          end
+          object Button33: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 109.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'List of files'
+            TextSettings.Trimming = None
+            OnClick = Button33Click
+          end
+          object Label38: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Files API CRUD'
+            TabOrder = 4
+          end
+          object Button34: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 139.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'Retrieve a file by its ID'
+            TextSettings.Trimming = None
+            OnClick = Button34Click
+          end
+          object Button35: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 169.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Delete a file by its ID'
+            TextSettings.Trimming = None
+            OnClick = Button35Click
+          end
+          object Button36: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 199.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Download a file'
+            TextSettings.Trimming = None
+            OnClick = Button36Click
+          end
+        end
+        object Layout11: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 296.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 209.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 22
+          object Label39: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Batch processing'
+            TabOrder = 4
+          end
+          object Button37: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'Batch job Creation'
+            TextSettings.Trimming = None
+            OnClick = Button37Click
+          end
+          object Label40: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 8.000000000000000000
+            Position.Y = 175.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 25
+            OnClick = Label40Click
+          end
+          object Button32: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'Batch job list'
+            TextSettings.Trimming = None
+            OnClick = Button32Click
+          end
+          object Button38: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Batch job retrieve'
+            TextSettings.Trimming = None
+            OnClick = Button38Click
+          end
+          object Button39: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Batch job cancel'
+            TextSettings.Trimming = None
+            OnClick = Button39Click
+          end
+          object Button40: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 145.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'Download batch Results'
+            TextSettings.Trimming = None
+            OnClick = Button40Click
+          end
+        end
+        object Layout12: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 537.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 120.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 21
+          object Label42: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Models'
+            TabOrder = 4
+          end
+          object Button41: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 18
+            Text = 'Models List'
+            TextSettings.Trimming = None
+          end
+          object Label43: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 22
+          end
+          object Button42: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 17
+            Text = 'Models Retrieve'
+            TextSettings.Trimming = None
+          end
+        end
+      end
+    end
+  end
+end

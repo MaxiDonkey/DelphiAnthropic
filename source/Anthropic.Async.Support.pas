@@ -2,30 +2,37 @@ unit Anthropic.Async.Support;
 
 {-------------------------------------------------------------------------------
 
+      Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
+      Visit the Github repository for the documentation and use examples
+
+ ------------------------------------------------------------------------------}
+
+interface
+
+{$REGION  'Dev notest'}
+
+(*
       Unit containing  records for managing  asynchronous events related to
       chat requests.
 
-      The  Anthropic.Chat.AsyncEvents  unit  provides  definitions for the
+      The  GenAI.Chat.AsyncEvents  unit  provides  definitions for the
       TAsyncParams<T>  and  TAsynStreamParams<T>  records, which  are  used
       to  handle  the lifecycle  of asynchronous chat operations, including
       starting, progressing, succeeding, and handling errors.
       These records enable non-blocking operations for chat functionalities
       and can be reused across multiple modules.
 
-      This unit depends  on Anthropic.Async.Params  for parameter management.
+      This  unit  depends  on GenAI.Async.Params  for parameter  management.
       The IUseParams<T>  and  TUseParamsFactory<T>  interfaces  and  classes
-      from  Anthropic.Async.Params  are  utilized  to  create and manage the
+      from  GenAI.Params.Core  are  utilized  to  create and manage the
       parameter  instances  for  asynchronous  operations.
+*)
 
-        Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
-        Visit the Github repository for the documentation and use examples
-
--------------------------------------------------------------------------------}
-
-interface
+{$ENDREGION}
 
 uses
-  System.SysUtils, system.Classes, System.Threading, Anthropic.Async.Params;
+  System.SysUtils, system.Classes, System.Threading, Anthropic.Async.Params,
+  Anthropic.Async.Promise;
 
 type
   /// <summary>
@@ -50,6 +57,7 @@ type
     /// This can be useful for providing context in the callback procedures.
     /// </remarks>
     property Sender: TObject read FSender write FSender;
+
     /// <summary>
     /// Event triggered at the start of the asynchronous request.
     /// </summary>
@@ -65,6 +73,7 @@ type
     /// </code>
     /// </remarks>
     property OnStart: TProc<TObject> read FOnStart write FOnStart;
+
     /// <summary>
     /// Event triggered at the end of the asynchronous request.
     /// </summary>
@@ -87,6 +96,7 @@ type
     /// </code>
     /// </remarks>
     property OnSuccess: TProc<TObject, T> read FOnSuccess write FOnSuccess;
+
     /// <summary>
     /// Event triggered when an error occurs during the asynchronous request.
     /// </summary>
@@ -111,6 +121,95 @@ type
   end;
 
   /// <summary>
+  /// Record used to define promise-style callbacks for asynchronous operations.
+  /// </summary>
+  /// <typeparam name="T">The type of result returned by the asynchronous operation.</typeparam>
+  /// <remarks>
+  /// <c>TPromiseCallBack&lt;T&gt;</c> encapsulates the callbacks to handle the start, successful completion, or error of an asynchronous request
+  /// in a promise-based workflow. Callback events can be used for UI updates, chaining operations, logging, or error handling
+  /// according to the outcome of the asynchronous task.
+  /// </remarks>
+  TPromiseCallBack<T> = record
+  private
+    FSender: TObject;
+    FOnStart: TProc<TObject>;
+    FOnSuccess: TFunc<TObject, T, string>;
+    FOnError: TFunc<TObject, string, string>;
+  public
+    /// <summary>
+    /// Object representing the sender of the asynchronous operation.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Sender</c> property is used to identify or store a reference to the object that initiated the request.
+    /// This can be useful for providing context in the callback procedures.
+    /// </remarks>
+    property Sender: TObject read FSender write FSender;
+
+    /// <summary>
+    /// Event triggered at the start of the asynchronous request.
+    /// </summary>
+    /// <remarks>
+    /// The <c>OnStart</c> event is called when the request begins.
+    /// It can be used to initialize any required state or display a loading indicator to the user.
+    /// <code>
+    /// OnStart :=
+    ///    procedure (Sender: TObject)
+    ///    begin
+    ///      // Code executed at the start of the request
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnStart: TProc<TObject> read FOnStart write FOnStart;
+
+    /// <summary>
+    /// Event triggered at the end of the asynchronous request.
+    /// </summary>
+    /// <param name="Sender">
+    /// Object that initiated the request, generally used for context.
+    /// </param>
+    /// <param name="Result">
+    /// The result of type <c>T</c> returned at the end of the request.
+    /// This event is used to process the final result of the asynchronous operation.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnSuccess</c> event is invoked when the process completes successfully.
+    /// It can be used to perform final actions based on the received result.
+    /// <code>
+    /// OnSuccess :=
+    ///    function (Sender: TObject; Result: T): string
+    ///    begin
+    ///      // Code executed at the end of the request with the obtained result
+    ///      Result := String_builded_from_Result;
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnSuccess: TFunc<TObject, T, string> read FOnSuccess write FOnSuccess;
+
+    /// <summary>
+    /// Event triggered when an error occurs during the asynchronous request.
+    /// </summary>
+    /// <param name="Sender">
+    /// Object that initiated the request, generally used for context.
+    /// </param>
+    /// <param name="ErrorMessage">
+    /// The error message received, which can be logged or displayed to the user.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnError</c> event is called when an error occurs during the asynchronous operation.
+    /// It can be used to handle failures, display error messages, or perform any necessary cleanup actions.
+    /// <code>
+    /// OnError :=
+    ///    function (Sender: TObject; ErrorMessage: string) : string
+    ///    begin
+    ///      // Code executed when an error occurs during the request
+    ///      Result := String_from_error;
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnError: TFunc<TObject, string, string> read FOnError write FOnError;
+  end;
+
+  /// <summary>
   /// Class used to manage asynchronous execution with callback events.
   /// </summary>
   /// <remarks>
@@ -132,6 +231,7 @@ type
     /// An instance of <c>IUseParams&lt;T&gt;</c> that provides parameter management functionality.
     /// </value>
     property Use: IUseParams<T> read FUse;
+
     /// <summary>
     /// The object representing the sender of the asynchronous operation.
     /// </summary>
@@ -142,6 +242,7 @@ type
     /// This property can be set to identify the object that initiated the asynchronous operation, which is useful in callback methods.
     /// </remarks>
     property Sender: TObject read FSender write FSender;
+
     /// <summary>
     /// Event triggered when the asynchronous operation starts.
     /// </summary>
@@ -159,6 +260,7 @@ type
     /// </code>
     /// </remarks>
     property OnStart: TProc<TObject> read FOnStart write FOnStart;
+
     /// <summary>
     /// Event triggered when the asynchronous operation completes successfully.
     /// </summary>
@@ -176,6 +278,7 @@ type
     /// </code>
     /// </remarks>
     property OnSuccess: TProc<TObject, U> read FOnSuccess write FOnSuccess;
+
     /// <summary>
     /// Event triggered when an error occurs during the asynchronous operation.
     /// </summary>
@@ -193,6 +296,7 @@ type
     /// </code>
     /// </remarks>
     property OnError: TProc<TObject, string> read FOnError write FOnError;
+
     /// <summary>
     /// Executes the specified function asynchronously.
     /// </summary>
@@ -204,6 +308,7 @@ type
     /// It invokes the <c>OnStart</c> event before execution, the <c>OnSuccess</c> event upon successful completion, and the <c>OnError</c> event if an exception occurs during execution.
     /// </remarks>
     procedure Run(Value: TFunc<U>);
+
     /// <summary>
     /// Initializes a new instance of the <c>TAsynCallBackExec&lt;T, U&gt;</c> class with the specified parameter function.
     /// </summary>
@@ -227,7 +332,7 @@ type
   private
     FSender: TObject;
     FOnStart: TProc<TObject>;
-    FOnSuccess: TProc<TObject, T>;
+    FOnSuccess: TProc<TObject>;
     FOnProgress: TProc<TObject, T>;
     FOnError: TProc<TObject, string>;
     FOnCancellation: TProc<TObject>;
@@ -241,6 +346,7 @@ type
     /// which can be useful for context within the callback procedures.
     /// </remarks>
     property Sender: TObject read FSender write FSender;
+
     /// <summary>
     /// Event triggered when the asynchronous chat request starts.
     /// </summary>
@@ -262,13 +368,14 @@ type
     /// </code>
     /// </remarks>
     property OnStart: TProc<TObject> read FOnStart write FOnStart;
+
     /// <summary>
-    /// Event triggered when the asynchronous chat request completes successfully.
+    /// Event triggered when the asynchronous Data request completes successfully.
     /// </summary>
     /// <param name="Sender">
     /// The object that initiated the request, typically used for context.
     /// </param>
-    /// <param name="Chat">
+    /// <param name="Data">
     /// The <c>TChat</c> object representing the current response chunk received from the model.
     /// This event can be used to update the user interface as new tokens are streamed in.
     /// </param>
@@ -277,20 +384,21 @@ type
     /// It does not provide additional data, as the result is expected to have been handled progressively via the <c>OnProgress</c> event.
     /// <code>
     /// OnSuccess :=
-    ///    procedure (Sender: TObject; Chat: TChat)
+    ///    procedure (Sender: TObject; Data: T)
     ///    begin
     ///      // code when the streaming process finishes successfully
     ///    end;
     /// </code>
     /// </remarks>
-    property OnSuccess: TProc<TObject, T> read FOnSuccess write FOnSuccess;
+    property OnSuccess: TProc<TObject> read FOnSuccess write FOnSuccess;
+
     /// <summary>
-    /// Event triggered to handle progress during the streaming chat request.
+    /// Event triggered to handle progress during the streaming Data request.
     /// </summary>
     /// <param name="Sender">
     /// The object that initiated the request, typically used for context.
     /// </param>
-    /// <param name="Chat">
+    /// <param name="Data">
     /// The <c>TChat</c> object representing the current response chunk received from the model.
     /// This event can be used to update the user interface as new tokens are streamed in.
     /// </param>
@@ -299,15 +407,16 @@ type
     /// This allows the application to handle the response progressively as it is generated by the model.
     /// <code>
     /// OnProgress :=
-    ///    procedure (Sender: TObject; Chat: TChat)
+    ///    procedure (Sender: TObject; Data: T)
     ///    begin
     ///      // code to handle the response progressively
     ///    end;
     /// </code>
     /// </remarks>
     property OnProgress: TProc<TObject, T> read FOnProgress write FOnProgress;
+
     /// <summary>
-    /// Event triggered when an error occurs during the asynchronous chat request.
+    /// Event triggered when an error occurs during the asynchronous request.
     /// </summary>
     /// <param name="Sender">
     /// The object that initiated the request, typically used for context.
@@ -327,8 +436,9 @@ type
     /// </code>
     /// </remarks>
     property OnError: TProc<TObject, string> read FOnError write FOnError;
+
     /// <summary>
-    /// Event triggered when the asynchronous chat request has been canceled.
+    /// Event triggered when the asynchronous request has been canceled.
     /// </summary>
     /// <remarks>
     /// The <c>OnCancellation</c> event is fired when the chat request is canceled by the user or the application.
@@ -342,6 +452,7 @@ type
     /// </code>
     /// </remarks>
     property OnCancellation: TProc<TObject> read FOnCancellation write FOnCancellation;
+
     /// <summary>
     /// Function called to determine if the asynchronous chat request should be canceled.
     /// </summary>
@@ -360,6 +471,217 @@ type
     /// </code>
     /// </remarks>
     property OnDoCancel: TFunc<Boolean> read FOnDoCancel write FOnDoCancel;
+  end;
+
+  /// <summary>
+  /// Record used to handle asynchronous events for a streaming operation with promise-based callbacks.
+  /// </summary>
+  /// <remarks>
+  /// <c>TPromiseStreamCallBack&lt;T&gt;</c> manages the lifecycle of a streaming asynchronous request.
+  /// It provides promise-style function callbacks for key events including start, progress, success, error, cancellation, and cancellation check.
+  /// The event signatures allow you to compose and chain UI, logging, or application logic in response to streamed data, errors, or user cancellation.
+  /// </remarks>
+  TPromiseStreamCallBack<T> = record
+  private
+    FSender: TObject;
+    FOnStart: TProc<TObject>;
+    FOnSuccess: TFunc<TObject, string>;
+    FOnProgress: TProc<TObject, T>;
+    FOnError: TFunc<TObject, string, string>;
+    FOnCancellation: TFunc<TObject, string>;
+    FOnDoCancel: TFunc<Boolean>;
+  public
+    /// <summary>
+    /// The object representing the sender of the asynchronous operation.
+    /// </summary>
+    /// <remarks>
+    /// The <c>Sender</c> property is used to identify or store a reference to the object that initiated the chat request,
+    /// which can be useful for context within the callback procedures.
+    /// </remarks>
+    property Sender: TObject read FSender write FSender;
+
+    /// <summary>
+    /// Event triggered when the asynchronous chat request starts.
+    /// </summary>
+    /// <param name="Sender">
+    /// The object that initiated the request, typically used for context.
+    /// </param>
+    /// <param name="Chat">
+    /// The <c>TChat</c> object representing the current response chunk received from the model.
+    /// This event can be used to update the user interface as new tokens are streamed in.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnStart</c> event is called when the chat request begins. It can be used to set up any initial state or display a loading indicator to the user.
+    /// <code>
+    /// OnStart :=
+    ///    procedure (Sender: TObject)
+    ///    begin
+    ///      // code when chat request begin
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnStart: TProc<TObject> read FOnStart write FOnStart;
+
+    /// <summary>
+    /// Event triggered when the asynchronous Data request completes successfully.
+    /// </summary>
+    /// <param name="Sender">
+    /// The object that initiated the request, typically used for context.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnSuccess</c> event is invoked when the streaming process finishes successfully.
+    /// It does not provide additional data, as the result is expected to have been handled progressively via the <c>OnProgress</c> event.
+    /// <code>
+    /// OnSuccess :=
+    ///    function (Sender: TObject): string
+    ///    begin
+    ///      // code when the streaming process finishes successfully
+    ///      Result := String_builded_from_Data;
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnSuccess: TFunc<TObject, string> read FOnSuccess write FOnSuccess;
+
+    /// <summary>
+    /// Event triggered to handle progress during the streaming Data request.
+    /// </summary>
+    /// <param name="Sender">
+    /// The object that initiated the request, typically used for context.
+    /// </param>
+    /// <param name="Data">
+    /// The <c>T</c> object representing the current response chunk received from the model.
+    /// This event can be used to update the user interface as new tokens are streamed in.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnProgress</c> event is fired every time a new chunk of data is received during the streaming process.
+    /// This allows the application to handle the response progressively as it is generated by the model.
+    /// <code>
+    /// OnProgress :=
+    ///    procedure (Sender: TObject; Data: T)
+    ///    begin
+    ///      // code to handle the response progressively
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnProgress: TProc<TObject, T> read FOnProgress write FOnProgress;
+
+    /// <summary>
+    /// Event triggered when an error occurs during the asynchronous streamed request.
+    /// </summary>
+    /// <param name="Sender">
+    /// The object that initiated the request, typically used for context.
+    /// </param>
+    /// <param name="ErrorMessage">
+    /// The error message received, which can be logged or displayed to the user.
+    /// </param>
+    /// <remarks>
+    /// The <c>OnError</c> event is called when an error occurs during the streaming process.
+    /// This can be used to handle failures, show error messages, or perform any necessary clean-up actions.
+    /// <code>
+    /// OnError :=
+    ///    function (Sender: TObject; message: string): string
+    ///    begin
+    ///      // code to handle an error occurs during the streaming process
+    ///      Result := String_builded_from_message;
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnError: TFunc<TObject, string, string> read FOnError write FOnError;
+
+    /// <summary>
+    /// Event triggered when the asynchronous request has been canceled.
+    /// </summary>
+    /// <remarks>
+    /// The <c>OnCancellation</c> event is fired when the chat request is canceled by the user or the application.
+    /// This can be used to perform clean-up operations or notify the user that the request has been terminated.
+    /// <code>
+    /// OnCancellation :=
+    ///    function (Sender: TObject): string
+    ///    begin
+    ///      // code to handle chat request cancellation
+    ///      Result := 'aborted'; or other string message
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnCancellation: TFunc<TObject, string> read FOnCancellation write FOnCancellation;
+
+    /// <summary>
+    /// Function called to determine if the asynchronous chat request should be canceled.
+    /// </summary>
+    /// <returns>
+    /// A <c>Boolean</c> value indicating whether the request should be canceled (<c>True</c>) or allowed to continue (<c>False</c>).
+    /// </returns>
+    /// <remarks>
+    /// The <c>OnDoCancel</c> function is periodically invoked to check whether the user or application has requested to cancel the chat request.
+    /// If the function returns <c>True</c>, the streaming process will be aborted.
+    /// <code>
+    /// OnDoCancel :=
+    ///    function : Boolean
+    ///    begin
+    ///      Result := ... // True to stop the streaming process
+    ///    end;
+    /// </code>
+    /// </remarks>
+    property OnDoCancel: TFunc<Boolean> read FOnDoCancel write FOnDoCancel;
+  end;
+
+  /// <summary>
+  /// Reference to a procedure type used to invoke an asynchronous operation with callback parameters.
+  /// </summary>
+  /// <typeparam name="T">The type of the result expected from the asynchronous operation.</typeparam>
+  /// <param name="CallBackParams">
+  /// A function returning a <c>TAsynCallBack&lt;T&gt;</c> record that defines the callbacks to handle start, success, and error events of the asynchronous request.
+  /// </param>
+  /// <remarks>
+  /// <c>TInvokeAsyn&lt;T&gt;</c> abstracts the invocation of an asynchronous task.
+  /// It accepts a function providing the set of callbacks to be executed during the lifecycle of the async operation.
+  /// This enables flexible and type-safe management of event handlers for non-blocking code.
+  /// </remarks>
+  TInvokeAsyn<T> = reference to procedure(const CallBackParams: TFunc<TAsynCallBack<T>>);
+
+  /// <summary>
+  /// Helper record providing utilities for composing asynchronous operations using async/await-style patterns.
+  /// </summary>
+  /// <remarks>
+  /// <c>TAsyncAwaitHelper</c> offers static helper methods to simplify the integration of asynchronous workflows in a promise-like style.
+  /// Its main utility is to bridge traditional callback-based asynchronous invocation with a modern, promise-based API.
+  /// </remarks>
+  TAsyncAwaitHelper = record
+    /// <summary>
+    /// Wraps a callback-based asynchronous invocation into a promise-style asynchronous workflow.
+    /// </summary>
+    /// <typeparam name="T">The type of result returned by the asynchronous operation.</typeparam>
+    /// <param name="Invoke">
+    /// A procedure that starts the asynchronous operation, accepting a function returning a <c>TAsynCallBack&lt;T&gt;</c> to specify event handlers.
+    /// </param>
+    /// <param name="CallBacks">
+    /// A function returning a <c>TPromiseCallBack&lt;T&gt;</c> record defining the promise-style callback handlers.
+    /// </param>
+    /// <returns>
+    /// Returns a <c>TPromise&lt;T&gt;</c> representing the asynchronous operation.
+    /// </returns>
+    /// <remarks>
+    /// Use <c>WrapAsyncAwait</c> to convert legacy callback-driven async code to a more composable, promise-based approach.
+    /// </remarks>
+    class function WrapAsyncAwait<T>(const Invoke: TInvokeAsyn<T>;
+      const CallBacks: TFunc<TPromiseCallBack<T>>): TPromise<T>; static;
+  end;
+
+  TDelayPolicy = reference to function(Attempt: Integer; CurrentDelayMs: Cardinal): Cardinal;
+
+  TAsynchronousHelper = class
+  public
+    class function Delay(const Ms: Cardinal): TPromise<Boolean>; static;
+
+    class function DefaultBackoff(const CurrentDelayMs, MaxDelayMs: Cardinal): Cardinal; static;
+
+    class function PollUntil<TSnap, TResult>(
+      const GetSnapshot: TFunc<TPromise<TSnap>>;
+      const IsDone: TFunc<TSnap, Boolean>;
+      const Extract: TFunc<TSnap, TResult>;
+      const FirstDelayMs: Cardinal;
+      const MaxTries: Integer;
+      const DelayPolicy: TDelayPolicy): TPromise<TResult>; static;
   end;
 
 implementation
@@ -436,6 +758,201 @@ begin
             end;
           end);
   Task.Start;
+end;
+
+{ TAsyncAwaitHelper }
+
+class function TAsyncAwaitHelper.WrapAsyncAwait<T>(const Invoke: TInvokeAsyn<T>;
+  const CallBacks: TFunc<TPromiseCallBack<T>>): TPromise<T>;
+begin
+  Result := TPromise<T>.Create(
+    procedure(Resolve: TProc<T>; Reject: TProc<Exception>)
+    begin
+      Invoke(
+        function: TAsynCallBack<T>
+        begin
+          if Assigned(CallBacks) then
+            begin
+              Result.Sender  := CallBacks.Sender;
+              Result.OnStart := CallBacks.OnStart;
+
+              Result.OnSuccess :=
+                procedure(Sender: TObject; Value: T)
+                begin
+                  if Assigned(CallBacks.OnSuccess) then
+                    CallBacks.OnSuccess(Sender, Value);
+                  Resolve(Value);
+                end;
+
+              Result.OnError :=
+                procedure(Sender: TObject; Error: string)
+                begin
+                  if Assigned(CallBacks.OnError) then
+                    Error := CallBacks.OnError(Sender, Error);
+                  Reject(Exception.Create(Error));
+                end;
+            end
+          else
+            begin
+              Result.OnSuccess :=
+                procedure(Sender: TObject; Value: T)
+                begin
+                  Resolve(Value);
+                end;
+
+              Result.OnError := procedure(Sender: TObject; Error: string)
+                begin
+                  Reject(Exception.Create(Error));
+                end;
+            end;
+        end);
+    end);
+end;
+
+{ TAsynchronousHelper }
+
+class function TAsynchronousHelper.DefaultBackoff(const CurrentDelayMs,
+  MaxDelayMs: Cardinal): Cardinal;
+var
+  Next: Cardinal;
+begin
+  Next := CurrentDelayMs * 2;
+  if Next > MaxDelayMs then
+    Next := MaxDelayMs;
+  Result := Next;
+end;
+
+class function TAsynchronousHelper.Delay(
+  const Ms: Cardinal): TPromise<Boolean>;
+begin
+  Result := TPromise<Boolean>.Create(
+    procedure(Resolve: TProc<Boolean>; Reject: TProc<Exception>)
+    begin
+      TTask.Run(
+        procedure
+        begin
+          try
+            TThread.Sleep(Ms);
+            TThread.Queue(nil, procedure
+              begin
+                Resolve(True);
+              end);
+          except
+            on E: Exception do
+              TThread.Queue(nil, procedure
+                begin
+                  Reject(E);
+                end);
+          end;
+        end);
+    end);
+end;
+
+class function TAsynchronousHelper.PollUntil<TSnap, TResult>(
+  const GetSnapshot: TFunc<TPromise<TSnap>>;
+  const IsDone: TFunc<TSnap, Boolean>; const Extract: TFunc<TSnap, TResult>;
+  const FirstDelayMs: Cardinal; const MaxTries: Integer;
+  const DelayPolicy: TDelayPolicy): TPromise<TResult>;
+begin
+  Result := TPromise<TResult>.Create(
+    procedure(Resolve: TProc<TResult>; Reject: TProc<Exception>)
+    var
+      Step: TProc<Cardinal, Integer, Integer>;
+      ReleaseState: TProc;
+
+      GetSnapshotFn: TFunc<TPromise<TSnap>>;
+      IsDoneFn: TFunc<TSnap, Boolean>;
+      ExtractFn: TFunc<TSnap, TResult>;
+      NextDelayFn: TDelayPolicy;
+
+      Complete: TProc<TResult>;
+      Fail: TProc<Exception>;
+    begin
+      GetSnapshotFn := GetSnapshot;
+      IsDoneFn := IsDone;
+      ExtractFn := Extract;
+      NextDelayFn := DelayPolicy;
+
+      Complete := Resolve;
+      Fail := Reject;
+
+      ReleaseState :=
+        procedure
+        begin
+          Step := nil;
+          ReleaseState := nil;
+
+          GetSnapshotFn := nil;
+          IsDoneFn := nil;
+          ExtractFn := nil;
+          NextDelayFn := nil;
+
+          Complete := nil;
+          Fail := nil;
+        end;
+
+      Step :=
+        procedure(DelayMs: Cardinal; TriesLeft: Integer; Attempt: Integer)
+        begin
+          GetSnapshotFn()
+            .&Then(
+              procedure(Snap: TSnap)
+              var
+                NextDelay: Cardinal;
+                Value: TResult;
+                CompleteNow: TProc<TResult>;
+                FailNow: TProc<Exception>;
+              begin
+                if IsDoneFn(Snap) then
+                  begin
+                    Value := ExtractFn(Snap);
+
+                    CompleteNow := Complete;
+                    ReleaseState;
+                    CompleteNow(Value);
+                    Exit;
+                  end;
+
+                if TriesLeft <= 0 then
+                  begin
+                    FailNow := Fail;
+                    ReleaseState;
+                    FailNow(Exception.Create('Timeout: operation not completed'));
+                    Exit;
+                  end;
+
+                NextDelay := NextDelayFn(Attempt, DelayMs);
+
+                Delay(DelayMs)
+                  .&Then(
+                    procedure
+                    begin
+                      if Assigned(Step) then
+                        Step(NextDelay, TriesLeft - 1, Attempt + 1);
+                    end)
+                  .&Catch(
+                    procedure(E: Exception)
+                    var
+                      FailNow: TProc<Exception>;
+                    begin
+                      FailNow := Fail;
+                      ReleaseState;
+                      FailNow(E);
+                    end);
+              end)
+            .&Catch(
+              procedure(E: Exception)
+              var
+                FailNow: TProc<Exception>;
+              begin
+                FailNow := Fail;
+                ReleaseState;
+                FailNow(E);
+              end);
+        end;
+
+      Step(FirstDelayMs, MaxTries, 1);
+    end);
 end;
 
 end.

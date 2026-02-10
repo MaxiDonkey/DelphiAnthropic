@@ -11,100 +11,269 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Net.URLClient,
-  Anthropic.API, Anthropic.Chat, Anthropic.Batches, Anthropic.Models,
-  Anthropic.Batches.Support, Anthropic.Functions.Core, Anthropic.Schema;
+  Anthropic.API, Anthropic.API.Params, Anthropic.HttpClientInterface, Anthropic.Chat,
+  Anthropic.Batches, Anthropic.Models, Anthropic.Batches.Support, Anthropic.Functions.Core,
+  Anthropic.Schema, Anthropic.Chat.Responses, Anthropic.Chat.Request, Anthropic.Chat.StreamEvents,
+  Anthropic.Monitoring, Anthropic.Net.MediaCodec, Anthropic.Chat.StreamEngine,
+  Anthropic.Chat.StreamCallbacks, Anthropic.Chat.Beta, Anthropic.API.JsonSafeReader,
+  Anthropic.Files, Anthropic.Skills, Anthropic.JSONL;
+
+const
+  VERSION = '1.2.0';
 
 type
   /// <summary>
-  /// The <c>IAnthropic</c> interface provides access to the various features and routes of the Anthropic AI API.
-  /// This interface allows interaction with different services such as agents, chat, code completion,
-  /// embeddings, file management, fine-tuning, and model information.
+  /// Defines the primary interface for interacting with the Anthropic API.
   /// </summary>
   /// <remarks>
-  /// This interface should be implemented by any class that wants to provide a structured way of accessing
-  /// the Anthropic AI services. It includes methods and properties for authenticating with an API key,
-  /// configuring the base URL, and accessing different API routes.
-  ///
-  /// To use this interface, instantiate a class that implements it, set the required properties such as
-  /// <see cref="Token"/> and <see cref="BaseURL"/>, and call the relevant methods for the desired operations.
-  /// <code>
-  ///   var Anthropic: IAnthropic := TAnthropic.Create(API_TOKEN);
-  /// </code>
-  /// <seealso cref="TAnthropic"/>
+  /// <para>
+  /// • <c>IAnthropic</c> represents the main entry point of the client library and provides structured
+  /// access to all supported Anthropic API domains.
+  /// </para>
+  /// <para>
+  /// • It exposes route-specific properties (such as <c>Chat</c>, <c>Models</c>, <c>Files</c>,
+  /// <c>Batch</c>, <c>Skills</c>, etc.) that encapsulate related operations behind cohesive route
+  /// abstractions.
+  /// </para>
+  /// <para>
+  /// • Each route property is typically lazily instantiated and shares the same underlying
+  /// <c>TAnthropicAPI</c> configuration, including authentication credentials and base URL.
+  /// </para>
+  /// <para>
+  /// • This interface is designed to be consumed as a long-lived service object, promoting clear
+  /// separation of concerns, testability, and consistent API usage patterns.
+  /// </para>
   /// </remarks>
   IAnthropic = interface
     ['{7E69221E-3C24-4B38-9AE9-894714CA9A47}']
     function GetAPI: TAnthropicAPI;
+    function GetHttpClient: IHttpClientAPI;
     procedure SetToken(const Value: string);
     function GetToken: string;
     function GetBaseUrl: string;
     procedure SetBaseUrl(const Value: string);
     function GetChatRoute: TChatRoute;
-    function GetBatcheRoute: TBatcheRoute;
+    function GetBatchRoute: TBatchRoute;
+    function GetFilesRoute: TFilesRoute;
     function GetModelsRoute : TModelsRoute;
+    function GetSkillsRoute : TSkillsRoute;
 
     /// <summary>
-    /// Provides access to the chat completion API.
+    /// Provides access to the chat API.
     /// </summary>
-    /// <returns>
-    /// An instance of TChatRoute for chat-related operations.
-    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TChatRoute</c> entry point for chat operations such as message
+    /// creation, streaming message creation, and token counting.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access chat-related operations through a single, centralized client
+    /// instance.
+    /// </para>
+    /// </remarks>
     property Chat: TChatRoute read GetChatRoute;
+
     /// <summary>
     /// Provides access to the batches API.
     /// </summary>
-    /// <returns>
-    /// An instance of TChatRoute for batches-related operations.
-    /// </returns>
-    property Batche: TBatcheRoute read GetBatcheRoute;
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TBatchRoute</c> entry point for message batch operations such as
+    /// create, retrieve, list, cancel, and delete.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access batch-related operations through a single, centralized client
+    /// instance.
+    /// </para>
+    /// </remarks>
+    property Batch: TBatchRoute read GetBatchRoute;
+
+    /// <summary>
+    /// Provides access to the files API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TFilesRoute</c> entry point for file operations such as upload,
+    /// retrieve, list, and delete.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access file-related operations through a single, centralized client
+    /// instance.
+    /// </para>
+    /// </remarks>
+    property Files: TFilesRoute read GetFilesRoute;
+
     /// <summary>
     /// Provides access to the models API.
     /// </summary>
-    /// <returns>
-    /// An instance of TModelsRoute for models-related operations.
-    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TModelsRoute</c> entry point for model operations such as listing
+    /// available models and retrieving model metadata by identifier or alias.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access model-related operations through a single, centralized client
+    /// instance.
+    /// </para>
+    /// </remarks>
     property Models: TModelsRoute read GetModelsRoute;
-    /// <summary>
-    /// the main API object used for making requests.
-    /// </summary>
-    /// <returns>
-    /// An instance of TAnthropicAPI for making API calls.
-    /// </returns>
-    property API: TAnthropicAPI read GetAPI;
-    /// Sets or retrieves the API token for authentication.
-    /// </summary>
-    /// <param name="Value">
-    /// The API token as a string.
-    /// </param>
-    /// <returns>
-    /// The current API token.
-    /// </returns>
-    property Token: string read GetToken write SetToken;
-    /// <summary>
-    /// Sets or retrieves the base URL for API requests.
-    /// Default is https://api.anthropic.com/v1
-    /// </summary>
-    /// <param name="Value">
-    /// The base URL as a string.
-    /// </param>
-    /// <returns>
-    /// The current base URL.
-    /// </returns>
-    property BaseURL: string read GetBaseUrl write SetBaseUrl;
 
+    /// <summary>
+    /// Provides access to the skills API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TSkillsRoute</c> entry point for skill management operations such as
+    /// create, retrieve, list, and delete.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access skill-related operations through a single, centralized client
+    /// instance.
+    /// </para>
+    /// </remarks>
+    property Skills: TSkillsRoute read GetSkillsRoute;
+
+    /// <summary>
+    /// Provides access to the underlying API client used to issue requests.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
+    /// objects.
+    /// </para>
+    /// <para>
+    /// • It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
+    /// deserialization, and header construction) when route-level abstractions are not sufficient.
+    /// </para>
+    /// <para>
+    /// • The returned instance reflects the current configuration (token, base URL, headers, and HTTP
+    /// transport template) and is intended to be long-lived.
+    /// </para>
+    /// <para>
+    /// • Use this property for advanced scenarios such as custom routing, diagnostics, or integration
+    /// with auxiliary infrastructure that requires the raw API client.
+    /// </para>
+    /// </remarks>
+    property API: TAnthropicAPI read GetAPI;
+
+    /// <summary>
+    /// Provides access to the underlying HTTP client implementation used by the API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
+    /// requests.
+    /// </para>
+    /// <para>
+    /// • It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
+    /// </para>
+    /// <para>
+    /// • Use this property when you need to customize transport behavior or integrate monitoring,
+    /// middleware, or client-specific options.
+    /// </para>
+    /// <para>
+    /// • The returned reference is shared across all routes and remains valid for the lifetime of the
+    /// owning Anthropic client instance.
+    /// </para>
+    /// </remarks>
+    property HttpClient: IHttpClientAPI read GetHttpClient;
+
+    /// <summary>
+    /// Sets or retrieves the API token used for authentication.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property holds the API key sent with each request to authenticate against the Anthropic API.
+    /// </para>
+    /// <para>
+    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// </para>
+    /// <para>
+    /// • The token must be a non-empty string; otherwise request execution will fail during validation.
+    /// </para>
+    /// <para>
+    /// • Use this property to rotate credentials or defer token assignment until after client creation.
+    /// </para>
+    /// </remarks>
+    property Token: string read GetToken write SetToken;
+
+    /// <summary>
+    /// Sets or retrieves the base URL used for all API requests.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property defines the root endpoint used to construct request URLs for all API calls.
+    /// </para>
+    /// <para>
+    /// • The default value is <c>https://api.anthropic.com/v1</c>.
+    /// </para>
+    /// <para>
+    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// </para>
+    /// <para>
+    /// • Use this property to target alternative endpoints, such as proxies, gateways, or test
+    /// environments.
+    /// </para>
+    /// </remarks>
+    property BaseURL: string read GetBaseUrl write SetBaseUrl;
   end;
 
   /// <summary>
-  /// The <c>TAnthropicFactory</c> class is responsible for creating instances of
-  /// the <see cref="IAnthropic"/> interface. It provides a factory method to instantiate
-  /// the interface with a provided API token and optional header configuration.
+  /// Factory class responsible for creating and configuring Anthropic client instances.
   /// </summary>
   /// <remarks>
-  /// This class provides a convenient way to initialize the <see cref="IAnthropic"/> interface
-  /// by encapsulating the necessary configuration details, such as the API token and header options.
-  /// By using the factory method, users can quickly create instances of <see cref="IAnthropic"/> without
-  /// manually setting up the implementation details.
-  /// </remarks>
+  /// <para>
+  /// • <c>TAnthropicFactory</c> centralizes the instantiation logic for Anthropic clients, ensuring
+  /// consistent configuration and initialization across the application.
+  /// </para>
+  /// <para>
+  /// • It typically encapsulates concerns such as API key injection, base URL selection, HTTP
+  /// client configuration, and default headers.
+  /// </para>
+  /// <para>
+  /// • The factory may expose one or more creation methods that return an <c>IAnthropic</c>
+  /// interface, allowing consumers to remain decoupled from concrete implementation classes.
+  /// </para>
+  /// <para>
+  /// • Use this class to obtain fully initialized Anthropic client instances instead of creating
+  /// them directly, promoting consistency, testability, and easier future evolution of the
+  /// client construction process.
+  /// </para>
   TAnthropicFactory = class
     /// <summary>
     /// Creates an instance of the <see cref="IAnthropic"/> interface with the specified API token
@@ -120,129 +289,168 @@ type
     /// <returns>
     /// An instance of <see cref="IAnthropic"/> initialized with the provided API token and header option.
     /// </returns>
-    class function CreateInstance(const AToken: string;
-      const Option: Integer = 0): IAnthropic;
-    /// <summary>
-    /// Creates an instance of the <see cref="IAnthropic"/> interface with the specified API token
-    /// with header managing caching configuration.
-    /// </summary>
-    /// <param name="AToken">
-    /// The API token as a string, required for authenticating with Anthropic API services.
-    /// </param>
-    /// <returns>
-    /// An instance of <see cref="IAnthropic"/> initialized with the provided API token and header option.
-    /// </returns>
-    class function CreateCachingInstance(const AToken: string): IAnthropic;
-    /// <summary>
-    /// Creates an instance of the <see cref="IAnthropic"/> interface with the specified API token
-    /// with header managing batch configuration.
-    /// </summary>
-    /// <param name="AToken">
-    /// The API token as a string, required for authenticating with Anthropic API services.
-    /// </param>
-    /// <returns>
-    /// An instance of <see cref="IAnthropic"/> initialized with the provided API token and header option.
-    /// </returns>
-    class function CreateBatchingInstance(const AToken: string): IAnthropic;
+    class function CreateInstance(const AToken: string): IAnthropic;
+  end;
+
+  TLazyRouteFactory = class(TInterfacedObject)
+  protected
+    FChatLock: TObject;
+    FBatchLock: TObject;
+    FFilesLock: TObject;
+    FModelsLock: TObject;
+    FSkillsLock: TObject;
+
+    function Lazy<T: class>(var AField: T; const ALock: TObject;
+      const AFactory: TFunc<T>): T; inline;
+
+  public
+    constructor Create;
+    destructor Destroy; override;
   end;
 
   /// <summary>
-  /// The TAnthropic class provides access to the various features and routes of the Anthropic AI API.
-  /// This class allows interaction with different services such as agents, chat, code completion,
-  /// embeddings, file management, fine-tuning, and model information.
+  /// Concrete implementation of the Anthropic client, providing access to all API routes.
   /// </summary>
   /// <remarks>
-  /// This class should be implemented by any class that wants to provide a structured way of accessing
-  /// the Anthropic AI services. It includes methods and properties for authenticating with an API key,
-  /// configuring the base URL, and accessing different API routes.
-  /// <seealso cref="TAnthropic"/>
+  /// <para>
+  /// • <c>TAnthropic</c> is the main entry point for interacting with the Anthropic API.
+  /// </para>
+  /// <para>
+  /// • It implements the <c>IAnthropic</c> interface, ensuring a stable and decoupled public
+  /// contract for consumers.
+  /// </para>
+  /// <para>
+  /// • By inheriting from <c>TLazyRouteFactory</c>, this class lazily instantiates route objects
+  /// (such as <c>Chat</c>, <c>Models</c>, <c>Batches</c>, <c>Skills</c>, etc.) only when they are first
+  /// accessed, minimizing overhead and improving startup performance.
+  /// </para>
+  /// <para>
+  /// • Each route instance returned by this class shares the same underlying configuration
+  /// (API key, base URL, HTTP client, middleware), guaranteeing consistent behavior across all
+  /// API calls.
+  /// </para>
+  /// <para>
+  /// • Typical usage involves creating an instance via <c>TAnthropicFactory</c> and then accessing
+  /// the desired route through the corresponding property exposed by <c>IAnthropic</c>.
+  /// </para>
   /// </remarks>
-  TAnthropic = class(TInterfacedObject, IAnthropic)
-  strict private
-
+  TAnthropic = class(TLazyRouteFactory, IAnthropic)
   private
     FAPI: TAnthropicAPI;
 
     FChatRoute: TChatRoute;
-    FBatcheRoute: TBatcheRoute;
+    FBatchRoute: TBatchRoute;
+    FFilesRoute: TFilesRoute;
     FModelsRoute: TModelsRoute;
+    FSkillsRoute: TSkillsRoute;
 
     function GetAPI: TAnthropicAPI;
     function GetToken: string;
     procedure SetToken(const Value: string);
     function GetBaseUrl: string;
     procedure SetBaseUrl(const Value: string);
+    function GetHttpClient: IHttpClientAPI;
 
     function GetChatRoute: TChatRoute;
-    function GetBatcheRoute: TBatcheRoute;
+    function GetBatchRoute: TBatchRoute;
+    function GetFilesRoute: TFilesRoute;
     function GetModelsRoute : TModelsRoute;
+    function GetSkillsRoute : TSkillsRoute;
 
   public
     /// <summary>
-    /// Provides access to the chat completion API.
+    /// Provides access to the underlying API client used to issue requests.
     /// </summary>
-    /// <returns>
-    /// An instance of TChatRoute for chat-related operations.
-    /// </returns>
-    property Chat: TChatRoute read GetChatRoute;
-    /// <summary>
-    /// Provides access to the batches API.
-    /// </summary>
-    /// <returns>
-    /// An instance of TChatRoute for batches-related operations.
-    /// </returns>
-    property Batche: TBatcheRoute read GetBatcheRoute;
-    /// <summary>
-    /// Provides access to the models API.
-    /// </summary>
-    /// <returns>
-    /// An instance of TModelsRoute for models-related operations.
-    /// </returns>
-    property Models: TModelsRoute read GetModelsRoute;
-
-  public
-    /// <summary>
-    /// the main API object used for making requests.
-    /// </summary>
-    /// <returns>
-    /// An instance of TAnthropicAPI for making API calls.
-    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
+    /// objects.
+    /// </para>
+    /// <para>
+    /// • It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
+    /// deserialization, and header construction) when route-level abstractions are not sufficient.
+    /// </para>
+    /// <para>
+    /// • The returned instance reflects the current configuration (token, base URL, headers, and HTTP
+    /// transport template) and is intended to be long-lived.
+    /// </para>
+    /// <para>
+    /// • Use this property for advanced scenarios such as custom routing, diagnostics, or integration
+    /// with auxiliary infrastructure that requires the raw API client.
+    /// </para>
+    /// </remarks>
     property API: TAnthropicAPI read GetAPI;
+
     /// <summary>
-    /// Sets or retrieves the API token for authentication.
+    /// Provides access to the underlying HTTP client implementation used by the API.
     /// </summary>
-    /// <param name="Value">
-    /// The API token as a string.
-    /// </param>
-    /// <returns>
-    /// The current API token.
-    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
+    /// requests.
+    /// </para>
+    /// <para>
+    /// • It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
+    /// </para>
+    /// <para>
+    /// • Use this property when you need to customize transport behavior or integrate monitoring,
+    /// middleware, or client-specific options.
+    /// </para>
+    /// <para>
+    /// • The returned reference is shared across all routes and remains valid for the lifetime of the
+    /// owning Anthropic client instance.
+    /// </para>
+    /// </remarks>
+    property HttpClient: IHttpClientAPI read GetHttpClient;
+
+    /// <summary>
+    /// Sets or retrieves the API token used for authentication.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property holds the API key sent with each request to authenticate against the Anthropic API.
+    /// </para>
+    /// <para>
+    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// </para>
+    /// <para>
+    /// • The token must be a non-empty string; otherwise request execution will fail during validation.
+    /// </para>
+    /// <para>
+    /// • Use this property to rotate credentials or defer token assignment until after client creation.
+    /// </para>
+    /// </remarks>
     property Token: string read GetToken write SetToken;
+
     /// <summary>
-    /// Sets or retrieves the base URL for API requests.
-    /// Default is https://api.anthropic.com/v1.
+    /// Sets or retrieves the base URL used for all API requests.
     /// </summary>
-    /// <param name="Value">
-    /// The base URL as a string.
-    /// </param>
-    /// <returns>
-    /// The current base URL.
-    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// • This property defines the root endpoint used to construct request URLs for all API calls.
+    /// </para>
+    /// <para>
+    /// • The default value is <c>https://api.anthropic.com/v1</c>.
+    /// </para>
+    /// <para>
+    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// </para>
+    /// <para>
+    /// • Use this property to target alternative endpoints, such as proxies, gateways, or test
+    /// environments.
+    /// </para>
+    /// </remarks>
     property BaseURL: string read GetBaseUrl write SetBaseUrl;
 
-  public
     /// <summary>
     /// Initializes a new instance of the <see cref="TAnthropic"/> class with optional header configuration.
     /// </summary>
-    /// <param name="Option">
-    /// An optional parameter of type <see cref="THeaderOption"/> to configure the request headers.
-    /// The default value is <c>THeaderOption.none</c>.
-    /// </param>
     /// <remarks>
     /// This constructor is typically used when no API token is provided initially.
     /// The token can be set later via the <see cref="Token"/> property.
     /// </remarks>
-    constructor Create(const Option: Integer = 0); overload;
+    constructor Create; overload;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TAnthropic"/> class with the provided API token and optional header configuration.
     /// </summary>
@@ -256,7 +464,8 @@ type
     /// <remarks>
     /// This constructor allows the user to specify an API token at the time of initialization.
     /// </remarks>
-    constructor Create(const AToken: string; const Option: Integer = 0); overload;
+    constructor Create(const AToken: string); overload;
+
     /// <summary>
     /// Releases all resources used by the current instance of the <see cref="TAnthropic"/> class.
     /// </summary>
@@ -267,552 +476,392 @@ type
     destructor Destroy; override;
   end;
 
-{$REGION 'Anthropic.Chat'}
+{$REGION 'Anthropic.API'}
 
-  /// <summary>
-  /// Represents an image source in the content payload.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to construct image-related content in a chat message, including
-  /// its type, media type, and data. The data can be encoded in Base64 format for secure
-  /// transmission or direct use, depending on the context.
-  /// </remarks>
-  TContentImageSource = Anthropic.Chat.TContentImageSource;
+  TAnthropicSettings = Anthropic.API.TAnthropicSettings;
+  TApiHttpHandler = Anthropic.API.TApiHttpHandler;
+  TApiDeserializer = Anthropic.API.TApiDeserializer;
+  TAnthropicAPI = Anthropic.API.TAnthropicAPI;
+  TAnthropicAPIRoute = Anthropic.API.TAnthropicAPIRoute;
 
-  /// <summary>
-  /// Represents the content of a chat message.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to construct the content of a chat message, which can include
-  /// text or image elements. It allows defining the type of content, the actual text or image
-  /// data, and optional caching control for optimized performance.
-  /// </remarks>
-  TChatMessageContent = Anthropic.Chat.TChatMessageContent;
+{$ENDREGION}
 
-  /// <summary>
-  /// Represents the payload for a chat message in a conversational context.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TChatMessagePayload</c> class provides the structure for defining and managing chat messages.
-  /// It allows specifying the role of the sender (e.g., user, assistant) and the content of the message.
-  /// The class supports multiple formats for message content, including text, images, and documents, and provides
-  /// convenient methods for creating instances with predefined roles and content types.
-  /// </remarks>
-  TChatMessagePayload = Anthropic.Chat.TChatMessagePayload;
+{$REGION 'Anthropic.API.Params'}
 
-  /// <summary>
-  /// Represents the payload for a chat message in a conversational context.
-  /// </summary>
-  /// <remarks>
-  /// The <c>Payload</c> class provides the structure for defining and managing chat messages.
-  /// It allows specifying the role of the sender (e.g., user, assistant) and the content of the message.
-  /// The class supports multiple formats for message content, including text, images, and documents, and provides
-  /// convenient methods for creating instances with predefined roles and content types.
-  /// </remarks>
-  Payload = Anthropic.Chat.Payload;
+  TUrlParam = Anthropic.API.Params.TUrlParam;
+  TJSONFingerprint = Anthropic.API.Params.TJSONFingerprint;
+  TOptionalContent = Anthropic.API.Params.TOptionalContent;
+  TJSONParam = Anthropic.API.Params.TJSONParam;
 
-  /// <summary>
-  /// The <c>TSystemPayload</c> record represents the system message payload
-  /// This type is used to indicate behavior rules, response format patterns, or general information about the current context.
-  /// </summary>
-  /// <remarks>
-  /// <para>
-  /// - The <c>TSystemPayload</c> record is essential for managing conversations in a chat application, allowing to customize the response that will be built by the LLM.
-  /// </para>
-  /// <para>
-  /// - This record provides several helper methods to create messages with predefined roles for easier management of system prompts.
-  /// </para>
-  /// <para>
-  /// - It notably manages server-side caching.
-  /// </para>
-  /// <para>
-  /// - In a system prompt there can be only two <c>TSystemPayload</c> records at most. The second <c>TSystemPayload</c> will be automatically marked to use caching.
-  /// </para>
-  /// </remarks>
-  TSystemPayload = Anthropic.Chat.TSystemPayload;
 
-  /// <summary>
-  /// The <c>TChatParams</c> class represents the set of parameters used to configure a chat interaction with an AI model.
-  /// </summary>
-  /// <remarks>
-  /// This class allows you to define various settings that control how the model behaves, including which model to use, how many tokens to generate,
-  /// what kind of messages to send, and how the model should handle its output. By using this class, you can fine-tune the AI's behavior and response format
-  /// based on your application's specific needs.
-  /// <para>
-  /// It inherits from <c>TJSONParam</c>, which provides methods for handling and serializing the parameters as JSON, allowing seamless integration
-  /// with JSON-based APIs.
-  /// </para>
-  /// <code>
-  /// var
-  ///   Params: TChatParams;
-  /// begin
-  ///   Params := TChatParams.Create
-  ///     .Model('my_model')
-  ///     .MaxTokens(100)
-  ///     .Messages([TChatMessagePayload1.User('Hello!')])
-  ///     .Temperature(0.7)
-  ///     .TopP(1)
-  /// end;
-  /// </code>
-  /// This example shows how to instantiate and configure a <c>TChatParams</c> object for interacting with an AI model.
-  /// </remarks>
-  TChatParams = Anthropic.Chat.TChatParams;
+{$ENDREGION}
 
-  /// <summary>
-  /// Represents the token usage statistics for a chat interaction, including the number of tokens
-  /// used in the prompt, the completion, and the total number of tokens consumed.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TChatUsage</c> class provides insight into the number of tokens used during a chat interaction.
-  /// This information is critical for understanding the cost of a request when using token-based billing systems
-  /// or for monitoring the model's behavior in terms of input (prompt) and output (completion) size.
-  /// </remarks>
-  TChatUsage = Anthropic.Chat.TChatUsage;
+{$REGION 'Anthropic.API.JsonSafeReader'}
 
-  /// <summary>
-  /// The response content made by a tool.
-  /// </summary>
-  TToolUse = Anthropic.Chat.TToolUse;
+  TJsonReader = Anthropic.API.JsonSafeReader.TJsonReader;
 
-  /// <summary>
-  /// The response content made by the LLM.
-  /// </summary>
-  /// <remarks>
-  /// This class inherits from the <c>TToolUse</c> class because if a tool has been called, then the arguments obtained must be provided, otherwise it gives access to the textual content of a simple response.
-  /// </remarks>
-  TChatContent = Anthropic.Chat.TChatContent;
+{$ENDREGION}
 
-  /// <summary>
-  /// Represents a data structure used for managing streaming chunks in a conversational system.
-  /// </summary>
-  /// <remarks>
-  /// This class is primarily designed to handle the incremental data (chunks) returned by an LLM (Large Language Model) during streaming responses.
-  /// It stores the type of chunk, textual content, and relevant metadata such as an identifier and tool name if applicable.
-  /// The 'Input' property can contain partial JSON data, which should be parsed to construct the final response.
-  /// </remarks>
-  TChatDelta = Anthropic.Chat.TChatDelta;
+{$REGION 'Anthropic.Chat.Beta'}
+  TTextCitation = Anthropic.Chat.Beta.TTextCitation;
+  TCitationConfig = Anthropic.Chat.Beta.TCitationConfig;
+  TToolResultErrorCode = Anthropic.Chat.Beta.TToolResultErrorCode;
+  TToolResultErrorCodeMessage = Anthropic.Chat.Beta.TToolResultErrorCodeMessage;
+  TWebSearchToolResultBlockContent = Anthropic.Chat.Beta.TWebSearchToolResultBlockContent;
+  TWebSearchToolResultBlock = Anthropic.Chat.Beta.TWebSearchToolResultBlock;
+  TDocumentSource = Anthropic.Chat.Beta.TDocumentSource;
+  TDocumentBlock = Anthropic.Chat.Beta.TDocumentBlock;
+  TWebFetchToolResultBlockContent = Anthropic.Chat.Beta.TWebFetchToolResultBlockContent;
+  TWebFetchToolResultBlock = Anthropic.Chat.Beta.TWebFetchToolResultBlock;
+  TCodeExecutionOutputBlock = Anthropic.Chat.Beta.TCodeExecutionOutputBlock;
+  TCodeExecutionToolResultBlockContent = Anthropic.Chat.Beta.TCodeExecutionToolResultBlockContent;
+  TCodeExecutionToolResultBlock = Anthropic.Chat.Beta.TCodeExecutionToolResultBlock;
+  TBashCodeExecutionResultBlock = Anthropic.Chat.Beta.TBashCodeExecutionResultBlock;
+  TBashCodeExecutionToolResultBlockContent = Anthropic.Chat.Beta.TBashCodeExecutionToolResultBlockContent;
+  TBashCodeExecutionToolResultBlock = Anthropic.Chat.Beta.TBashCodeExecutionToolResultBlock;
+  TTextEditorCodeExecutionToolResultBlockContent = Anthropic.Chat.Beta.TTextEditorCodeExecutionToolResultBlockContent;
+  TTextEditorCodeExecutionToolResultBlock = Anthropic.Chat.Beta.TTextEditorCodeExecutionToolResultBlock;
+  TToolReferenceBlock = Anthropic.Chat.Beta.TToolReferenceBlock;
+  TToolSearchToolResultBlockContent = Anthropic.Chat.Beta.TToolSearchToolResultBlockContent;
+  TToolSearchToolResultBlock = Anthropic.Chat.Beta.TToolSearchToolResultBlock;
+  TMCPToolResultBlockContent = Anthropic.Chat.Beta.TMCPToolResultBlockContent;
+  TMCPToolResultBlock = Anthropic.Chat.Beta.TMCPToolResultBlock;
+  TToolContent = Anthropic.Chat.Beta.TToolContent;
 
-  /// <summary>
-  /// Represents a chat completion response generated by an AI model, containing the necessary metadata,
-  /// the generated choices, and usage statistics.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TChat</c> class encapsulates the results of a chat request made to an AI model.
-  /// It contains details such as a unique identifier, the model used, when the completion was created,
-  /// the choices generated by the model, and token usage statistics.
-  /// This class is crucial for managing the results of AI-driven conversations and understanding the
-  /// underlying usage and response characteristics of the AI.
-  /// </remarks>
-  TChat = Anthropic.Chat.TChat;
+{$ENDREGION}
 
-  /// <summary>
-  /// Count the number of tokens in a Message.
-  /// The Token Count API can be used to count the number of tokens in a Message, including tools,
-  /// images, and documents, without creating it.
-  /// </summary>
-  TTokenCount = Anthropic.Chat.TTokenCount;
+{$REGION 'Anthropic.Chat.Responses'}
 
-  /// <summary>
-  /// Manages asynchronous chat callBacks for a chat request using <c>TTokenCount</c> as the response type.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TAsynTokenCount</c> type extends the <c>TAsynParams&lt;TTokenCount&gt;</c> record to handle the lifecycle of an asynchronous chat operation.
-  /// It provides event handlers that trigger at various stages, such as when the operation starts, completes successfully, or encounters an error.
-  /// This structure facilitates non-blocking chat operations and is specifically tailored for scenarios where multiple choices from a chat model are required.
-  /// </remarks>
-  TAsynTokenCount = Anthropic.Chat.TAsynTokenCount;
+  TContentBlockContent = Anthropic.Chat.Responses.TContentBlockContent;
+  TContentBlock = Anthropic.Chat.Responses.TContentBlock;
+  TCacheCreation = Anthropic.Chat.Responses.TCacheCreation;
+  TServerToolUsage = Anthropic.Chat.Responses.TServerToolUsage;
+  TUsage = Anthropic.Chat.Responses.TUsage;
+  TMessage = Anthropic.Chat.Responses.TMessage;
 
-  /// <summary>
-  /// Manages asynchronous chat callBacks for a chat request using <c>TChat</c> as the response type.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TAsynChat</c> type extends the <c>TAsynParams&lt;TChat&gt;</c> record to handle the lifecycle of an asynchronous chat operation.
-  /// It provides event handlers that trigger at various stages, such as when the operation starts, completes successfully, or encounters an error.
-  /// This structure facilitates non-blocking chat operations and is specifically tailored for scenarios where multiple choices from a chat model are required.
-  /// </remarks>
-  TAsynChat = Anthropic.Chat.TAsynChat;
+  TChat = Anthropic.Chat.Responses.TChat;
+  TAsynChat = Anthropic.Chat.Responses.TAsynChat;
+  TPromiseChat = Anthropic.Chat.Responses.TPromiseChat;
 
-  /// <summary>
-  /// Manages asynchronous streaming chat callBacks for a chat request using <c>TChat</c> as the response type.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TAsynChatStream</c> type extends the <c>TAsynStreamParams&lt;TChat&gt;</c> record to support the lifecycle of an asynchronous streaming chat operation.
-  /// It provides callbacks for different stages, including when the operation starts, progresses with new data chunks, completes successfully, or encounters an error.
-  /// This structure is ideal for handling scenarios where the chat response is streamed incrementally, providing real-time updates to the user interface.
-  /// </remarks>
-  TAsynChatStream = Anthropic.Chat.TAsynChatStream;
+  TTokensCountContextManagement = Anthropic.Chat.Responses.TTokensCountContextManagement;
+  TTokenCount = Anthropic.Chat.Responses.TTokenCount;
+  TAsynTokenCount = Anthropic.Chat.Responses.TAsynTokenCount;
+  TPromiseTokenCount = Anthropic.Chat.Responses.TPromiseTokenCount;
 
-  /// <summary>
-  /// Represents a callback procedure used during the reception of responses from a chat request in streaming mode.
-  /// </summary>
-  /// <param name="Chat">
-  /// The <c>TChat</c> object containing the current information about the response generated by the model.
-  /// If this value is <c>nil</c>, it indicates that the data stream is complete.
-  /// </param>
-  /// <param name="IsDone">
-  /// A boolean flag indicating whether the streaming process is complete.
-  /// If <c>True</c>, it means the model has finished sending all response data.
-  /// </param>
-  /// <param name="Cancel">
-  /// A boolean flag that can be set to <c>True</c> within the callback to cancel the streaming process.
-  /// If set to <c>True</c>, the streaming will be terminated immediately.
-  /// </param>
-  /// <remarks>
-  /// This callback is invoked multiple times during the reception of the response data from the model.
-  /// It allows for real-time processing of received messages and interaction with the user interface or other systems
-  /// based on the state of the data stream.
-  /// When the <c>IsDone</c> parameter is <c>True</c>, it indicates that the model has finished responding,
-  /// and the <c>Chat</c> parameter will be <c>nil</c>.
-  /// </remarks>
-  TChatEvent = Anthropic.Chat.TChatEvent;
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.StreamEvents'}
+
+  TErrorMessage = Anthropic.Chat.StreamEvents.TErrorMessage;
+  TRawErrorEvent = Anthropic.Chat.StreamEvents.TRawErrorEvent;
+  TRawMessageStartEvent = Anthropic.Chat.StreamEvents.TRawMessageStartEvent;
+  TRawContentBlockStartEvent = Anthropic.Chat.StreamEvents.TRawContentBlockStartEvent;
+  TRawContentBlockDelta = Anthropic.Chat.StreamEvents.TRawContentBlockDelta;
+  TRawContentBlockDeltaEvent = Anthropic.Chat.StreamEvents.TRawContentBlockDeltaEvent;
+  TRawContentBlockStopEvent = Anthropic.Chat.StreamEvents.TRawContentBlockStopEvent;
+  TDelta = Anthropic.Chat.StreamEvents.TDelta;
+  TRawMessageDeltaEvent = Anthropic.Chat.StreamEvents.TRawMessageDeltaEvent;
+  TRawMessageStopEvent = Anthropic.Chat.StreamEvents.TRawMessageStopEvent;
+  TStreamEvent = Anthropic.Chat.StreamEvents.TStreamEvent;
+
+  TChatStream = Anthropic.Chat.StreamEvents.TChatStream;
+  TAsynChatStream = Anthropic.Chat.StreamEvents.TAsynChatStream;
+  TPromiseChatStream = Anthropic.Chat.StreamEvents.TPromiseChatStream;
+  TChatEvent = Anthropic.Chat.StreamEvents.TChatEvent;
+
+  TSessionCallbacks = Anthropic.Chat.StreamEvents.TSessionCallbacks;
+  TSessionCallbacksStream = Anthropic.Chat.StreamEvents.TSessionCallbacksStream;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.StreamEngine'}
+
+  IStreamEventHandler = Anthropic.Chat.StreamEngine.IStreamEventHandler;
+  IEventEngineManager = Anthropic.Chat.StreamEngine.IEventEngineManager;
+  TEventEngineManagerFactory = Anthropic.Chat.StreamEngine.TEventEngineManagerFactory;
+  TEventExecutionEngine = Anthropic.Chat.StreamEngine.TEventExecutionEngine;
+  TEventEngineManager = Anthropic.Chat.StreamEngine.TEventEngineManager;
+  TMessageStart = Anthropic.Chat.StreamEngine.TMessageStart;
+  TMessageDelta = Anthropic.Chat.StreamEngine.TMessageDelta;
+  TMessageStop = Anthropic.Chat.StreamEngine.TMessageStop;
+  TContentStart = Anthropic.Chat.StreamEngine.TContentStart;
+  TContentDelta = Anthropic.Chat.StreamEngine.TContentDelta;
+  TContentStop = Anthropic.Chat.StreamEngine.TContentStop;
+  TErrorEvent = Anthropic.Chat.StreamEngine.TErrorEvent;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.StreamCallbacks'}
+
+  TEventData = Anthropic.Chat.StreamCallbacks.TEventData;
+  TStreamEventCallBack = Anthropic.Chat.StreamCallbacks.TStreamEventCallBack;
+  IStreamEventDispatcher = Anthropic.Chat.StreamCallbacks.IStreamEventDispatcher;
+  TStreamEventDispatcher = Anthropic.Chat.StreamCallbacks.TStreamEventDispatcher;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.Request'}
+
+  TContentBlockParam = Anthropic.Chat.Request.TContentBlockParam;
+  TCacheControlEphemeral = Anthropic.Chat.Request.TCacheControlEphemeral;
+  TTextCitationParam = Anthropic.Chat.Request.TTextCitationParam;
+  TCitationCharLocationParam = Anthropic.Chat.Request.TCitationCharLocationParam;
+  TCitationPageLocationParam = Anthropic.Chat.Request.TCitationPageLocationParam;
+  TCitationContentBlockLocationParam = Anthropic.Chat.Request.TCitationContentBlockLocationParam;
+  TCitationWebSearchResultLocationParam = Anthropic.Chat.Request.TCitationWebSearchResultLocationParam;
+  TCitationSearchResultLocationParam = Anthropic.Chat.Request.TCitationSearchResultLocationParam;
+  TTextBlockParam = Anthropic.Chat.Request.TTextBlockParam;
+
+  TImageSource = Anthropic.Chat.Request.TImageSource;
+  TBase64ImageSource = Anthropic.Chat.Request.TBase64ImageSource;
+  TURLImageSource = Anthropic.Chat.Request.TURLImageSource;
+  TFileImageSource = Anthropic.Chat.Request.TFileImageSource;
+  TImage = Anthropic.Chat.Request.TImage;
+  TImageBlockParam = Anthropic.Chat.Request.TImageBlockParam;
+
+  TDocumentSourceParam = Anthropic.Chat.Request.TDocumentSourceParam;
+  TBase64PDFSource = Anthropic.Chat.Request.TBase64PDFSource;
+  TPlainTextSource = Anthropic.Chat.Request.TPlainTextSource;
+  TContentBlockSourceContent = Anthropic.Chat.Request.TContentBlockSourceContent;
+  TContentBlockSource = Anthropic.Chat.Request.TContentBlockSource;
+  TURLPDFSource = Anthropic.Chat.Request.TURLPDFSource;
+  TFileDocumentSource = Anthropic.Chat.Request.TFileDocumentSource;
+  TCitationsConfigParam = Anthropic.Chat.Request.TCitationsConfigParam;
+  TDocument = Anthropic.Chat.Request.TDocument;
+  TDocumentBlockParam = Anthropic.Chat.Request.TDocumentBlockParam;
+
+  TSearchResultBlockParam = Anthropic.Chat.Request.TSearchResultBlockParam;
+  TThinkingBlockParam = Anthropic.Chat.Request.TThinkingBlockParam;
+  TRedactedThinkingBlockParam = Anthropic.Chat.Request.TRedactedThinkingBlockParam;
+  TToolUseBlockParam = Anthropic.Chat.Request.TToolUseBlockParam;
+  TToolReferenceBlockParam = Anthropic.Chat.Request.TToolReferenceBlockParam;
+  TToolResultBlockParam = Anthropic.Chat.Request.TToolResultBlockParam;
+  TServerToolUseBlockParam = Anthropic.Chat.Request.TServerToolUseBlockParam;
+  TWebSearchToolResultBlockParamContent = Anthropic.Chat.Request.TWebSearchToolResultBlockParamContent;
+  TWebSearchToolResultBlockItem = Anthropic.Chat.Request.TWebSearchToolResultBlockItem;
+  TWebSearchToolRequestError = Anthropic.Chat.Request.TWebSearchToolRequestError;
+  TWebSearchToolResultBlockParam = Anthropic.Chat.Request.TWebSearchToolResultBlockParam;
+  TWebFetchToolResultErrorBlockParam = Anthropic.Chat.Request.TWebFetchToolResultErrorBlockParam;
+  TWebFetchBlockParam = Anthropic.Chat.Request.TWebFetchBlockParam;
+  TWebFetchToolResultBlockParam = Anthropic.Chat.Request.TWebFetchToolResultBlockParam;
+  TCodeExecutionToolResultErrorParam = Anthropic.Chat.Request.TCodeExecutionToolResultErrorParam;
+  TCodeExecutionOutputBlockParam = Anthropic.Chat.Request.TCodeExecutionOutputBlockParam;
+  TCodeExecutionResultBlockParam = Anthropic.Chat.Request.TCodeExecutionResultBlockParam;
+  TCodeExecutionToolResultBlockParam = Anthropic.Chat.Request.TCodeExecutionToolResultBlockParam;
+  TBashCodeExecutionToolResultErrorPara = Anthropic.Chat.Request.TBashCodeExecutionToolResultErrorPara;
+  TBashCodeExecutionOutputBlockParam = Anthropic.Chat.Request.TBashCodeExecutionOutputBlockParam;
+  TBashCodeExecutionResultBlockParam = Anthropic.Chat.Request.TBashCodeExecutionResultBlockParam;
+  TBashCodeExecutionToolResultBlockParam = Anthropic.Chat.Request.TBashCodeExecutionToolResultBlockParam;
+  TTextEditorCodeExecutionToolResultErrorParam = Anthropic.Chat.Request.TTextEditorCodeExecutionToolResultErrorParam;
+  TTextEditorCodeExecutionViewResultBlockParam = Anthropic.Chat.Request.TTextEditorCodeExecutionViewResultBlockParam;
+  TTextEditorCodeExecutionCreateResultBlockParam = Anthropic.Chat.Request.TTextEditorCodeExecutionCreateResultBlockParam;
+  TTextEditorCodeExecutionStrReplaceResultBlockParam = Anthropic.Chat.Request.TTextEditorCodeExecutionStrReplaceResultBlockParam;
+  TTextEditorCodeExecutionToolResultBlockParam = Anthropic.Chat.Request.TTextEditorCodeExecutionToolResultBlockParam;
+  TToolSearchToolResultErrorParam = Anthropic.Chat.Request.TToolSearchToolResultErrorParam;
+  TToolSearchToolSearchResultBlockParam = Anthropic.Chat.Request.TToolSearchToolSearchResultBlockParam;
+  TToolSearchToolResultBlockParam = Anthropic.Chat.Request.TToolSearchToolResultBlockParam;
+  TMCPToolUseBlockParam = Anthropic.Chat.Request.TMCPToolUseBlockParam;
+  TMCPToolResultBlockParam = Anthropic.Chat.Request.TMCPToolResultBlockParam;
+  TContainerUploadBlockParam = Anthropic.Chat.Request.TContainerUploadBlockParam;
+
+  TMessageParam = Anthropic.Chat.Request.TMessageParam;
+  TThinkingConfigParam = Anthropic.Chat.Request.TThinkingConfigParam;
+  TToolChoice = Anthropic.Chat.Request.TToolChoice;
+
+  TSkillParams = Anthropic.Chat.Request.TSkillParams;
+  TContainerParams = Anthropic.Chat.Request.TContainerParams;
+  TEditsParams = Anthropic.Chat.Request.TEditsParams;
+  TInputTokensClearAtLeast = Anthropic.Chat.Request.TInputTokensClearAtLeast;
+  TToolUsesKeep = Anthropic.Chat.Request.TToolUsesKeep;
+  TInputTokensTrigger = Anthropic.Chat.Request.TInputTokensTrigger;
+  TToolUsesTrigger = Anthropic.Chat.Request.TToolUsesTrigger;
+  TClearToolUses20250919Edit = Anthropic.Chat.Request.TClearToolUses20250919Edit;
+  TThinkingTurns = Anthropic.Chat.Request.TThinkingTurns;
+  TAllThinkingTurns = Anthropic.Chat.Request.TAllThinkingTurns;
+  TClearThinking20251015Edit = Anthropic.Chat.Request.TClearThinking20251015Edit;
+  TContextManagementConfig = Anthropic.Chat.Request.TContextManagementConfig;
+  TRequestMCPServerToolConfiguration = Anthropic.Chat.Request.TRequestMCPServerToolConfiguration;
+  TRequestMCPServerURLDefinition = Anthropic.Chat.Request.TRequestMCPServerURLDefinition;
+  TOutputConfig = Anthropic.Chat.Request.TOutputConfig;
+  TJSONOutputFormat = Anthropic.Chat.Request.TJSONOutputFormat;
+
+  TInputSchema = Anthropic.Chat.Request.TInputSchema;
+  TUserLocation = Anthropic.Chat.Request.TUserLocation;
+  TMCPconfigs = Anthropic.Chat.Request.TMCPconfigs;
+
+  TToolUnion = Anthropic.Chat.Request.TToolUnion;
+
+  // Tools
+  TTool = Anthropic.Chat.Request.TTool;
+  TToolBash20250124 = Anthropic.Chat.Request.TToolBash20250124;
+  TToolTextEditor20250124 = Anthropic.Chat.Request.TToolTextEditor20250124;
+  TToolTextEditor20250429 = Anthropic.Chat.Request.TToolTextEditor20250429;
+  TToolTextEditor20250728 = Anthropic.Chat.Request.TToolTextEditor20250728;
+  TWebSearchTool20250305 = Anthropic.Chat.Request.TWebSearchTool20250305;
+
+  // [beta] Tools
+  TToolBash20241022 = Anthropic.Chat.Request.TToolBash20241022;
+  TCodeExecutionTool20250522 = Anthropic.Chat.Request.TCodeExecutionTool20250522;
+  TCodeExecutionTool20250825 = Anthropic.Chat.Request.TCodeExecutionTool20250825;
+  TToolComputerUse20241022 = Anthropic.Chat.Request.TToolComputerUse20241022;
+  TMemoryTool20250818 = Anthropic.Chat.Request.TMemoryTool20250818;
+  TToolComputerUse20250124 = Anthropic.Chat.Request.TToolComputerUse20250124;
+  TToolTextEditor20241022 = Anthropic.Chat.Request.TToolTextEditor20241022;
+  TToolComputerUse20251124 = Anthropic.Chat.Request.TToolComputerUse20251124;
+  TWebFetchTool20250910 = Anthropic.Chat.Request.TWebFetchTool20250910;
+  TToolSearchToolBm25_20251119 = Anthropic.Chat.Request.TToolSearchToolBm25_20251119;
+  TToolSearchToolRegex20251119 = Anthropic.Chat.Request.TToolSearchToolRegex20251119;
+  TMCPToolset = Anthropic.Chat.Request.TMCPToolset;
+
+  TChatParams = Anthropic.Chat.Request.TChatParams;
+
+  TChatParamProc = Anthropic.Chat.Request.TChatParamProc;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Batches'}
 
-  /// <summary>
-  /// The <c>TBatcheParams</c> class is used to manage and define parameters for a batch of messages.
-  /// It provides methods to customize the batch with specific identifiers and additional parameters.
-  /// </summary>
-  TBatcheParams = Anthropic.Batches.TBatcheParams;
-
-  /// <summary>
-  /// The <c>TRequestParams</c> class is used to manage and define request parameters for sending message batches.
-  /// It allows you to specify multiple batch requests as part of a single request operation.
-  /// </summary>
+  TBatchParams = Anthropic.Batches.TBatchParams;
   TRequestParams = Anthropic.Batches.TRequestParams;
-
-  /// <summary>
-  /// The <c>TRequestCounts</c> class represents the counts of different statuses related to batch processing.
-  /// It tracks the number of batches that are currently being processed, successfully completed, errored, canceled, and expired.
-  /// </summary>
-  /// <remarks>
-  /// This class provides an overview of the state of batch processing by categorizing the results into several status types,
-  /// helping to monitor the success and failure rates of batch operations.
-  /// </remarks>
+  TRequestParamProc = Anthropic.Batches.TRequestParamProc;
   TRequestCounts = Anthropic.Batches.TRequestCounts;
-
-  /// <summary>
-  /// The <c>TBatche</c> class represents a batch of messages in the system.
-  /// It contains detailed information about the batch, including its processing status, request counts, timestamps, and related URLs.
-  /// </summary>
-  /// <remarks>
-  /// This class provides key details for managing and tracking a batch of messages, such as the batch's unique identifier,
-  /// its current state (in progress, canceled, or ended), and related metadata. It is essential for operations that involve handling
-  /// message batches in a structured and organized manner.
-  /// </remarks>
-  TBatche = Anthropic.Batches.TBatche;
-
-  /// <summary>
-  /// The <c>TBatcheList</c> class represents a collection of batch objects, along with metadata about the batch list.
-  /// It includes information about whether there are more batches to be fetched and provides identifiers for pagination purposes.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to handle lists of batches returned from the API, enabling pagination through the first and last batch identifiers
-  /// and indicating whether additional batches are available beyond the current list.
-  /// </remarks>
-  TBatcheList = Anthropic.Batches.TBatcheList;
-
-  /// <summary>
-  /// The <c>TBatchDelete</c> class represents a batch deletion operation.
-  /// It provides information about the identifier and type of the batch being deleted.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to manage the deletion of batches, enabling the application
-  /// to track which batch is being removed from the system. It encapsulates the batch
-  /// identifier and type information necessary for deletion requests.
-  /// </remarks>
+  TBatch = Anthropic.Batches.TBatch;
+  TBatchList = Anthropic.Batches.TBatchList;
   TBatchDelete = Anthropic.Batches.TBatchDelete;
-
-  /// <summary>
-  /// The <c>TListParams</c> class is used to define parameters for retrieving lists of batches.
-  /// It allows for pagination by setting limits, specifying batch IDs to start after, or ending before.
-  /// </summary>
-  /// <remarks>
-  /// This class helps in controlling the number of results returned in list queries and enables efficient data navigation
-  /// through the use of pagination parameters such as <c>Limit</c>, <c>AfterId</c>, and <c>BeforeId</c>.
-  /// <para>
-  /// <b>--- Warning:</b> The parameters <c>AfterId</c> and <c>BeforeId</c> are mutually exclusive, meaning that both cannot be used simultaneously
-  /// in a single query. Ensure that only one of these parameters is set at a time to avoid conflicts.
-  /// </para>
-  /// </remarks>
   TListParams = Anthropic.Batches.TListParams;
+  TListParamProc = Anthropic.Batches.TListParamProc;
 
-  /// <summary>
-  /// The <c>TAsynBatche</c> class is a type alias used to handle asynchronous callbacks for batch processing.
-  /// It provides support for executing batch operations asynchronously and processing the results upon completion.
-  /// </summary>
-  /// <remarks>
-  /// This class is part of the asynchronous framework that allows non-blocking batch operations.
-  /// It uses a callback mechanism to return the result of a batch process once it is completed.
-  /// </remarks>
-  TAsynBatche = Anthropic.Batches.TAsynBatche;
-
-  /// <summary>
-  /// The <c>TAsynBatcheList</c> class represents an asynchronous callback for handling operations that return a list of batch objects (<c>TBatcheList</c>).
-  /// It is used to manage asynchronous processes where a list of batches is retrieved, processed, or manipulated.
-  /// </summary>
-  /// <remarks>
-  /// This class is typically employed in scenarios where batch lists need to be fetched or processed asynchronously, allowing for
-  /// non-blocking execution and handling of potentially large sets of batch data.
-  /// </remarks>
-  TAsynBatcheList = Anthropic.Batches.TAsynBatcheList;
-
-  /// <summary>
-  /// The <c>TAsynStringList</c> class is a callback handler for asynchronous operations that return a <c>TStringList</c> result.
-  /// It is used to process string list data asynchronously, such as retrieving batch results from the API.
-  /// </summary>
-  /// <remarks>
-  /// This class allows for non-blocking operations where a <c>TStringList</c> is returned, enabling efficient handling of large datasets or long-running tasks.
-  /// The callback mechanism helps in managing success, error handling, and overall execution flow.
-  /// </remarks>
+  TAsynBatch = Anthropic.Batches.TAsynBatch;
+  TPromiseBatch = Anthropic.Batches.TPromiseBatch;
+  TAsynBatchList = Anthropic.Batches.TAsynBatchList;
+  TPromiseBatchList = Anthropic.Batches.TPromiseBatchList;
   TAsynStringList = Anthropic.Batches.TAsynStringList;
-
-  /// <summary>
-  /// The <c>TAsynBatchDelete</c> class is a callback handler for asynchronous operations that return a <c>TStringList</c> result.
-  /// It is used to process string list data asynchronously, such as retrieving batch results from the API.
-  /// </summary>
-  /// <remarks>
-  /// This class allows for non-blocking operations where a <c>TBatchDelete</c> is returned, enabling efficient handling of large datasets or long-running tasks.
-  /// The callback mechanism helps in managing success, error handling, and overall execution flow.
-  /// </remarks>
+  TPromiseStringList = Anthropic.Batches.TPromiseStringList;
   TAsynBatchDelete = Anthropic.Batches.TAsynBatchDelete;
+  TPromiseBatchDelete = Anthropic.Batches.TPromiseBatchDelete;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Batches.Support'}
 
-  /// <summary>
-  /// Provides an interface for managing batch results and associated file information.
-  /// </summary>
-  /// <remarks>
-  /// The IBatcheResults interface allows for the retrieval of batch result items
-  /// and management of the file from which these results are loaded. It ensures
-  /// that the specified file exists before loading and provides access to individual
-  /// batch results through the Batches property.
-  /// </remarks>
   IBatcheResults = Anthropic.Batches.Support.IBatcheResults;
-
-  /// <summary>
-  /// Factory class responsible for creating instances of <see cref="IBatcheResults"/>.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TBatcheResultsFactory</c> provides a centralized way to instantiate <c>IBatcheResults</c>
-  /// objects, optionally initializing them with a specified file. This ensures that all
-  /// instances are created consistently throughout the application.
-  /// </remarks>
   TBatcheResultsFactory = Anthropic.Batches.Support.TBatcheResultsFactory;
-
-  /// <summary>
-  /// Represents an individual item within a batch result.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TBatcheResultItem</c> class encapsulates a single result item from a batch operation,
-  /// including a custom identifier and the corresponding batch result.
-  /// </remarks>
   TBatcheResultItem = Anthropic.Batches.Support.TBatcheResultItem;
-
-  /// <summary>
-  /// Represents the result of a single batch operation.
-  /// </summary>
-  /// <remarks>
-  /// The <c>TBatcheResult</c> class contains detailed information about the outcome of a batch request,
-  /// including the type of result and the associated chat message.
-  /// </remarks>
   TBatcheResult = Anthropic.Batches.Support.TBatcheResult;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Files'}
+
+  TUploadParams = Anthropic.Files.TUploadParams;
+  TUploadParamProc = Anthropic.Files.TUploadParamProc;
+  TFilesListParams = Anthropic.Files.TFilesListParams;
+  TFilesListParamProc = Anthropic.Files.TFilesListParamProc;
+  TFile = Anthropic.Files.TFile;
+  TFileList = Anthropic.Files.TFileList;
+  TFileDeleted = Anthropic.Files.TFileDeleted;
+  TFileDownloaded = Anthropic.Files.TFileDownloaded;
+
+  TAsynFile = Anthropic.Files.TAsynFile;
+  TPromiseFile = Anthropic.Files.TPromiseFile;
+  TAsynFileList = Anthropic.Files.TAsynFileList;
+  TPromiseFileList = Anthropic.Files.TPromiseFileList;
+  TAsynFileDeleted = Anthropic.Files.TAsynFileDeleted;
+  TPromiseFileDeleted = Anthropic.Files.TPromiseFileDeleted;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Models'}
 
-  /// <summary>
-  /// The <c>TListModelsParams</c> class is used to define parameters for retrieving lists of models.
-  /// It allows for pagination by setting limits, specifying model IDs to start after, or ending before.
-  /// </summary>
-  /// <remarks>
-  /// This class helps in controlling the number of results returned in list queries and enables efficient data navigation
-  /// through the use of pagination parameters such as <c>Limit</c>, <c>AfterId</c>, and <c>BeforeId</c>.
-  /// <para>
-  /// <b>--- Warning:</b> The parameters <c>AfterId</c> and <c>BeforeId</c> are mutually exclusive, meaning that both cannot be used simultaneously
-  /// in a single query. Ensure that only one of these parameters is set at a time to avoid conflicts.
-  /// </para>
-  /// </remarks>
   TListModelsParams = Anthropic.Models.TListModelsParams;
-
-  /// <summary>
-  /// The <c>TModel</c> class represents a single model entity within the Anthropic API.
-  /// It provides access to details about the model, including its unique identifier,
-  /// type, human-readable name, and creation timestamp.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to encapsulate the metadata associated with a model.
-  /// It is designed to be serialized and deserialized from JSON format
-  /// when interacting with the Anthropic API endpoints.
-  /// <para>
-  /// The <c>Type</c> property will always return the value "model" for instances
-  /// of this class. The <c>Id</c> property uniquely identifies the model, while
-  /// the <c>DisplayName</c> property provides a human-readable description of the model.
-  /// The <c>CreatedAt</c> property indicates when the model was released or first made available.
-  /// </para>
-  /// </remarks>
   TModel = Anthropic.Models.TModel;
-
-  /// <summary>
-  /// The <c>TModels</c> class represents a collection of model entities retrieved from the Anthropic API.
-  /// It encapsulates the list of models and additional metadata for pagination purposes.
-  /// </summary>
-  /// <remarks>
-  /// This class is designed to manage and store a list of <c>TModel</c> objects, along with
-  /// information to facilitate navigation through paginated results.
-  /// <para>
-  /// The <c>Data</c> property contains the array of models retrieved in the current query.
-  /// The <c>HasMore</c> property indicates whether there are additional results beyond the current page.
-  /// The <c>FirstId</c> and <c>LastId</c> properties provide cursors for navigating to the previous
-  /// and next pages of results, respectively.
-  /// </para>
-  /// <para>
-  /// When an instance of this class is destroyed, it ensures proper memory cleanup
-  /// by freeing the individual <c>TModel</c> objects in the <c>Data</c> array.
-  /// </para>
-  /// </remarks>
-  TModels = Anthropic.Models.TModels;
-
-  /// <summary>
-  /// The <c>TAsynModel</c> class is a type alias used to handle asynchronous callbacks for batch processing.
-  /// It provides support for executing batch operations asynchronously and processing the results upon completion.
-  /// </summary>
-  /// <remarks>
-  /// This class is part of the asynchronous framework that allows non-blocking batch operations.
-  /// It uses a callback mechanism to return the result of a batch process once it is completed.
-  /// </remarks>
   TAsynModel = Anthropic.Models.TAsynModel;
+  TPromiseModel = Anthropic.Models.TPromiseModel;
 
-  /// <summary>
-  /// The <c>TAsynModels</c> class is a type alias used to handle asynchronous callbacks for batch processing.
-  /// It provides support for executing batch operations asynchronously and processing the results upon completion.
-  /// </summary>
-  /// <remarks>
-  /// This class is part of the asynchronous framework that allows non-blocking batch operations.
-  /// It uses a callback mechanism to return the result of a batch process once it is completed.
-  /// </remarks>
+  TModels = Anthropic.Models.TModels;
   TAsynModels = Anthropic.Models.TAsynModels;
+  TPromiseModels = Anthropic.Models.TPromiseModels;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Skills'}
+
+  TSkillListParams = Anthropic.Skills.TSkillListParams;
+  TSkill = Anthropic.Skills.TSkill;
+  TSkillList = Anthropic.Skills.TSkillList;
+  TSkillDeleted = Anthropic.Skills.TSkillDeleted;
+
+  TAsynSkill = Anthropic.Skills.TAsynSkill;
+  TPromiseSkill = Anthropic.Skills.TPromiseSkill;
+  TAsynSkillList = Anthropic.Skills.TAsynSkillList;
+  TPromiseSkillList = Anthropic.Skills.TPromiseSkillList;
+  TAsynSkillDeleted = Anthropic.Skills.TAsynSkillDeleted;
+  TPromiseSkillDeleted = Anthropic.Skills.TPromiseSkillDeleted;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Functions.Core'}
 
-  /// <summary>
-  /// Interface defining the core structure and functionality of a function in the system.
-  /// </summary>
-  /// <remarks>
-  /// This interface outlines the basic properties and methods that any function implementation must include.
-  /// </remarks>
   IFunctionCore = Anthropic.Functions.Core.IFunctionCore;
-
-  /// <summary>
-  /// Abstract base class for implementing core function behavior.
-  /// </summary>
-  /// <remarks>
-  /// This class provides basic implementations for some methods and defines the structure that derived classes must follow.
-  /// </remarks>
   TFunctionCore = Anthropic.Functions.Core.TFunctionCore;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Schema'}
 
-  /// <summary>
-  /// Provides helper methods for creating property items in OpenAPI schema definitions.
-  /// </summary>
-  /// <remarks>
-  /// This record simplifies the creation of property entries when building schema objects,
-  /// particularly for object properties in OpenAPI specifications.
-  /// </remarks>
   TPropertyItem = Anthropic.Schema.TPropertyItem;
-
-  /// <summary>
-  /// Represents the Schema Object in OpenAPI, enabling the definition of input and output data types.
-  /// These types can be objects, primitives, or arrays. This class provides methods to build and
-  /// configure schema definitions as per the OpenAPI 3.0 Specification.
-  /// </summary>
-  /// <remarks>
-  /// The Schema Object allows the definition of input and output data types in the OpenAPI Specification.
-  /// This class provides a fluent interface to construct schema definitions programmatically.
-  /// </remarks>
   TSchemaParams = Anthropic.Schema.TSchemaParams;
 
 {$ENDREGION}
 
-function fromAssistant(const Value: string): Payload;
-function FromPdf(const Value: string; const Documents: TArray<string>;
-  CacheControl: Boolean = False): Payload; overload;
-function FromPdf(const Value: string; const Documents: string;
-  CacheControl: Boolean = False): Payload; overload;
-function fromUser(const Value: string; CacheControl: Boolean = False): Payload; overload;
-function fromUser(const Value: string; const Images: TArray<string>;
-  CacheControl: Boolean = False): Payload; overload;
-function fromUser(const Value: string; const Image: string;
-  CacheControl: Boolean = False): Payload; overload;
+{$REGION 'Anthropic.Net.MediaCodec'}
+
+  TMediaCodec = Anthropic.Net.MediaCodec.TMediaCodec;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.JSONL'}
+
+  TJSONLHelper = Anthropic.JSONL.TJSONLHelper;
+
+{$ENDREGION}
+
+function CurrentVersion: string;
+function HttpMonitoring: IRequestMonitor;
 
 implementation
 
-const
-  batches = 1;
-  caching = 2;
-
-function fromAssistant(const Value: string): Payload;
+function CurrentVersion: string;
 begin
-  Result := TChatMessagePayload.Assistant(Value);
+  Result := VERSION;
 end;
 
-function FromPdf(const Value: string; const Documents: TArray<string>;
-  CacheControl: Boolean = False): Payload;
+function HttpMonitoring: IRequestMonitor;
 begin
-  Result := TChatMessagePayload.Pdf(Value, Documents, CacheControl);
-end;
-
-function FromPdf(const Value: string; const Documents: string;
-  CacheControl: Boolean = False): Payload; overload;
-begin
-  Result := TChatMessagePayload.Pdf(Value, [Documents], CacheControl);
-end;
-
-function fromUser(const Value: string; CacheControl: Boolean = False): Payload;
-begin
-  Result := TChatMessagePayload.User(Value, CacheControl);
-end;
-
-function fromUser(const Value: string; const Images: TArray<string>;
-  CacheControl: Boolean = False): Payload;
-begin
-  Result := TChatMessagePayload.User(Value, Images, CacheControl);
-end;
-
-function fromUser(const Value: string; const Image: string;
-  CacheControl: Boolean = False): Payload; overload;
-begin
-  Result := TChatMessagePayload.User(Value, [Image], CacheControl);
+  Result := Monitoring;
 end;
 
 { TAnthropic }
 
-constructor TAnthropic.Create(const Option: Integer);
+constructor TAnthropic.Create;
 begin
   inherited Create;
-  FAPI := TAnthropicAPI.Create(Option);
+  FAPI := TAnthropicAPI.Create;
 end;
 
-constructor TAnthropic.Create(const AToken: string; const Option: Integer);
+constructor TAnthropic.Create(const AToken: string);
 begin
-  Create(Option);
+  Create;
   Token := AToken;
 end;
 
 destructor TAnthropic.Destroy;
 begin
   FChatRoute.Free;
-  FBatcheRoute.Free;
+  FBatchRoute.Free;
+  FFilesRoute.Free;
   FModelsRoute.Free;
+  FSkillsRoute.Free;
   FAPI.Free;
   inherited;
 end;
@@ -827,25 +876,54 @@ begin
   Result := FAPI.BaseURL;
 end;
 
-function TAnthropic.GetBatcheRoute: TBatcheRoute;
+function TAnthropic.GetBatchRoute: TBatchRoute;
 begin
-  if not Assigned(FBatcheRoute) then
-    FBatcheRoute := TBatcheRoute.CreateRoute(API);
-  Result := FBatcheRoute;
+  Result := Lazy<TBatchRoute>(FBatchRoute, FBatchLock,
+    function: TBatchRoute
+    begin
+      Result := TBatchRoute.CreateRoute(API);
+    end);
 end;
 
 function TAnthropic.GetChatRoute: TChatRoute;
 begin
-  if not Assigned(FChatRoute) then
-    FChatRoute := TChatRoute.CreateRoute(API);
-  Result := FChatRoute;
+  Result := Lazy<TChatRoute>(FChatRoute, FChatLock,
+    function: TChatRoute
+    begin
+      Result := TChatRoute.CreateRoute(API);
+    end);
+end;
+
+function TAnthropic.GetFilesRoute: TFilesRoute;
+begin
+  Result := Lazy<TFilesRoute>(FFilesRoute, FFilesLock,
+    function: TFilesRoute
+    begin
+      Result := TFilesRoute.CreateRoute(API);
+    end);
+end;
+
+function TAnthropic.GetHttpClient: IHttpClientAPI;
+begin
+  Result := API.HttpClient;
 end;
 
 function TAnthropic.GetModelsRoute: TModelsRoute;
 begin
-  if not Assigned(FModelsRoute) then
-    FModelsRoute := TModelsRoute.CreateRoute(API);
-  Result := FModelsRoute;
+  Result := Lazy<TModelsRoute>(FModelsRoute, FModelsLock,
+    function: TModelsRoute
+    begin
+      Result := TModelsRoute.CreateRoute(API);
+    end);
+end;
+
+function TAnthropic.GetSkillsRoute: TSkillsRoute;
+begin
+  Result := Lazy<TSkillsRoute>(FSkillsRoute, FSkillsLock,
+    function: TSkillsRoute
+    begin
+      Result := TSkillsRoute.CreateRoute(API);
+    end);
 end;
 
 function TAnthropic.GetToken: string;
@@ -865,22 +943,48 @@ end;
 
 { TAnthropicFactory }
 
-class function TAnthropicFactory.CreateBatchingInstance(
-  const AToken: string): IAnthropic;
+class function TAnthropicFactory.CreateInstance(const AToken: string): IAnthropic;
 begin
-  Result := CreateInstance(AToken, batches);
+  Result := TAnthropic.Create(AToken);
 end;
 
-class function TAnthropicFactory.CreateCachingInstance(
-  const AToken: string): IAnthropic;
+{ TLazyRouteFactory }
+
+constructor TLazyRouteFactory.Create;
 begin
-  Result := CreateInstance(AToken, caching);
+  inherited Create;
+  FChatLock := TObject.Create;
+  FBatchLock := TObject.Create;
+  FFilesLock := TObject.Create;
+  FModelsLock := TObject.Create;
+  FSkillsLock := TObject.Create;
 end;
 
-class function TAnthropicFactory.CreateInstance(const AToken: string;
-  const Option: Integer): IAnthropic;
+destructor TLazyRouteFactory.Destroy;
 begin
-  Result := TAnthropic.Create(AToken, Option);
+  FChatLock.Free;
+  FBatchLock.Free;
+  FFilesLock.Free;
+  FModelsLock.Free;
+  FSkillsLock.Free;
+  inherited;
+end;
+
+function TLazyRouteFactory.Lazy<T>(var AField: T; const ALock: TObject;
+  const AFactory: TFunc<T>): T;
+begin
+  Result := AField;
+  if Result <> nil then
+    Exit;
+
+  TMonitor.Enter(ALock);
+  try
+    if AField = nil then
+      AField := AFactory();
+    Result := AField;
+  finally
+    TMonitor.Exit(ALock);
+  end;
 end;
 
 end.

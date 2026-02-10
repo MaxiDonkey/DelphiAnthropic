@@ -2,10 +2,20 @@ unit Anthropic.Async.Params;
 
 {-------------------------------------------------------------------------------
 
+      Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
+      Visit the Github repository for the documentation and use examples
+
+ ------------------------------------------------------------------------------}
+
+interface
+
+{$REGION  'Dev notes'}
+
+(*
       Unit containing generic interfaces and classes for managing parameters
       across  various  asynchronous  operations.
 
-      The Anthropic.Async.Params unit  provides  a set of tools for creating
+      The GenAI.Async.Params  unit  provides  a set of tools for creating
       and managing  parameter  instances  using  generic  types. The primary
       components include:
 
@@ -20,16 +30,12 @@ unit Anthropic.Async.Params;
       asynchronous  scenarios  such  as  chat  operations.
 
       Note  that  This  unit  is  designed   to  work   seamlessly  with  the
-      Anthropic.Chat.AsyncEvents unit,  which  relies  on  IUseParams<T> and
+      GenAI.Chat.AsyncEvents unit,  which  relies  on  IUseParams<T> and
       TUseParamsFactory<T>  to  manage   parameters   for  asynchronous  chat
       requests.
+*)
 
-        Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
-        Visit the Github repository for the documentation and use examples
-
--------------------------------------------------------------------------------}
-
-interface
+{$ENDREGION}
 
 uses
   System.SysUtils, System.Classes;
@@ -42,7 +48,7 @@ type
   /// The type of the parameters.
   /// </typeparam>
   IUseParams<T> = interface
-    ['{18566F2C-F2D9-4257-A460-D9AE8F053357}']
+    ['{D7C1F3AC-CA7C-49E5-9250-8E898B28EC97}']
     /// <summary>
     /// Sets the parameters.
     /// </summary>
@@ -50,6 +56,7 @@ type
     /// The value of the parameters to be set.
     /// </param>
     procedure SetParams(const Value: T);
+
     /// <summary>
     /// Gets the current parameters.
     /// </summary>
@@ -57,6 +64,7 @@ type
     /// The current parameters of type <c>T</c>.
     /// </returns>
     function GetParams: T;
+
     /// <summary>
     /// Assigns the parameters using a function.
     /// </summary>
@@ -64,6 +72,7 @@ type
     /// A function that returns parameters of type <c>T</c>.
     /// </param>
     procedure Assign(Value: TFunc<T>);
+
     /// <summary>
     /// Returns the current instance as an object of type <c>TObject</c>.
     /// </summary>
@@ -71,6 +80,7 @@ type
     /// The instance cast to <c>TObject</c>.
     /// </returns>
     function AsSender: TObject;
+
     /// <summary>
     /// Provides access to the parameters as a property.
     /// </summary>
@@ -91,6 +101,7 @@ type
     /// A new instance of <c>IUseParams&lt;T&gt;</c>.
     /// </returns>
     class function CreateInstance: IUseParams<T>; overload;
+
     /// <summary>
     /// Creates and returns a new instance of <c>IUseParams</c> for the specified type <c>T</c>, using the provided function.
     /// </summary>
@@ -119,6 +130,7 @@ type
     /// The new parameters value.
     /// </param>
     procedure SetParams(const Value: T);
+
     /// <summary>
     /// Retrieves the current parameters value.
     /// </summary>
@@ -134,6 +146,7 @@ type
     /// The current instance cast to <c>TObject</c>.
     /// </returns>
     function AsSender: TObject;
+
     /// <summary>
     /// Assigns the parameters using a function that returns type <c>T</c>.
     /// </summary>

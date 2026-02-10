@@ -11,7 +11,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, REST.JsonReflect, System.JSON, System.Threading,
-  REST.Json.Types, Anthropic.Chat;
+  REST.Json.Types, Anthropic.Chat.Responses;
 
 type
   TBatcheResultItem = class;

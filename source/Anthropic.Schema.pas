@@ -1,4 +1,4 @@
-unit Anthropic.Schema;
+﻿unit Anthropic.Schema;
 
 {-------------------------------------------------------------------------------
 
@@ -58,7 +58,19 @@ type
     /// The <c>type</c> keyword is required in the Schema Object to define the data type.
     /// Valid types include <c>string</c>, <c>number</c>, <c>integer</c>, <c>boolean</c>, <c>array</c>, and <c>object</c>.
     /// </remarks>
-    function &Type(const Value: TSchemaType): TSchemaParams;
+    function &Type(const Value: TSchemaType): TSchemaParams; overload;
+
+    /// <summary>
+    /// Sets the data type of the schema.
+    /// </summary>
+    /// <param name="Value">The data type to assign to the schema, specified as a <c>TSchemaType</c> value.</param>
+    /// <returns>The current <c>TSchemaParams</c> instance to allow for method chaining.</returns>
+    /// <remarks>
+    /// The <c>type</c> keyword is required in the Schema Object to define the data type.
+    /// Valid types include <c>string</c>, <c>number</c>, <c>integer</c>, <c>boolean</c>, <c>array</c>, and <c>object</c>.
+    /// </remarks>
+    function &Type(const Value: string): TSchemaParams; overload;
+
     /// <summary>
     /// Specifies the format of the data type.
     /// </summary>
@@ -70,6 +82,7 @@ type
     /// for <c>number</c> types; and <c>byte</c>, <c>binary</c>, <c>date</c>, <c>date-time</c>, <c>password</c> for <c>string</c> types.
     /// </remarks>
     function Format(const Value: string): TSchemaParams;
+
     /// <summary>
     /// Adds a description to the schema.
     /// </summary>
@@ -80,6 +93,7 @@ type
     /// This field supports Markdown syntax for rich text representation.
     /// </remarks>
     function Description(const Value: string): TSchemaParams;
+
     /// <summary>
     /// Specifies whether the schema's value can be null.
     /// </summary>
@@ -90,6 +104,7 @@ type
     /// By default, this is false.
     /// </remarks>
     function Nullable(const Value: Boolean): TSchemaParams;
+
     /// <summary>
     /// Specifies an enumeration of possible values.
     /// </summary>
@@ -100,6 +115,7 @@ type
     /// The schema's type must be <c>string</c> when using enum.
     /// </remarks>
     function Enum(const Value: TArray<string>): TSchemaParams;
+
     /// <summary>
     /// Specifies the maximum number of items allowed in an array schema.
     /// </summary>
@@ -110,6 +126,7 @@ type
     /// of items the array can contain.
     /// </remarks>
     function MaxItems(const Value: string): TSchemaParams;
+
     /// <summary>
     /// Specifies the minimum number of items required in an array schema.
     /// </summary>
@@ -120,6 +137,7 @@ type
     /// of items the array must contain.
     /// </remarks>
     function MinItems(const Value: string): TSchemaParams;
+
     /// <summary>
     /// Adds a property to an object schema.
     /// </summary>
@@ -131,6 +149,7 @@ type
     /// Each property is a key-value pair where the key is the property name and the value is a schema defining the property.
     /// </remarks>
     function Properties(const Key: string; const Value: TSchemaParams): TSchemaParams; overload;
+
     /// <summary>
     /// Adds a property to an object schema using a parameterized procedure to configure the property's schema.
     /// </summary>
@@ -141,6 +160,7 @@ type
     /// This overload allows you to define the property's schema inline using a procedural configuration.
     /// </remarks>
     function Properties(const Key: string; const ParamProc: TProcRef<TSchemaParams>): TSchemaParams; overload;
+
     /// <summary>
     /// Adds multiple properties to an object schema.
     /// </summary>
@@ -150,6 +170,48 @@ type
     /// This overload allows adding multiple properties at once to the object schema.
     /// </remarks>
     function Properties(const Value: TArray<TJSONPair>): TSchemaParams; overload;
+
+    /// <summary>
+    /// Assigns a pre-built set of property definitions to an object schema.
+    /// </summary>
+    /// <param name="Value">
+    /// A <c>TSchemaParams</c> instance containing the JSON object that represents the
+    /// schema's <c>properties</c> map (property name → property schema).
+    /// </param>
+    /// <returns>
+    /// The current <c>TSchemaParams</c> instance to allow for method chaining.
+    /// </returns>
+    /// <remarks>
+    /// This overload is useful when you have already composed the full <c>properties</c> object
+    /// (for example via successive calls to the key-based <c>Properties</c> overload) and want
+    /// to attach it to the current schema in one step.
+    /// <para>
+    /// The provided <paramref name="Value" /> is detached and transferred into the resulting JSON,
+    /// meaning ownership of its underlying JSON value is moved to this schema.
+    /// </para>
+    /// </remarks>
+    function Properties(const Value: TSchemaParams): TSchemaParams; overload;
+
+    /// <summary>
+    /// Assigns a JSON object containing property definitions to an object schema.
+    /// </summary>
+    /// <param name="Value">
+    /// A <c>TJSONObject</c> representing the schema's <c>properties</c> map
+    /// (property name → property schema JSON).
+    /// </param>
+    /// <returns>
+    /// The current <c>TSchemaParams</c> instance to allow for method chaining.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the <c>properties</c> object has already been built as raw JSON
+    /// and you want to attach it directly to the current schema.
+    /// <para>
+    /// The <paramref name="Value" /> instance is used as-is; after this call, it is owned by the
+    /// schema JSON structure and should not be freed or reused by the caller.
+    /// </para>
+    /// </remarks>
+    function Properties(const Value: TJSONObject): TSchemaParams; overload;
+
     /// <summary>
     /// Specifies which properties are required in an object schema.
     /// </summary>
@@ -160,6 +222,9 @@ type
     /// is validated against the schema.
     /// </remarks>
     function Required(const Value: TArray<string>): TSchemaParams;
+
+    function AdditionalProperties(const Value: Boolean): TSchemaParams;
+
     /// <summary>
     /// Specifies the schema of the items in an array schema.
     /// </summary>
@@ -169,6 +234,7 @@ type
     /// The <c>items</c> keyword is used in array schemas to define the schema of each item in the array.
     /// </remarks>
     function Items(const Value: TSchemaParams): TSchemaParams; overload;
+
     /// <summary>
     /// Specifies the schema of the items in an array schema using a parameterized procedure.
     /// </summary>
@@ -178,11 +244,13 @@ type
     /// This overload allows you to define the items' schema inline using a procedural configuration.
     /// </remarks>
     function Items(const ParamProc: TProcRef<TSchemaParams>): TSchemaParams; overload;
+
     /// <summary>
     /// Creates a new instance of <c>TSchemaParams</c>.
     /// </summary>
     /// <returns>A new <c>TSchemaParams</c> instance.</returns>
     class function New: TSchemaParams; overload;
+
     /// <summary>
     /// Creates and configures a new instance of <c>TSchemaParams</c> using a parameterized procedure.
     /// </summary>
@@ -200,6 +268,22 @@ uses
   System.StrUtils, System.Rtti, Rest.Json;
 
 { TSchemaParams }
+
+function TSchemaParams.&Type(const Value: TSchemaType): TSchemaParams;
+begin
+  Result := &Type(Value.ToString);
+end;
+
+function TSchemaParams.&Type(const Value: string): TSchemaParams;
+begin
+  Result := TSchemaParams(Add('type', Value));
+end;
+
+function TSchemaParams.AdditionalProperties(
+  const Value: Boolean): TSchemaParams;
+begin
+  Result := TSchemaParams(Add('additionalProperties', Value));
+end;
 
 function TSchemaParams.Description(const Value: string): TSchemaParams;
 begin
@@ -286,20 +370,25 @@ begin
   else Result := Self;
 end;
 
+function TSchemaParams.Properties(const Value: TSchemaParams): TSchemaParams;
+begin
+  Result := TSchemaParams(Add('properties', Value.Detach));
+end;
+
 function TSchemaParams.Properties(const Key: string;
   const Value: TSchemaParams): TSchemaParams;
 begin
   Result := TSchemaParams(Add(Key, Value.Detach));
 end;
 
+function TSchemaParams.Properties(const Value: TJSONObject): TSchemaParams;
+begin
+  Result := TSchemaParams(Add('properties', Value));
+end;
+
 function TSchemaParams.Required(const Value: TArray<string>): TSchemaParams;
 begin
   Result := TSchemaParams(Add('required', Value));
-end;
-
-function TSchemaParams.&Type(const Value: TSchemaType): TSchemaParams;
-begin
-  Result := TSchemaParams(Add('type', Value.ToString));
 end;
 
 { TPropertyItem }

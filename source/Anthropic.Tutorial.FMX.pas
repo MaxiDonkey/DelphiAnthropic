@@ -16,70 +16,57 @@ uses
   System.SysUtils, System.Classes, Winapi.Messages, FMX.Types, FMX.StdCtrls, FMX.ExtCtrls,
   FMX.Controls, FMX.Forms, Winapi.Windows, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.Media, FMX.Objects, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, System.UITypes,
-  System.Types,
+  System.Types, System.JSON, system.Threading,
   Anthropic, Anthropic.Types, Anthropic.API.Params;
 
 type
   TToolProc = procedure (const Value: string) of object;
 
-  /// <summary>
-  /// Represents a tutorial hub for handling visual components in a Delphi application,
-  /// including text display, button interactions, and navigation through pages.
-  /// </summary>
   TFMXTutorialHub = class
   private
+    FClient: IAnthropic;
     FMemo1: TMemo;
+    FMemo2: TMemo;
+    FMemo3: TMemo;
+    FMemo4: TMemo;
     FButton: TButton;
-    FBatchId: string;
-    FFileName: string;
     FTool: IFunctionCore;
     FToolCall: TToolProc;
     FCancel: Boolean;
-    FJSONParam: TJSONParam;
     procedure OnButtonClick(Sender: TObject);
     procedure SetButton(const Value: TButton);
     procedure SetMemo1(const Value: TMemo);
+    procedure SetMemo2(const Value: TMemo);
+    procedure SetMemo3(const Value: TMemo);
+    procedure SetMemo4(const Value: TMemo);
+    procedure SetJSONRequest(const Value: string);
+    procedure SetJSONResponse(const Value: string);
   public
-    /// <summary>
-    /// Gets or sets the first memo component for displaying messages or data.
-    /// </summary>
+    property Client: IAnthropic read FClient write FClient;
     property Memo1: TMemo read FMemo1 write SetMemo1;
-    /// <summary>
-    /// Gets or sets the button component used to trigger actions or handle cancellation.
-    /// </summary>
+    property Memo2: TMemo read FMemo2 write SetMemo2;
+    property Memo3: TMemo read FMemo3 write SetMemo3;
+    property Memo4: TMemo read FMemo4 write SetMemo4;
     property Button: TButton read FButton write SetButton;
-    /// <summary>
-    /// Gets or sets a value indicating whether the operation has been canceled.
-    /// </summary>
     property Cancel: Boolean read FCancel write FCancel;
-    /// <summary>
-    /// Gets or sets the TJSONParam object associated with the tutorial hub.
-    /// </summary>
-    property JSONParam: TJSONParam read FJSONParam write FJSONParam;
-    /// <summary>
-    /// Gets or sets the batch identifier associated with the tutorial hub.
-    /// </summary>
-    property BatchId: string read FBatchId write FBatchId;
-    /// <summary>
-    /// Gets or sets the name of the file associated with the tutorial hub.
-    /// </summary>
-    property FileName: string read FFileName write FFileName;
-    /// <summary>
-    /// Gets or sets the core function tool used for processing.
-    /// </summary>
     property Tool: IFunctionCore read FTool write FTool;
-    /// <summary>
-    /// Gets or sets the procedure for handling tool-specific calls.
-    /// </summary>
     property ToolCall: TToolProc read FToolCall write FToolCall;
-    /// <summary>
-    /// Gets or sets a value indicating whether file overrides are allowed.
-    /// </summary>
-    constructor Create(const AMemo1: TMemo; const AButton: TButton);
+    property JSONRequest: string write SetJSONRequest;
+    property JSONResponse: string write SetJSONResponse;
+
+    procedure JSONUIClear;
+    procedure ShowCancel;
+    procedure HideCancel;
+
+    constructor Create(
+      const AClient: IAnthropic;
+      const AMemo1, AMemo2, AMemo3, AMemo4: TMemo;
+      const AButton: TButton);
   end;
 
   procedure Cancellation(Sender: TObject);
   function DoCancellation: Boolean;
+  function DoCancellationStream(Sender: TObject): string;
   procedure Start(Sender: TObject);
 
   procedure Display(Sender: TObject); overload;
@@ -88,18 +75,35 @@ type
   procedure Display(Sender: TObject; Value: TChat); overload;
   procedure Display(Sender: TObject; Value: TModel); overload;
   procedure Display(Sender: TObject; Value: TModels); overload;
-  procedure Display(Sender: TObject; Value: TChatUsage); overload;
-  procedure Display(Sender: TObject; Value: TBatcheList); overload;
-  procedure Display(Sender: TObject; Value: TBatche); overload;
+  procedure Display(Sender: TObject; Value: TUsage); overload;
+  procedure Display(Sender: TObject; Value: TBatchList); overload;
+  procedure Display(Sender: TObject; Value: TBatch); overload;
   procedure Display(Sender: TObject; Value: TBatchDelete); overload;
   procedure Display(Sender: TObject; Value: TStringList); overload;
   procedure Display(Sender: TObject; Value: IBatcheResults); overload;
   procedure Display(Sender: TObject; Value: TTokenCount); overload;
+  procedure Display(Sender: TObject; Value: TFile); overload;
+  procedure Display(Sender: TObject; Value: TFileList); overload;
+  procedure Display(Sender: TObject; Value: TFileDeleted); overload;
 
   procedure DisplayStream(Sender: TObject; Value: string); overload;
-  procedure DisplayStream(Sender: TObject; Value: TChat); overload;
+  procedure DisplayStream(Sender: TObject; Value: TChatStream); overload;
+
+  procedure DisplayChunk(Value: string); overload;
+  procedure DisplayChunk(Value: TChatStream); overload;
+
+  function DisplayPromise(Sender: TObject; Value: string): string; overload;
+  function DisplayPromise(Sender: TObject; Value: TChat): string; overload;
 
   procedure DisplayUsage(Sender: TObject; Value: TChat);
+
+  procedure DisplayMessageStart(Sender: TObject; Value: TEventData);
+  procedure DisplayMessageDelta(Sender: TObject; Value: TEventData);
+  procedure DisplayMessageStop(Sender: TObject; Value: TEventData);
+  procedure DisplayContentStart(Sender: TObject; Value: TEventData);
+  procedure DisplayContentDelta(Sender: TObject; Value: TEventData);
+  procedure DisplayContentStop(Sender: TObject; Value: TEventData);
+  procedure DisplayStreamError(Sender: TObject; Value: TEventData);
 
   function F(const Name, Value: string): string; overload;
   function F(const Name: string; const Value: TArray<string>): string; overload;
@@ -143,6 +147,11 @@ begin
   Result := TutorialHub.Cancel;
 end;
 
+function DoCancellationStream(Sender: TObject): string;
+begin
+  Result := 'aborted';
+end;
+
 procedure Start(Sender: TObject);
 begin
   Display(Sender, 'Please wait...');
@@ -182,24 +191,43 @@ end;
 
 procedure Display(Sender: TObject; Value: TChat);
 begin
+  if not Assigned(Value) then
+    Exit;
+
+  TutorialHub.JSONResponse := Value.JSONResponse;
+
   for var Item in Value.Content do
     begin
-      if Item.&Type = 'text' then
-          begin
-            Display(Sender, Item.Text);
-            DisplayUsage(Sender, Value);
-          end
-        else
-        if Item.&Type = 'tool_use' then
-          begin
-            if Assigned(TutorialHub.ToolCall) then
-              TutorialHub.ToolCall(TutorialHub.Tool.Execute(Item.Input));
-          end;
+      if Item.&Type = TContentBlockType.text then
+        begin
+          Display(Sender, Item.Text);
+        end
+      else
+      if Item.&Type = TContentBlockType.web_search_tool_result then
+        begin
+//          Display(Sender, Item.Content);
+
+          for var Content in Item.ToolContent.WebSearchToolResultBlock.Content do
+            Display(Sender, Content.Url);
+        end
+      else
+      if Item.&Type = TContentBlockType.tool_use then
+        begin
+          Display(Sender, F('Type', Item.&Type.ToString));
+          Display(Sender, F('Name', Item.Name));
+          Display(Sender, F('input', Item.Input));
+          if Assigned(TutorialHub.ToolCall) then
+            TutorialHub.ToolCall(TutorialHub.Tool.Execute(Item.Input));
+        end;
     end;
+  Display(Sender);
+  DisplayUsage(Sender, Value);
 end;
 
 procedure Display(Sender: TObject; Value: TModel);
 begin
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, [
     Value.Id,
     F('Type', Value.&Type),
@@ -216,47 +244,49 @@ begin
       Display(Sender, 'No model found');
       Exit;
     end;
+  TutorialHub.JSONResponse := Value.JSONResponse;
   for var Item in Value.Data do
     begin
       Display(Sender, Item);
-      Application.ProcessMessages;
     end;
   Display(Sender);
 end;
 
-procedure Display(Sender: TObject; Value: TChatUsage);
+procedure Display(Sender: TObject; Value: TUsage);
 begin
-  Display(Sender, [F('input_tokens', [Value.InputTokens.ToString,
-      F('output_tokens', Value.OutputTokens.ToString),
-      F('cache_creation_input_tokens', Value.CacheCreationInputTokens.ToString),
-      F('cache_read_input_tokens', Value.CacheReadInputTokens.ToString)
+  Display(Sender, [F('• input_tokens', [Value.InputTokens.ToString,
+      F('• output_tokens', Value.OutputTokens.ToString),
+      F('• cache_creation_input_tokens', Value.CacheCreationInputTokens.ToString),
+      F('• cache_read_input_tokens', Value.CacheReadInputTokens.ToString)
    ])]);
   Display(Sender)
 end;
 
-procedure Display(Sender: TObject; Value: TBatche);
+procedure Display(Sender: TObject; Value: TBatch);
 begin
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+
   Display(Sender, [EmptyStr,
     Value.Id,
-    F('Type', Value.&Type),
-    F('Processing_status', Value.ProcessingStatus.ToString),
-    F('CreatedAt', Value.CreatedAt),
-    F('ExpiresAt', Value.ExpiresAt),
-    F('CancelInitiatedAt', Value.CancelInitiatedAt),
-    F('ResultsUrl', Value.ResultsUrl),
-    F('Processing', Value.RequestCounts.Processing.ToString),
-    F('Succeeded', Value.RequestCounts.Succeeded.ToString),
-    F('Errored', Value.RequestCounts.Errored.ToString),
-    F('Canceled', Value.RequestCounts.Canceled.ToString),
-    F('Expired', Value.RequestCounts.Expired.ToString)
+    F('• Type', Value.&Type),
+    F('• Processing_status', Value.ProcessingStatus.ToString),
+    F('• CreatedAt', Value.CreatedAt),
+    F('• ExpiresAt', Value.ExpiresAt),
+    F('• CancelInitiatedAt', Value.CancelInitiatedAt),
+    F('• ResultsUrl', Value.ResultsUrl),
+    F('• Processing', Value.RequestCounts.Processing.ToString),
+    F('• Succeeded', Value.RequestCounts.Succeeded.ToString),
+    F('• Errored', Value.RequestCounts.Errored.ToString),
+    F('• Canceled', Value.RequestCounts.Canceled.ToString),
+    F('• Expired', Value.RequestCounts.Expired.ToString)
   ]);
   Display(Sender, EmptyStr);
-  if Assigned(TutorialHub.JSONParam) then
-    FreeAndNil(TutorialHub.JSONParam);
 end;
 
 procedure Display(Sender: TObject; Value: TBatchDelete);
 begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, F('Id', [
      Value.Id,
      F('Type', Value.&Type)
@@ -264,11 +294,13 @@ begin
   Display(Sender);
 end;
 
-procedure Display(Sender: TObject; Value: TBatcheList);
+procedure Display(Sender: TObject; Value: TBatchList);
 begin
-  Display(Sender, F('HasMore', BoolToStr(Value.HasMore, True)));
-  Display(Sender, F('FirstId', Value.FirstId));
-  Display(Sender, F('LastId', Value.LastId));
+  TutorialHub.JSONResponse := Value.JSONResponse;
+
+  Display(Sender, F('• HasMore', BoolToStr(Value.HasMore, True)));
+  Display(Sender, F('• FirstId', Value.FirstId));
+  Display(Sender, F('• LastId', Value.LastId));
   Display(Sender, EmptyStr);
 
   for var Item in Value.Data do
@@ -276,7 +308,7 @@ begin
       Display(Sender, [EmptyStr,
         F('Id', [
           Item.Id,
-          Item.ProcessingStatus.ToString
+          F('• processingStatus', Item.ProcessingStatus.ToString)
         ])
       ]);
     end;
@@ -304,62 +336,132 @@ end;
 
 procedure Display(Sender: TObject; Value: TTokenCount);
 begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, F('Input_tokens', Value.InputTokens.ToString));
+end;
+
+procedure Display(Sender: TObject; Value: TFile);
+begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('• filename', Value.Filename),
+    F('• mimeType', Value.MimeType),
+    F('• sizeBytes', Value.SizeBytes.ToString),
+    F('• downloadable', BoolToStr(Value.Downloadable, True))
+  ]);
+  Display(Sender);
+end;
+
+procedure Display(Sender: TObject; Value: TFileList);
+begin
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+end;
+
+procedure Display(Sender: TObject; Value: TFileDeleted);
+begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' deleted');
 end;
 
 procedure DisplayStream(Sender: TObject; Value: string);
 var
   M: TMemo;
-  CurrentLine: string;
 begin
   if Sender is TMemo then
     M := Sender as TMemo
   else
     M := (Sender as TFMXTutorialHub).Memo1;
-  var ShouldScroll := M.ViewportPosition.Y >= (M.Content.Height - M.Height - 16);
+
   M.Lines.BeginUpdate;
   try
-    var Lines := Value.Replace(#13, '').Split([#10]);
-    if System.Length(Lines) > 0 then
-    begin
-      if M.Lines.Count > 0 then
-        CurrentLine := M.Lines[M.Lines.Count - 1]
-      else
-        CurrentLine := EmptyStr;
-      CurrentLine := CurrentLine + Lines[0];
-      if M.Lines.Count > 0 then
-        M.Lines[M.Lines.Count - 1] := CurrentLine
-      else
-        M.Lines.Add(CurrentLine);
-      for var i := 1 to High(Lines) do
-        M.Lines.Add(Lines[i]);
-    end;
+    M.Lines.Text := M.Text + Value;
   finally
     M.Lines.EndUpdate;
   end;
-  if ShouldScroll then
-    M.ViewportPosition := PointF(M.ViewportPosition.X, M.Content.Height - M.Height + 1);
 end;
 
-procedure DisplayStream(Sender: TObject; Value: TChat);
+procedure DisplayStream(Sender: TObject; Value: TChatStream);
 begin
-  if Assigned(Value) then
-    begin
-      if Value.Delta.&Type = 'tool_use' then
-        begin
-          if Assigned(TutorialHub.ToolCall) then
-            TutorialHub.ToolCall(TutorialHub.Tool.Execute(Value.Delta.Input));
-        end
-      else
-        begin
-          DisplayStream(Sender, Value.Delta.Text);
-        end;
+  if not Assigned(Value) then
+    Exit;
+
+  if Value.EventType = TEventType.content_block_delta then
+    DisplayStream(Sender, Value.ContentBlockDelta.Delta.Text);
+
+  DisplayChunk(Value);
+end;
+
+procedure DisplayChunk(Value: string);
+begin
+  if Value.Trim.IsEmpty then
+    Exit;
+
+  var JSONValue := TJSONObject.ParseJSONValue(Value);
+    try
+      Display(TutorialHub.Memo4, JSONValue.ToString);
+    finally
+      JSONValue.Free;
     end;
+end;
+
+procedure DisplayChunk(Value: TChatStream);
+begin
+  DisplayChunk(Value.JSONResponse);
+end;
+
+function DisplayPromise(Sender: TObject; Value: string): string;
+begin
+  Display(Sender, Value);
+end;
+
+function DisplayPromise(Sender: TObject; Value: TChat): string;
+begin
+  Display(Sender, Value);
 end;
 
 procedure DisplayUsage(Sender: TObject; Value: TChat);
 begin
   Display(Sender, Value.Usage);
+end;
+
+procedure DisplayMessageStart(Sender: TObject; Value: TEventData);
+begin
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayMessageDelta(Sender: TObject; Value: TEventData);
+begin
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayMessageStop(Sender: TObject; Value: TEventData);
+begin
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayContentStart(Sender: TObject; Value: TEventData);
+begin
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayContentDelta(Sender: TObject; Value: TEventData);
+begin
+  DisplayStream(Sender, Value.Delta);
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayContentStop(Sender: TObject; Value: TEventData);
+begin
+  DisplayChunk(Value.RawJson);
+end;
+
+procedure DisplayStreamError(Sender: TObject; Value: TEventData);
+begin
+  Display(Sender, 'error');
 end;
 
 function F(const Name, Value: string): string;
@@ -417,17 +519,37 @@ end;
 
 { TFMXTutorialHub }
 
-constructor TFMXTutorialHub.Create(const AMemo1: TMemo; const AButton: TButton);
+constructor TFMXTutorialHub.Create(
+  const AClient: IAnthropic;
+  const AMemo1, AMemo2, AMemo3, AMemo4: TMemo;
+  const AButton: TButton);
 begin
   inherited Create;
+  FClient := AClient;
   Memo1 := AMemo1;
+  Memo2 := AMemo2;
+  Memo3 := AMemo3;
+  Memo4 := AMemo4;
   Button := AButton;
-  JSONParam := nil;
+end;
+
+procedure TFMXTutorialHub.HideCancel;
+begin
+  FButton.Visible := False;
+end;
+
+procedure TFMXTutorialHub.JSONUIClear;
+begin
+  Memo1.Lines.Clear;
+  Memo2.Lines.Clear;
+  Memo3.Lines.Clear;
+  Memo4.Lines.Clear;
 end;
 
 procedure TFMXTutorialHub.OnButtonClick(Sender: TObject);
 begin
   Cancel := True;
+  HideCancel;
 end;
 
 procedure TFMXTutorialHub.SetButton(const Value: TButton);
@@ -437,10 +559,63 @@ begin
   FButton.Text := 'Cancel';
 end;
 
+procedure TFMXTutorialHub.SetJSONRequest(const Value: string);
+begin
+  var Task: ITask := TTask.Create(
+  procedure()
+  begin
+    TThread.Synchronize(nil, procedure
+      begin
+        Memo3.Lines.Text := Value;
+        Memo3.SelStart := 0;
+      end)
+  end);
+
+  Task.Start;
+end;
+
+procedure TFMXTutorialHub.SetJSONResponse(const Value: string);
+begin
+  var Task: ITask := TTask.Create(
+  procedure()
+  begin
+    TThread.Synchronize(nil, procedure
+      begin
+        Memo4.Lines.Text := Value;
+        Memo4.SelStart := 0;
+      end)
+  end);
+
+  Task.Start;
+end;
+
 procedure TFMXTutorialHub.SetMemo1(const Value: TMemo);
 begin
   FMemo1 := Value;
   FMemo1.TextSettings.WordWrap := True;
+end;
+
+procedure TFMXTutorialHub.SetMemo2(const Value: TMemo);
+begin
+  FMemo2 := Value;
+  FMemo2.TextSettings.WordWrap := False;
+end;
+
+procedure TFMXTutorialHub.SetMemo3(const Value: TMemo);
+begin
+  FMemo3 := Value;
+  FMemo3.TextSettings.WordWrap := False;
+end;
+
+procedure TFMXTutorialHub.SetMemo4(const Value: TMemo);
+begin
+  FMemo4 := Value;
+  FMemo4.TextSettings.WordWrap := False;
+end;
+
+procedure TFMXTutorialHub.ShowCancel;
+begin
+  FButton.Visible := True;
 end;
 
 initialization

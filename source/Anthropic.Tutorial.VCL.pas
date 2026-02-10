@@ -15,8 +15,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  System.UITypes,
-  Anthropic, Anthropic.Types, Anthropic.API.Params;
+  System.UITypes, System.Threading,
+  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Chat.StreamEvents,
+  Anthropic.Chat.StreamCallbacks;
 
 type
   TToolProc = procedure (const Value: string) of object;
@@ -28,6 +29,7 @@ type
   TVCLTutorialHub = class
   private
     FMemo1: TMemo;
+    FMemo2: TMemo;
     FButton: TButton;
     FBatchId: string;
     FFileName: string;
@@ -38,11 +40,15 @@ type
     procedure OnButtonClick(Sender: TObject);
     procedure SetButton(const Value: TButton);
     procedure SetMemo1(const Value: TMemo);
+    procedure SetMemo2(const Value: TMemo);
   public
     /// <summary>
     /// Gets or sets the first memo component for displaying messages or data.
     /// </summary>
     property Memo1: TMemo read FMemo1 write SetMemo1;
+
+    property Memo2: TMemo read FMemo2 write SetMemo2;
+
     /// <summary>
     /// Gets or sets the button component used to trigger actions or handle cancellation.
     /// </summary>
@@ -71,12 +77,16 @@ type
     /// Gets or sets the procedure for handling tool-specific calls.
     /// </summary>
     property ToolCall: TToolProc read FToolCall write FToolCall;
-    constructor Create(const AMemo1: TMemo; const AButton: TButton);
+    constructor Create(const AMemo1, AMemo2: TMemo; const AButton: TButton);
   end;
 
   procedure Cancellation(Sender: TObject);
   function DoCancellation: Boolean;
+  function DoCancellationStream(Sender: TObject): string;
   procedure Start(Sender: TObject);
+
+  procedure DisplaySync(Sender: TObject; Value: string); overload;
+  procedure DisplayStreamSync(Sender: TObject; Value: string); overload;
 
   procedure Display(Sender: TObject); overload;
   procedure Display(Sender: TObject; Value: string); overload;
@@ -84,18 +94,29 @@ type
   procedure Display(Sender: TObject; Value: TChat); overload;
   procedure Display(Sender: TObject; Value: TModel); overload;
   procedure Display(Sender: TObject; Value: TModels); overload;
-  procedure Display(Sender: TObject; Value: TChatUsage); overload;
-  procedure Display(Sender: TObject; Value: TBatcheList); overload;
-  procedure Display(Sender: TObject; Value: TBatche); overload;
+  procedure Display(Sender: TObject; Value: TUsage); overload;
+  procedure Display(Sender: TObject; Value: TBatchList); overload;
+  procedure Display(Sender: TObject; Value: TBatch); overload;
   procedure Display(Sender: TObject; Value: TBatchDelete); overload;
   procedure Display(Sender: TObject; Value: TStringList); overload;
   procedure Display(Sender: TObject; Value: IBatcheResults); overload;
   procedure Display(Sender: TObject; Value: TTokenCount); overload;
 
+  function DisplayChat(Sender: TObject; Value: TChat): string; overload;
+  function DisplayChat(Sender: TObject; Value: string): string; overload;
+
   procedure DisplayStream(Sender: TObject; Value: string); overload;
-  procedure DisplayStream(Sender: TObject; Value: TChat); overload;
+  procedure DisplayStream(Sender: TObject; Value: TChatStream); overload;
 
   procedure DisplayUsage(Sender: TObject; Value: TChat);
+
+  procedure DisplayMessageStart(Sender: TObject; Value: TEventData);
+  procedure DisplayMessageDelta(Sender: TObject; Value: TEventData);
+  procedure DisplayMessageStop(Sender: TObject; Value: TEventData);
+  procedure DisplayContentStart(Sender: TObject; Value: TEventData);
+  procedure DisplayContentDelta(Sender: TObject; Value: TEventData);
+  procedure DisplayContentStop(Sender: TObject; Value: TEventData);
+  procedure DisplayStreamError(Sender: TObject; Value: TEventData);
 
   function F(const Name, Value: string): string; overload;
   function F(const Name: string; const Value: TArray<string>): string; overload;
@@ -140,13 +161,19 @@ begin
   Result := TutorialHub.Cancel;
 end;
 
+function DoCancellationStream(Sender: TObject): string;
+begin
+  Result := 'aborted';
+end;
+
 procedure Start(Sender: TObject);
 begin
+  TutorialHub.Cancel := False;
   Display(Sender, 'Please wait...');
   Display(Sender);
 end;
 
-procedure Display(Sender: TObject; Value: string);
+procedure DisplaySync(Sender: TObject; Value: string);
 var
   M: TMemo;
 begin
@@ -166,6 +193,22 @@ begin
     end;
 
   M.Perform(WM_VSCROLL, SB_BOTTOM, 0);
+end;
+
+procedure Display(Sender: TObject; Value: string);
+begin
+  DisplaySync(Sender, Value);
+
+//  var Task: ITask := TTask.Create(
+//  procedure()
+//  begin
+//    TThread.Synchronize(nil, procedure
+//      begin
+//        DisplaySync(Sender, Value);
+//      end)
+//  end);
+//
+//  Task.Start;
 end;
 
 procedure Display(Sender: TObject; Value: TArray<string>);
@@ -190,20 +233,33 @@ end;
 
 procedure Display(Sender: TObject; Value: TChat);
 begin
+  if not Assigned(Value) then
+    Exit;
+
+  TutorialHub.Memo2.Text := Value.JSONResponse;
+
   for var Item in Value.Content do
     begin
-      if Item.&Type = 'text' then
-          begin
-            Display(Sender, Item.Text);
-            DisplayUsage(Sender, Value);
-          end
-        else
-        if Item.&Type = 'tool_use' then
-          begin
-            if Assigned(TutorialHub.ToolCall) then
-              TutorialHub.ToolCall(TutorialHub.Tool.Execute(Item.Input));
-          end;
+      if Item.&Type = TContentBlockType.text then
+        begin
+          Display(Sender, Item.Text);
+        end
+      else
+      if Item.&Type = TContentBlockType.web_search_tool_result then
+        begin
+//          Display(Sender, Item.Content);
+
+          for var Content in Item.ToolContent.WebSearchToolResultBlock.Content do
+            Display(Sender, Content.Url);
+        end
+      else
+      if Item.&Type = TContentBlockType.tool_use then
+        begin
+          if Assigned(TutorialHub.ToolCall) then
+            TutorialHub.ToolCall(TutorialHub.Tool.Execute(Item.Input));
+        end;
     end;
+  DisplayUsage(Sender, Value);
 end;
 
 procedure Display(Sender: TObject; Value: TModel);
@@ -232,7 +288,7 @@ begin
   Display(Sender);
 end;
 
-procedure Display(Sender: TObject; Value: TChatUsage);
+procedure Display(Sender: TObject; Value: TUsage);
 begin
   Display(Sender, [F('input_tokens', [Value.InputTokens.ToString,
       F('output_tokens', Value.OutputTokens.ToString),
@@ -242,7 +298,7 @@ begin
   Display(Sender)
 end;
 
-procedure Display(Sender: TObject; Value: TBatche);
+procedure Display(Sender: TObject; Value: TBatch);
 begin
   Display(Sender, [EmptyStr,
     Value.Id,
@@ -272,7 +328,7 @@ begin
   Display(Sender);
 end;
 
-procedure Display(Sender: TObject; Value: TBatcheList);
+procedure Display(Sender: TObject; Value: TBatchList);
 begin
   Display(Sender, F('HasMore', BoolToStr(Value.HasMore, True)));
   Display(Sender, F('FirstId', Value.FirstId));
@@ -315,7 +371,17 @@ begin
   Display(Sender, F('Input_tokens', Value.InputTokens.ToString));
 end;
 
-procedure DisplayStream(Sender: TObject; Value: string);
+function DisplayChat(Sender: TObject; Value: TChat): string;
+begin
+  Display(Sender, Value);
+end;
+
+function DisplayChat(Sender: TObject; Value: string): string;
+begin
+  Display(Sender, Value);
+end;
+
+procedure DisplayStreamSync(Sender: TObject; Value: string);
 var
   M: TMemo;
   CurrentLine: string;
@@ -324,8 +390,10 @@ begin
   if Sender is TMemo then
     M := TMemo(Sender) else
     M := (Sender as TVCLTutorialHub).Memo1;
+
   var OldSelStart := M.SelStart;
   var ShouldScroll := (OldSelStart = M.GetTextLen);
+
   M.Lines.BeginUpdate;
   try
     Lines := Value.Split([#10]);
@@ -335,17 +403,21 @@ begin
         CurrentLine := M.Lines[M.Lines.Count - 1]
       else
         CurrentLine := '';
+
       CurrentLine := CurrentLine + Lines[0];
+
       if M.Lines.Count > 0 then
         M.Lines[M.Lines.Count - 1] := CurrentLine
       else
         M.Lines.Add(CurrentLine);
+
       for var i := 1 to High(Lines) do
         M.Lines.Add(Lines[i]);
     end;
   finally
     M.Lines.EndUpdate;
   end;
+
   if ShouldScroll then
   begin
     M.SelStart := M.GetTextLen;
@@ -354,25 +426,68 @@ begin
   end;
 end;
 
-procedure DisplayStream(Sender: TObject; Value: TChat);
+procedure DisplayStream(Sender: TObject; Value: string);
 begin
-  if Assigned(Value) then
-    begin
-      if Value.Delta.&Type = 'tool_use' then
-        begin
-          if Assigned(TutorialHub.ToolCall) then
-            TutorialHub.ToolCall(TutorialHub.Tool.Execute(Value.Delta.Input));
-        end
-      else
-        begin
-          DisplayStream(Sender, Value.Delta.Text);
-        end;
-    end;
+//  DisplayStreamSync(Sender, Value);
+  var Task: ITask := TTask.Create(
+  procedure()
+  begin
+    TThread.Synchronize(nil, procedure
+      begin
+        DisplayStreamSync(Sender, Value);
+      end)
+  end);
+
+  Task.Start;
+end;
+
+procedure DisplayStream(Sender: TObject; Value: TChatStream);
+begin
+  if not Assigned(Value) then
+    Exit;
+
+  if Value.EventType = TEventType.content_block_delta then
+    DisplayStream(Sender, Value.ContentBlockDelta.Delta.Text);
 end;
 
 procedure DisplayUsage(Sender: TObject; Value: TChat);
 begin
   Display(Sender, Value.Usage);
+end;
+
+procedure DisplayMessageStart(Sender: TObject; Value: TEventData);
+begin
+
+end;
+
+procedure DisplayMessageDelta(Sender: TObject; Value: TEventData);
+begin
+
+end;
+
+procedure DisplayMessageStop(Sender: TObject; Value: TEventData);
+begin
+
+end;
+
+procedure DisplayContentStart(Sender: TObject; Value: TEventData);
+begin
+
+end;
+
+procedure DisplayContentDelta(Sender: TObject; Value: TEventData);
+begin
+  DisplayStream(Sender, Value.Delta);
+end;
+
+procedure DisplayContentStop(Sender: TObject; Value: TEventData);
+begin
+
+end;
+
+procedure DisplayStreamError(Sender: TObject; Value: TEventData);
+begin
+  Display(Sender, 'error');
 end;
 
 function F(const Name, Value: string): string;
@@ -405,10 +520,11 @@ end;
 
 { TVCLTutorialHub }
 
-constructor TVCLTutorialHub.Create(const AMemo1: TMemo; const AButton: TButton);
+constructor TVCLTutorialHub.Create(const AMemo1, AMemo2: TMemo; const AButton: TButton);
 begin
   inherited Create;
   Memo1 := AMemo1;
+  Memo2 := AMemo2;
   Button := AButton;
   JSONParam := nil;
 end;
@@ -429,6 +545,12 @@ procedure TVCLTutorialHub.SetMemo1(const Value: TMemo);
 begin
   FMemo1 := Value;
   FMemo1.ScrollBars := TScrollStyle.ssVertical;
+end;
+
+procedure TVCLTutorialHub.SetMemo2(const Value: TMemo);
+begin
+  FMemo2 := Value;
+  FMemo2.ScrollBars := TScrollStyle.ssVertical;
 end;
 
 initialization

@@ -10,279 +10,138 @@ unit Anthropic.Types;
 interface
 
 uses
-  System.SysUtils, Anthropic.API.Params;
+  System.SysUtils,
+  Anthropic.API.Params, Anthropic.Types.Rtti, Anthropic.Types.EnumWire;
 
 type
 
+  TArgsFixInterceptor = class(TJSONInterceptorStringToString)
+  public
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
 {$REGION 'Anthropic.Chat'}
 
-/// <summary>
-  /// Type of message role
-  /// </summary>
+  {$SCOPEDENUMS OFF}
   TMessageRole = (
     /// <summary>
     /// User message
     /// </summary>
     user,
+
     /// <summary>
     /// Assistant message
     /// </summary>
     assistant);
 
-  /// <summary>
-  /// Helper record for the <c>TMessageRole</c> enumeration, providing utility methods for converting
-  /// between <c>TMessageRole</c> values and their string representations.
-  /// </summary>
   TMessageRoleHelper = record helper for TMessageRole
-    /// <summary>
-    /// Converts the current <c>TMessageRole</c> value to its corresponding string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TMessageRole</c> value.
-    /// </returns>
     function ToString: string;
-    /// <summary>
-    /// Converts a string representation of a <c>TMessageRole</c> into its corresponding enumeration value.
-    /// </summary>
-    /// <param name="Value">
-    /// The string representing a <c>TMessageRole</c>.
-    /// </param>
-    /// <returns>
-    /// The <c>TMessageRole</c> enumeration value that corresponds to the provided string.
-    /// </returns>
-    class function FromString(const Value: string): TMessageRole; static;
+    class function Parse(const S: string): TMessageRole; static;
   end;
 
-
-  /// <summary>
-  /// Represents the different reasons why the processing of a request can terminate.
-  /// </summary>
-  TStopReason = (
-    /// <summary>
-    /// The model reached a natural stopping point
-    /// </summary>
-    end_turn,
-    /// <summary>
-    /// We exceeded the requested max_tokens or the model's maximum
-    /// </summary>
-    max_tokens,
-    /// <summary>
-    /// One of your provided custom stop_sequences was generated
-    /// </summary>
-    stop_sequence,
-    /// <summary>
-    /// The model invoked one or more tools
-    /// </summary>
-    tool_use);
-
-  /// <summary>
-  /// Helper record for the <c>TStopReason</c> enumeration, providing utility methods for conversion between string representations and <c>TStopReason</c> values.
-  /// </summary>
-  TStopReasonHelper = record helper for TStopReason
-    /// <summary>
-    /// Converts the current <c>TStopReason</c> value to its string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TStopReason</c> value.
-    /// </returns>
-    function ToString: string;
-    /// <summary>
-    /// Creates a <c>TStopReason</c> value from its corresponding string representation.
-    /// </summary>
-    /// <param name="Value">
-    /// The string value representing a <c>TStopReason</c>.
-    /// </param>
-    /// <returns>
-    /// The corresponding <c>TStopReason</c> enumeration value for the provided string.
-    /// </returns>
-    /// <remarks>
-    /// This method throws an exception if the input string does not match any valid <c>TStopReason</c> values.
-    /// </remarks>
-    class function Create(const Value: string): TStopReason; static;
-  end;
-
-  /// <summary>
-  /// Interceptor class for converting <c>TStopReason</c> values to and from their string representations in JSON serialization and deserialization.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to facilitate the conversion between the <c>TStopReason</c> enum and its string equivalents during JSON processing.
-  /// It extends the <c>TJSONInterceptorStringToString</c> class to override the necessary methods for custom conversion logic.
-  /// </remarks>
-  TStopReasonInterceptor = class(TJSONInterceptorStringToString)
+  TMessageRoleInterceptor = class(TJSONInterceptorStringToString)
   public
-    /// <summary>
-    /// Converts the <c>TStopReason</c> value of the specified field to a string during JSON serialization.
-    /// </summary>
-    /// <param name="Data">
-    /// The object containing the field to be converted.
-    /// </param>
-    /// <param name="Field">
-    /// The field name representing the <c>TStopReason</c> value.
-    /// </param>
-    /// <returns>
-    /// The string representation of the <c>TStopReason</c> value.
-    /// </returns>
     function StringConverter(Data: TObject; Field: string): string; override;
-    /// <summary>
-    /// Converts a string back to a <c>TStopReason</c> value for the specified field during JSON deserialization.
-    /// </summary>
-    /// <param name="Data">
-    /// The object containing the field to be set.
-    /// </param>
-    /// <param name="Field">
-    /// The field name where the <c>TStopReason</c> value will be set.
-    /// </param>
-    /// <param name="Arg">
-    /// The string representation of the <c>TStopReason</c> to be converted back.
-    /// </param>
-    /// <remarks>
-    /// This method converts the string argument back to the corresponding <c>TStopReason</c> value and assigns it to the specified field in the object.
-    /// </remarks>
     procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
   end;
 
-  /// <summary>
-  /// Indicator to specify how to use tools.
-  /// </summary>
+  {$SCOPEDENUMS OFF}
+  TStopReason = (
+    end_turn,
+    max_tokens,
+    stop_sequence,
+    tool_use,
+    pause_turn,
+    refusal
+  );
+
+  TStopReasonHelper = record helper for TStopReason
+    function ToString: string;
+    class function Parse(const S: string): TStopReason; static;
+  end;
+
+  TStopReasonInterceptor = class(TJSONInterceptorStringToString)
+  public
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+  {$SCOPEDENUMS ON}
   TToolChoiceType = (
     /// <summary>
     /// Allows Claude to decide whether to call any provided tools or not. This is the default value.
     /// </summary>
     auto,
+
     /// <summary>
     /// Tells Claude that it must use one of the provided tools, but doesn’t force a particular tool.
     /// </summary>
     any,
+
     /// <summary>
     ///  Allows us to force Claude to always use a particular tool.
     /// </summary>
-    tool
+    tool,
+
+    /// <summary>
+    /// The model will not be allowed to use tools.
+    /// </summary>
+    none
   );
 
-  /// <summary>
-  /// Helper record for the <c>TToolChoiceType</c> enumeration, providing utility methods for converting
-  /// between <c>TToolChoiceType</c> values and their string representations.
-  /// </summary>
   TToolChoiceTypeHelper = record helper for TToolChoiceType
-    /// <summary>
-    /// Converts the current <c>TToolChoiceType</c> value to its corresponding string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TToolChoiceType</c> value.
-    /// </returns>
     function ToString: string;
+    class function Parse(const S: string): TToolChoiceType; static;
   end;
 
-  /// <summary>
-  /// Indicator to specify how to use caching.
-  /// </summary>
+  {$SCOPEDENUMS ON}
   TCachingType = (
     /// <summary>
     /// Cache is not used.
     /// </summary>
     nocaching,
+
     /// <summary>
     /// This is the only type currently defined by Anthropic.
     /// </summary>
     ephemeral
   );
 
-  /// <summary>
-  /// Helper record for the <c>TCachingType</c> enumeration, providing utility methods for converting
-  /// between <c>TCachingType</c> values and their string representations.
-  /// </summary>
   TCachingTypeHelper = record Helper for TCachingType
-    /// <summary>
-    /// Converts the current <c>TCachingType</c> value to its string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TCachingType</c> value.
-    /// </returns>
     function ToString: string;
+    class function Parse(const S: string): TCachingType; static;
   end;
 
 {$ENDREGION}
 
 {$REGION 'Anthropic.Batches'}
 
-  /// <summary>
-  /// Processing status of the Message Batch.
-  /// </summary>
+  {$SCOPEDENUMS OFF}
   TProcessingStatusType = (
     /// <summary>
     /// Batch of messages pending or being processed
     /// </summary>
     in_progress,
+
     /// <summary>
     /// Message batch processing canceled
     /// </summary>
     canceling,
+
     /// <summary>
     /// Batch processing is complete
     /// </summary>
     ended
   );
 
-  /// <summary>
-  /// Helper record for the <c>TProcessingStatusType</c> enumeration, providing utility methods for converting
-  /// between <c>TProcessingStatusType</c> values and their string representations.
-  /// </summary>
   TProcessingStatusTypeHelper = record helper for TProcessingStatusType
-    /// <summary>
-    /// Converts the current <c>TProcessingStatusType</c> value to its corresponding string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TProcessingStatusType</c> value.
-    /// </returns>
     function ToString: string;
-    /// <summary>
-    /// Converts a string representation of a <c>TProcessingStatusType</c> into its corresponding enumeration value.
-    /// </summary>
-    /// <param name="Value">
-    /// The string representing a <c>TTProcessingStatusType</c>.
-    /// </param>
-    /// <returns>
-    /// The <c>TProcessingStatusType</c> enumeration value that corresponds to the provided string.
-    /// </returns>
-    class function Create(const Value: string): TProcessingStatusType; static;
+    class function Parse(const S: string): TProcessingStatusType; static;
   end;
 
-  /// <summary>
-  /// Interceptor class for converting <c>TTProcessingStatusType</c> values to and from their string representations in JSON serialization and deserialization.
-  /// </summary>
-  /// <remarks>
-  /// This class is used to facilitate the conversion between the <c>TTProcessingStatusType</c> enum and its string equivalents during JSON processing.
-  /// It extends the <c>TJSONInterceptorStringToString</c> class to override the necessary methods for custom conversion logic.
-  /// </remarks>
+
   TProcessingStatusInterceptor = class(TJSONInterceptorStringToString)
-    /// <summary>
-    /// Converts the <c>TJSONInterceptorStringToString</c> value of the specified field to a string during JSON serialization.
-    /// </summary>
-    /// <param name="Data">
-    /// The object containing the field to be converted.
-    /// </param>
-    /// <param name="Field">
-    /// The field name representing the <c>TJSONInterceptorStringToString</c> value.
-    /// </param>
-    /// <returns>
-    /// The string representation of the <c>TJSONInterceptorStringToString</c> value.
-    /// </returns>
     function StringConverter(Data: TObject; Field: string): string; override;
-    /// <summary>
-    /// Converts a string back to a <c>TJSONInterceptorStringToString</c> value for the specified field during JSON deserialization.
-    /// </summary>
-    /// <param name="Data">
-    /// The object containing the field to be set.
-    /// </param>
-    /// <param name="Field">
-    /// The field name where the <c>TJSONInterceptorStringToString</c> value will be set.
-    /// </param>
-    /// <param name="Arg">
-    /// The string representation of the <c>TJSONInterceptorStringToString</c> to be converted back.
-    /// </param>
-    /// <remarks>
-    /// This method converts the string argument back to the corresponding <c>TJSONInterceptorStringToString</c> value and assigns it to the specified field in the object.
-    /// </remarks>
     procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
   end;
 
@@ -290,52 +149,369 @@ type
 
 {$REGION 'Anthropic.Schema'}
 
-  /// <summary>
-  /// Type contains the list of OpenAPI data types as defined by https://spec.openapis.org/oas/v3.0.3#data-types
-  /// </summary>
+  {$SCOPEDENUMS ON}
   TSchemaType = (
     /// <summary>
     /// Not specified, should not be used.
     /// </summary>
     TYPE_UNSPECIFIED,
+
     /// <summary>
     /// String type.
     /// </summary>
-    stSTRING,
+    &STRING,
+
     /// <summary>
     /// Number type.
     /// </summary>
-    stNUMBER,
+    NUMBER,
+
     /// <summary>
     /// Integer type.
     /// </summary>
-    stINTEGER,
+    &INTEGER,
+
     /// <summary>
     /// Boolean type.
     /// </summary>
-    stBOOLEAN,
+    &BOOLEAN,
+
     /// <summary>
     /// Array type.
     /// </summary>
-    stARRAY,
+    &ARRAY,
+
     /// <summary>
     /// Object type.
     /// </summary>
-    stOBJECT
+    &OBJECT
   );
 
-  /// <summary>
-  /// Helper record for the <c>TSchemaType</c> enumeration, providing utility methods for converting
-  /// between <c>TSchemaType</c> values and their string representations.
-  /// </summary>
   TSchemaTypeHelper = record helper for TSchemaType
-    /// <summary>
-    /// Converts the current <c>TSchemaType</c> value to its corresponding string representation.
-    /// </summary>
-    /// <returns>
-    /// A string representing the current <c>TSchemaType</c> value.
-    /// </returns>
     function ToString: string;
+    class function Parse(const S: string): TSchemaType; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.StreamEvents'}
+
+  {$SCOPEDENUMS ON}
+  TEventType = (
+    ping,
+    error,
+    message_start,
+    content_block_start,
+    content_block_delta,
+    content_block_stop,
+    message_delta,
+    message_stop
+  );
+
+  TEventTypeHelper = record Helper for TEventType
+    function ToString: string;
+    class function Parse(const S: string): TEventType; static;
+  end;
+
+  TEventTypeInterceptor = class(TJSONInterceptorStringToString)
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TDeltaType = (
+    text_delta,
+    input_json_delta,
+    citations_delta,
+    thinking_delta,
+    signature_delta
+  );
+
+  TDeltaTypeHelper = record Helper for TDeltaType
+    function ToString: string;
+    class function Parse(const S: string): TDeltaType; static;
+  end;
+
+  TDeltaTypeInterceptor = class(TJSONInterceptorStringToString)
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.Request'}
+
+  {$SCOPEDENUMS ON}
+  TServiceTierType = (
+    auto,
+    standard_only
+  );
+
+  TServiceTierTypeHelper = record Helper for TServiceTierType
+    function ToString: string;
+    class function Parse(const S: string): TServiceTierType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TContentType = (
+    text,
+    image,
+    document,
+    search_result,
+    thinking,
+    redacted_thinking,
+    tool_use,
+    tool_result,
+    server_tool_use,
+    web_search_tool_result
+  );
+
+  TContentTypeHelper = record Helper for TContentType
+    function ToString: string;
+    class function Parse(const S: string): TContentType; static;
+  end;
+
+  {$SCOPEDENUMS OFF}
+  TWebSearchError = (
+    query_too_long,
+    invalid_tool_input,
+    url_too_long,
+    url_not_allowed,
+    url_not_accessible,
+    unsupported_content_type,
+    too_many_requests,
+    max_uses_exceeded,
+    unavailable,
+    execution_time_exceeded,
+    output_file_too_large,
+    file_not_found
+  );
+
+  TWebSearchErrorHelper = record Helper for TWebSearchError
+    function ToString: string;
+    class function Parse(const S: string): TWebSearchError; static;
+  end;
+
+  {$SCOPEDENUMS OFF}
+  TBeta = (
+    message_batches_2024_09_24,
+    prompt_caching_2024_07_31,
+    computer_use_2024_10_22,
+    computer_use_2025_01_24,
+    pdfs_2024_09_25,
+    token_counting_2024_11_01,
+    token_efficient_tools_2025_02_19,
+    output_128k_2025_02_19,
+    files_api_2025_04_14,
+    mcp_client_2025_04_04,
+    mcp_client_2025_11_20,
+    dev_full_thinking_2025_05_14,
+    interleaved_thinking_2025_05_14,
+    code_execution_2025_05_22,
+    extended_cache_ttl_2025_04_11,
+    context_1m_2025_08_07,
+    context_management_2025_06_27,
+    model_context_window_exceeded_2025_08_26,
+    skills_2025_10_02,
+    fast_mode_2026_02_01,
+    structured_outputs_2025_11_13  // deprecated since january 29, 2026
+  );
+
+  TBetaHelper = record Helper for TBeta
+  const
+    Betas: array[TBeta] of string = (
+      'message-batches-2024-09-24',
+      'prompt-caching-2024-07-31',
+      'computer-use-2024-10-22',
+      'computer-use-2025-01-24',
+      'pdfs-2024-09-25',
+      'token-counting-2024-11-01',
+      'token-efficient-tools-2025-02-19',
+      'output-128k-2025-02-19',
+      'files-api-2025-04-14',
+      'mcp-client-2025-04-04',
+      'mcp-client-2025-11-20',
+      'dev-full-thinking-2025-05-14',
+      'interleaved-thinking-2025-05-14',
+      'code-execution-2025-05-22',
+      'extended-cache-ttl-2025-04-11',
+      'context-1m-2025-08-07',
+      'context-management-2025-06-27',
+      'model-context-window-exceeded-2025-08-26',
+      'skills-2025-10-02',
+      'fast-mode-2026-02-01',
+      'structured-outputs-2025-11-13'  // deprecated since january 29, 2026
+    );
+  public
+    function ToString: string;
+    class function Parse(const S: string): TBeta; static;
+  end;
+
+  {$SCOPEDENUMS OFF}
+  TServerToolUseName = (
+    web_search,
+    web_fetch,
+    code_execution,
+    bash_code_execution,
+    text_editor_code_execution,
+    tool_search_tool_regex,
+    tool_search_tool_bm25
+  );
+
+  TServerToolUseNameHelper = record Helper for TServerToolUseName
+    function ToString: string;
+    class function Parse(const S: string): TServerToolUseName; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TFileType = (
+    text,
+    image,
+    pdf
+  );
+
+  TFileTypeHelper = record Helper for TFileType
+    function ToString: string;
+    class function Parse(const S: string): TFileType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TThinkingType = (
+    enabled,
+    disabled,
+    adaptive
+  );
+
+  TThinkingTypeHelper = record Helper for TThinkingType
+    function ToString: string;
+    class function Parse(const S: string): TThinkingType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TSpeedType = (
+    standard,
+    fast
+  );
+
+  TSpeedTypeHelper = record Helper for TSpeedType
+    function ToString: string;
+    class function Parse(const S: string): TSpeedType; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Chat.Responses'}
+
+  {$SCOPEDENUMS ON}
+  TContentBlockType = (
+    text,
+    thinking,
+    redacted_thinking,
+    tool_use,
+    server_tool_use,
+    web_search_tool_result,
+    //[beta]
+    web_fetch_tool_result,
+    code_execution_tool_result,
+    bash_code_execution_tool_result,
+    text_editor_code_execution_tool_result,
+    tool_search_tool_result,
+    mcp_tool_use,
+    mcp_tool_result,
+    container_upload
+  );
+
+  TContentBlockTypeHelper = record Helper for TContentBlockType
+    function ToString: string;
+    class function Parse(const S: string): TContentBlockType; static;
+  end;
+
+  TContentBlockTypeInterceptor = class(TJSONInterceptorStringToString)
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TContentSubBlockType = (
+    web_search_tool_result_error,
+    web_search_result,
+    web_fetch_tool_result_error,
+    web_fetch_result,
+    code_execution_tool_result_error,
+    code_execution_result,
+    bash_code_execution_tool_result_error,
+    bash_code_execution_result,
+    text_editor_code_execution_tool_result_error,
+    text_editor_code_execution_view_result,
+    text_editor_code_execution_create_result,
+    text_editor_code_execution_str_replace_result,
+    tool_search_tool_result_error,
+    tool_search_tool_search_result,
+    text
+  );
+
+  TContentSubBlockTypeHelper = record Helper for TContentSubBlockType
+    function ToString: string;
+    class function Parse(const S: string): TContentSubBlockType; static;
+  end;
+
+  TContentSubBlockTypeInterceptor = class(TJSONInterceptorStringToString)
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+  {$SCOPEDENUMS OFF}
+  TCitationsType = (
+    char_location,
+    page_location,
+    content_block_location,
+    web_search_result_location,
+    search_result_location
+  );
+
+  TCitationsTypeHelper = record Helper for TCitationsType
+    function ToString: string;
+    class function Parse(const S: string): TCitationsType; static;
+  end;
+
+  TCitationsTypeInterceptor = class(TJSONInterceptorStringToString)
+    function StringConverter(Data: TObject; Field: string): string; override;
+    procedure StringReverter(Data: TObject; Field: string; Arg: string); override;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TSkillType = (
+    anthropic,
+    custom
+  );
+
+  TSkillTypeHelper = record Helper for TSkillType
+    function ToString: string;
+    class function Parse(const S: string): TSkillType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TEffortType = (
+    low,
+    medium,
+    high,
+    max
+  );
+
+  TEffortTypeHelper = record Helper for TEffortType
+    function ToString: string;
+    class function Parse(const S: string): TEffortType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TAllowedCallersType = (
+    direct,
+    code_execution_20250825
+  );
+
+  TAllowedCallersTypeHelper = record Helper for TAllowedCallersType
+    function ToString: string;
+    class function Parse(const S: string): TAllowedCallersType; static;
   end;
 
 {$ENDREGION}
@@ -343,60 +519,40 @@ type
 implementation
 
 uses
-  System.StrUtils, System.Rtti, Rest.Json;
+  System.StrUtils, System.Rtti, Rest.Json, Anthropic.API.JSONShield;
+
+{ TArgsFixInterceptor }
+
+procedure TArgsFixInterceptor.StringReverter(Data: TObject; Field, Arg: string);
+begin
+  RTTI
+    .GetType(Data.ClassType)
+    .GetField(Field)
+    .SetValue(Data, TJsonPolyUnshield.Restore(Arg));
+end;
 
 { TMessageRoleHelper }
 
-class function TMessageRoleHelper.FromString(const Value: string): TMessageRole;
+class function TMessageRoleHelper.Parse(const S: string): TMessageRole;
 begin
-  case IndexStr(Value.ToLower, ['user', 'assistant']) of
-    0 :
-      Exit(user);
-    1 :
-      Exit(assistant);
-  end;
-  Result := user;
+  Result := TEnumWire.Parse<TMessageRole>(S);
 end;
 
 function TMessageRoleHelper.ToString: string;
 begin
-  case Self of
-    user:
-      Exit('user');
-    assistant:
-      Exit('assistant');
-  end;
+  Result := TEnumWire.ToString<TMessageRole>(Self);
 end;
 
 { TStopReasonHelper }
 
-class function TStopReasonHelper.Create(const Value: string): TStopReason;
+class function TStopReasonHelper.Parse(const S: string): TStopReason;
 begin
-  case IndexStr(AnsiLowerCase(Value), ['end_turn', 'max_tokens', 'stop_sequence', 'tool_use']) of
-    0 :
-      Exit(end_turn);
-    1 :
-      Exit(max_tokens);
-    2 :
-      Exit(stop_sequence);
-    3 :
-      Exit(tool_use);
-  end;
-  Result := end_turn;
+  Result := TEnumWire.Parse<TStopReason>(S);
 end;
 
 function TStopReasonHelper.ToString: string;
 begin
-  case Self of
-    end_turn:
-      Exit('end_turn');
-    max_tokens:
-      Exit('max_tokens');
-    stop_sequence:
-      Exit('stop_sequence');
-    tool_use:
-      Exit('tool_use');
-  end;
+  Result := TEnumWire.ToString<TStopReason>(Self);
 end;
 
 { TStopReasonInterceptor }
@@ -404,62 +560,52 @@ end;
 function TStopReasonInterceptor.StringConverter(Data: TObject;
   Field: string): string;
 begin
-  Result := RTTI.GetType(Data.ClassType).GetField(Field).GetValue(Data).AsType<TStopReason>.ToString;
+  var V := TRttiMemberAccess.GetValue<TStopReason>(Data, Field);
+  Result := V.ToString;
 end;
 
 procedure TStopReasonInterceptor.StringReverter(Data: TObject; Field,
   Arg: string);
 begin
-  RTTI.GetType(Data.ClassType).GetField(Field).SetValue(Data, TValue.From(TStopReason.Create(Arg)));
+  var V := TStopReason.Parse(Arg);
+  TRttiMemberAccess.SetValue<TStopReason>(Data, Field, V);
 end;
 
 { TToolChoiceTypeHelper }
 
+class function TToolChoiceTypeHelper.Parse(const S: string): TToolChoiceType;
+begin
+  Result := TEnumWire.Parse<TToolChoiceType>(S);
+end;
+
 function TToolChoiceTypeHelper.ToString: string;
 begin
-  case Self of
-    auto:
-      Exit('auto');
-    any:
-      Exit('any');
-    tool:
-      Exit('tool');
-  end;
+  Result := TEnumWire.ToString<TToolChoiceType>(Self);
 end;
 
 { TCachingTypeHelper }
 
+class function TCachingTypeHelper.Parse(const S: string): TCachingType;
+begin
+  Result := TEnumWire.Parse<TCachingType>(S);
+end;
+
 function TCachingTypeHelper.ToString: string;
 begin
-  case Self of
-    nocaching:
-      Exit('nocaching');
-    ephemeral:
-      Exit('ephemeral');
-  end;
+  Result := TEnumWire.ToString<TCachingType>(Self);
 end;
 
 { TProcessingStatusTypeHelper }
 
-class function TProcessingStatusTypeHelper.Create(
-  const Value: string): TProcessingStatusType;
+class function TProcessingStatusTypeHelper.Parse(
+  const S: string): TProcessingStatusType;
 begin
-  var index := IndexStr(AnsiLowerCase(Value), ['in_progress', 'canceling', 'ended']);
-  if index = -1 then
-    raise Exception.Create('Invalid processing status value.');
-  Result := TProcessingStatusType(index);
+  Result := TEnumWire.Parse<TProcessingStatusType>(S);
 end;
 
 function TProcessingStatusTypeHelper.ToString: string;
 begin
-  case Self of
-    in_progress:
-      Exit('in_progress');
-    canceling:
-      Exit('canceling');
-    ended:
-      Exit('ended');
-  end;
+  Result := TEnumWire.ToString<TProcessingStatusType>(Self);
 end;
 
 { TProcessingStatusInterceptor }
@@ -467,35 +613,319 @@ end;
 function TProcessingStatusInterceptor.StringConverter(Data: TObject;
   Field: string): string;
 begin
-  Result := RTTI.GetType(Data.ClassType).GetField(Field).GetValue(Data).AsType<TProcessingStatusType>.ToString;
+  var V := TRttiMemberAccess.GetValue<TProcessingStatusType>(Data, Field);
+  Result := V.ToString;
 end;
 
 procedure TProcessingStatusInterceptor.StringReverter(Data: TObject; Field,
   Arg: string);
 begin
-  RTTI.GetType(Data.ClassType).GetField(Field).SetValue(Data, TValue.From(TProcessingStatusType.Create(Arg)));
+  var V := TProcessingStatusType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TProcessingStatusType>(Data, Field, V);
 end;
 
 { TSchemaTypeHelper }
 
+class function TSchemaTypeHelper.Parse(const S: string): TSchemaType;
+begin
+ Result := TEnumWire.Parse<TSchemaType>(S);
+end;
+
 function TSchemaTypeHelper.ToString: string;
 begin
-  case Self of
-    TYPE_UNSPECIFIED:
-      Exit('type_unspecified');
-    stSTRING:
-      Exit('string');
-    stNUMBER:
-      Exit('number');
-    stINTEGER:
-      Exit('integer');
-    stBOOLEAN:
-      Exit('boolean');
-    stARRAY:
-      Exit('array');
-    stOBJECT:
-      Exit('object');
-  end;
+  Result := TEnumWire.ToString<TSchemaType>(Self);
+end;
+
+{ TEventTypeHelper }
+
+class function TEventTypeHelper.Parse(const S: string): TEventType;
+begin
+  Result := TEnumWire.Parse<TEventType>(S);
+end;
+
+function TEventTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TEventType>(Self);
+end;
+
+{ TEventTypeInterceptor }
+
+function TEventTypeInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TEventType>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TEventTypeInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TEventType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TEventType>(Data, Field, V);
+end;
+
+{ TDeltaTypeHelper }
+
+class function TDeltaTypeHelper.Parse(const S: string): TDeltaType;
+begin
+  Result := TEnumWire.Parse<TDeltaType>(S);
+end;
+
+function TDeltaTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TDeltaType>(Self);
+end;
+
+{ TContentBlockTypeHelper }
+
+class function TContentBlockTypeHelper.Parse(
+  const S: string): TContentBlockType;
+begin
+  Result := TEnumWire.Parse<TContentBlockType>(S);
+end;
+
+function TContentBlockTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TContentBlockType>(Self);
+end;
+
+{ TMessageRoleInterceptor }
+
+function TMessageRoleInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TMessageRole>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TMessageRoleInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TMessageRole.Parse(Arg);
+  TRttiMemberAccess.SetValue<TMessageRole>(Data, Field, V);
+end;
+
+{ TContentBlockTypeInterceptor }
+
+function TContentBlockTypeInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TContentBlockType>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TContentBlockTypeInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TContentBlockType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TContentBlockType>(Data, Field, V);
+end;
+
+{ TDeltaTypeInterceptor }
+
+function TDeltaTypeInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TDeltaType>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TDeltaTypeInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TDeltaType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TDeltaType>(Data, Field, V);
+end;
+
+{ TCitationsTypeHelper }
+
+class function TCitationsTypeHelper.Parse(const S: string): TCitationsType;
+begin
+  Result := TEnumWire.Parse<TCitationsType>(S);
+end;
+
+function TCitationsTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TCitationsType>(Self);
+end;
+
+{ TCitationsTypeInterceptor }
+
+function TCitationsTypeInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TCitationsType>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TCitationsTypeInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TCitationsType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TCitationsType>(Data, Field, V);
+end;
+
+{ TServiceTierTypeHelper }
+
+class function TServiceTierTypeHelper.Parse(const S: string): TServiceTierType;
+begin
+  Result := TEnumWire.Parse<TServiceTierType>(S);
+end;
+
+function TServiceTierTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TServiceTierType>(Self);
+end;
+
+{ TContentTypeHelper }
+
+class function TContentTypeHelper.Parse(const S: string): TContentType;
+begin
+  Result := TEnumWire.Parse<TContentType>(S);
+end;
+
+function TContentTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TContentType>(Self);
+end;
+
+{ TWebSearchErrorHelper }
+
+class function TWebSearchErrorHelper.Parse(const S: string): TWebSearchError;
+begin
+  Result := TEnumWire.Parse<TWebSearchError>(S);
+end;
+
+function TWebSearchErrorHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TWebSearchError>(Self);
+end;
+
+{ TBetaHelper }
+
+class function TBetaHelper.Parse(const S: string): TBeta;
+begin
+  Result := TEnumWire.Parse<TBeta>(S, Betas);
+end;
+
+function TBetaHelper.ToString: string;
+begin
+  Result := Betas[Self];
+end;
+
+{ TServerToolUseNameHelper }
+
+class function TServerToolUseNameHelper.Parse(
+  const S: string): TServerToolUseName;
+begin
+  Result := TEnumWire.Parse<TServerToolUseName>(S);
+end;
+
+function TServerToolUseNameHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TServerToolUseName>(Self);
+end;
+
+{ TFileTypeHelper }
+
+class function TFileTypeHelper.Parse(const S: string): TFileType;
+begin
+  Result := TEnumWire.Parse<TFileType>(S);
+end;
+
+function TFileTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TFileType>(Self);
+end;
+
+{ TSkillTypeHelper }
+
+class function TSkillTypeHelper.Parse(const S: string): TSkillType;
+begin
+  Result := TEnumWire.Parse<TSkillType>(S);
+end;
+
+function TSkillTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TSkillType>(Self);
+end;
+
+{ TEffortTypeHelper }
+
+class function TEffortTypeHelper.Parse(const S: string): TEffortType;
+begin
+  Result := TEnumWire.Parse<TEffortType>(S);
+end;
+
+function TEffortTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TEffortType>(Self);
+end;
+
+{ TAllowedCallersTypeHelper }
+
+class function TAllowedCallersTypeHelper.Parse(
+  const S: string): TAllowedCallersType;
+begin
+  Result := TEnumWire.Parse<TAllowedCallersType>(S);
+end;
+
+function TAllowedCallersTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TAllowedCallersType>(Self);
+end;
+
+{ TContentSubBlockTypeHelper }
+
+class function TContentSubBlockTypeHelper.Parse(
+  const S: string): TContentSubBlockType;
+begin
+  Result := TEnumWire.Parse<TContentSubBlockType>(S);
+end;
+
+function TContentSubBlockTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TContentSubBlockType>(Self);
+end;
+
+{ TContentSubBlockTypeInterceptor }
+
+function TContentSubBlockTypeInterceptor.StringConverter(Data: TObject;
+  Field: string): string;
+begin
+  var V := TRttiMemberAccess.GetValue<TContentSubBlockType>(Data, Field);
+  Result := V.ToString;
+end;
+
+procedure TContentSubBlockTypeInterceptor.StringReverter(Data: TObject; Field,
+  Arg: string);
+begin
+  var V := TContentSubBlockType.Parse(Arg);
+  TRttiMemberAccess.SetValue<TContentSubBlockType>(Data, Field, V);
+end;
+
+{ TThinkingTypeHelper }
+
+class function TThinkingTypeHelper.Parse(const S: string): TThinkingType;
+begin
+  Result := TEnumWire.Parse<TThinkingType>(S);
+end;
+
+function TThinkingTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TThinkingType>(Self);
+end;
+
+{ TSpeedTypeHelper }
+
+class function TSpeedTypeHelper.Parse(const S: string): TSpeedType;
+begin
+  Result := TEnumWire.Parse<TSpeedType>(S);
+end;
+
+function TSpeedTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TSpeedType>(Self);
 end;
 
 end.

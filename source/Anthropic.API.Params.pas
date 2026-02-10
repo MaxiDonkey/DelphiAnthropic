@@ -11,8 +11,10 @@ interface
 
 uses
   System.Classes, System.JSON, System.SysUtils, System.Types, System.RTTI,
-  REST.JsonReflect, REST.Json.Interceptors, System.Generics.Collections,
-  System.Threading;
+  REST.JsonReflect, REST.Json.Interceptors, System.Generics.Collections;
+
+const
+  NULL = 'null';
 
 type
   /// <summary>
@@ -32,14 +34,157 @@ type
     RTTI: TRttiContext;
   end;
 
+  TUrlParam = class
+  strict private
+    FMap: TDictionary<string,string>;
+  protected
+    function Encode(const S: string): string;
+  public
+    constructor Create; virtual;
+    destructor Destroy; override;
+
+    function Add(const Name, Value: string): TUrlParam; overload; virtual;
+    function Add(const Name: string; Value: Boolean): TUrlParam; overload; virtual;
+    function Add(const Name: string; Value: Integer): TUrlParam; overload; virtual;
+    function Add(const Name: string; Value: Int64): TUrlParam; overload; virtual;
+    function Add(const Name: string; Value: Double): TUrlParam; overload; virtual;
+    function Add(const Name: string; const Value: TArray<string>): TUrlParam; overload; virtual;
+
+    function Remove(const Name: string): TUrlParam; virtual;
+    function ToQueryString: string;
+  end;
+
+  /// <summary>
+  /// Represents a base class for all classes obtained after deserialization.
+  /// </summary>
+  /// <remarks>
+  /// This class is designed to store the raw JSON string returned by the API,
+  /// allowing applications to access the original JSON response if needed.
+  /// </remarks>
+  TJSONFingerprint = class
+  private
+    FJSONResponse: string;
+
+  protected
+    /// <summary>
+    /// Updates and rebuilds polymorphic content structures after JSON deserialization.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method is responsible for processing content fields that cannot be reliably handled by
+    /// automatic RTTI-based deserialization, such as polymorphic or dynamically typed JSON nodes.
+    /// </para>
+    /// <para>
+    /// • It is typically invoked as part of the post-deserialization lifecycle and relies on the
+    /// JSONResponse property to extract and rebuild the appropriate internal content representations.
+    /// </para>
+    /// <para>
+    /// • This method is not intended to be called directly by user code and should be considered an
+    /// internal implementation detail of the deserialization process.
+    /// </para>
+    /// </remarks>
+    procedure ContentUpdate; virtual;
+
+    /// <summary>
+    /// Builds and routes a stream event to its strongly typed internal representation.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method is responsible for interpreting the raw streaming JSON payload and constructing
+    /// the appropriate event-specific object graph (for example, content_block_start, content_block_delta,
+    /// message_start, message_delta, and message_stop).
+    /// </para>
+    /// <para>
+    /// • It is typically invoked as part of the post-deserialization lifecycle and relies on the
+    /// JSONResponse property to parse and bind the event payload to the corresponding internal fields.
+    /// </para>
+    /// <para>
+    /// • This method is not intended to be called directly by user code and should be considered an
+    /// internal implementation detail of the streaming deserialization process.
+    /// </para>
+    procedure StreamEventBuilder; virtual;
+
+    /// <summary>
+    /// Executes internal post-deserialization processing for the current instance.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method serves as a protected lifecycle hook that is invoked after the JSON payload has
+    /// been fully deserialized, bound, and the JSONResponse property assigned.
+    /// </para>
+    /// <para>
+    /// • It allows derived classes to perform additional internal initialization steps such as invoking
+    /// ContentUpdate, StreamEventBuilder, or other class-specific post-processing logic.
+    /// </para>
+    /// <para>
+    /// • This method is not intended to be called directly by user code and should be considered an
+    /// internal extension point of the deserialization infrastructure.
+    /// </para>
+    /// </remarks>
+    procedure AfterDeserialize; virtual;
+
+  public
+    /// <summary>
+    /// Finalizes the deserialization process by executing all internal post-deserialization hooks.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method is intended to be called exclusively by the deserialization infrastructure after
+    /// the object has been fully instantiated, bound, and its JSONResponse property assigned.
+    /// </para>
+    /// <para>
+    /// • It invokes the protected lifecycle hook AfterDeserialize, which allows derived classes to perform
+    /// internal post-processing such as rebuilding polymorphic content structures, constructing
+    /// stream-specific event data, and finalizing derived or computed properties.
+    /// </para>
+    /// <para>
+    /// • This method is not intended to be called by user code and should be considered part of the
+    /// internal deserialization contract. Calling it outside of the deserialization lifecycle may result
+    /// in undefined or inconsistent object state.
+    /// </para>
+    /// </remarks>
+    procedure InternalFinalizeDeserialize;
+
+    /// <summary>
+    /// Gets or sets the raw JSON string returned by the API.
+    /// </summary>
+    /// <remarks>
+    /// Typically, the API returns a single JSON string, which is stored in this property.
+    /// </remarks>
+    property JSONResponse: string read FJSONResponse write FJSONResponse;
+  end;
+
+  TOptionalContent = class
+  private
+    FHasValue: Boolean;
+  public
+    /// <summary>
+    /// Indicates whether this instance contains a value provided by the deserialization process.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • A value of <c>True</c> means that this instance was populated from an actual payload
+    /// returned by the API and not merely created as a placeholder.
+    /// </para>
+    /// <para>
+    /// • A value of <c>False</c> indicates that no corresponding content was present in the
+    /// response, even though the instance itself exists.
+    /// </para>
+    /// </remarks>
+    property HasValue: Boolean read FHasValue;
+
+    /// <summary>
+    /// Marks this instance as containing a value provided by the deserialization process.
+    /// </summary>
+    procedure MarkHasValue; inline;
+  end;
+
   TJSONParam = class
   private
     FJSON: TJSONObject;
     procedure SetJSON(const Value: TJSONObject);
     function GetCount: Integer;
-
-  protected
-    function ImportJSONL(const FilePath: string): TArray<string>; virtual;
+    procedure EnsureJSONAllocated; inline;
 
   public
     constructor Create; virtual;
@@ -49,40 +194,62 @@ type
     function Add(const Key: string; const Value: Extended): TJSONParam; overload; virtual;
     function Add(const Key: string; const Value: Boolean): TJSONParam; overload; virtual;
     function Add(const Key: string; const Value: TDateTime; Format: string): TJSONParam; overload; virtual;
+
+    /// <summary>
+    /// Adds a JSON value and transfers ownership of Value to the internal JSONObject.
+    /// </summary>
     function Add(const Key: string; const Value: TJSONValue): TJSONParam; overload; virtual;
+
+    /// <summary>
+    /// Adds a clone of Value.JSON (does not transfer ownership of Value).
+    /// </summary>
     function Add(const Key: string; const Value: TJSONParam): TJSONParam; overload; virtual;
+
     function Add(const Key: string; Value: TArray<string>): TJSONParam; overload; virtual;
     function Add(const Key: string; Value: TArray<Integer>): TJSONParam; overload; virtual;
     function Add(const Key: string; Value: TArray<Extended>): TJSONParam; overload; virtual;
+
+    /// <summary>
+    /// Adds an array and transfers ownership of the array elements to the internal JSONObject.
+    /// </summary>
     function Add(const Key: string; Value: TArray<TJSONValue>): TJSONParam; overload; virtual;
+
+    /// <summary>
+    /// Adds an array and transfers ownership of each TJSONParam JSON object into the created array.
+    /// Each item is freed by this method.
+    /// </summary>
     function Add(const Key: string; Value: TArray<TJSONParam>): TJSONParam; overload; virtual;
-    function AddJSONL(const Key: string; const FilePath: string): TJSONParam; virtual;
+
     function GetOrCreateObject(const Name: string): TJSONObject;
     function GetOrCreate<T: TJSONValue, constructor>(const Name: string): T;
+
     procedure Delete(const Key: string); virtual;
     procedure Clear; virtual;
+
     property Count: Integer read GetCount;
-    function Detach: TJSONObject;
     property JSON: TJSONObject read FJSON write SetJSON;
+
     function ToJsonString(FreeObject: Boolean = False): string; virtual;
     function ToFormat(FreeObject: Boolean = False): string;
     function ToStringPairs: TArray<TPair<string, string>>;
     function ToStream: TStringStream;
+
+    /// <summary>
+    /// Return the JSON value in a TJSONObject and then release the TJSONParam instance.
+    /// Consuming/move semantics (internal wrapper usage).
+    /// </summary>
+    function Detach: TJSONObject;
   end;
 
-  TUrlParam = class
-  private
-    FValue: string;
-    procedure Check(const Name: string);
-    function GetValue: string;
-  public
-    function Add(const Name, Value: string): TUrlParam; overload;
-    function Add(const Name: string; Value: Integer): TUrlParam; overload;
-    function Add(const Name: string; Value: Boolean): TUrlParam; overload;
-    function Add(const Name: string; Value: Double): TUrlParam; overload;
-    function Add(const Name: string; Value: TArray<string>): TUrlParam; overload;
-    property Value: string read GetValue;
-    constructor Create; virtual;
+  TJSONHelper = record
+    class function StringToJson(const Value: string): TJSONObject; static;
+    class function StringToJsonArray(const Value: string): TJSONArray; static;
+    class function ToJsonArray<T: TJSONParam>(const Value: TArray<T>): TJSONArray; overload; static;
+    class function ToJsonArray(const Value: TArray<TJSONObject>): TJSONArray; overload; static;
+
+    class function TryParse(const Value: string; out Json: TJSONValue): Boolean; static;
+    class function TryGetObject(const Value: string; out Obj: TJSONObject): Boolean; static;
+    class function TryGetArray(const Value: string; out Arr: TJSONArray): Boolean; static;
   end;
 
 const
@@ -93,7 +260,7 @@ const
 implementation
 
 uses
-  System.DateUtils;
+  System.DateUtils, System.NetEncoding;
 
 { TJSONInterceptorStringToString }
 
@@ -127,6 +294,7 @@ end;
 
 function TJSONParam.Add(const Key, Value: string): TJSONParam;
 begin
+  EnsureJSONAllocated;
   Delete(Key);
   FJSON.AddPair(Key, Value);
   Result := Self;
@@ -134,6 +302,7 @@ end;
 
 function TJSONParam.Add(const Key: string; const Value: TJSONValue): TJSONParam;
 begin
+  EnsureJSONAllocated;
   Delete(Key);
   FJSON.AddPair(Key, Value);
   Result := Self;
@@ -141,6 +310,15 @@ end;
 
 function TJSONParam.Add(const Key: string; const Value: TJSONParam): TJSONParam;
 begin
+  {--- Clone semantics for single TJSONParam to avoid consuming the argument }
+  EnsureJSONAllocated;
+  if Value = nil then
+    begin
+      Delete(Key);
+      FJSON.AddPair(Key, TJSONNull.Create);
+      Exit(Self);
+    end;
+
   Add(Key, TJSONValue(Value.JSON.Clone));
   Result := Self;
 end;
@@ -166,81 +344,105 @@ begin
 end;
 
 function TJSONParam.Add(const Key: string; const Value: Extended): TJSONParam;
+var
+  fs: TFormatSettings;
 begin
-  Add(Key, TJSONNumber.Create(Value));
+  fs := TFormatSettings.Create('en-US');
+  Add(Key, TJSONNumber.Create(FormatFloat('0.############', Value, fs)));
   Result := Self;
 end;
 
 function TJSONParam.Add(const Key: string; Value: TArray<TJSONValue>): TJSONParam;
-var
-  JArr: TJSONArray;
 begin
-  JArr := TJSONArray.Create;
-  Fetch<TJSONValue>.All(Value, JArr.AddElement);
-  Add(Key, JArr);
+  EnsureJSONAllocated;
+  var JArr := TJSONArray.Create;
+  try
+    Fetch<TJSONValue>.All(Value, JArr.AddElement);
+    Add(Key, JArr);
+  except
+    JArr.Free;
+    raise;
+  end;
   Result := Self;
 end;
 
 function TJSONParam.Add(const Key: string; Value: TArray<TJSONParam>): TJSONParam;
-var
-  JArr: TJSONArray;
-  Item: TJSONParam;
 begin
-  JArr := TJSONArray.Create;
-  for Item in Value do
+  EnsureJSONAllocated;
+  var JArr := TJSONArray.Create;
   try
-    JArr.AddElement(Item.JSON);
-    Item.JSON := nil;
-  finally
-    Item.Free;
-  end;
-  Add(Key, JArr);
-  Result := Self;
-end;
+    for var Item in Value do
+    try
+      if Item = nil then
+      begin
+        JArr.AddElement(TJSONNull.Create);
+        Continue;
+      end;
 
-function TJSONParam.AddJSONL(const Key, FilePath: string): TJSONParam;
-begin
-  var JSONL := ImportJSONL(FilePath);
-  var JSONArray := TJSONArray.Create;
-  for var Item in JSONL do
-    JSONArray.Add(TJSONObject.ParseJSONValue(Item) as TJSONObject);
-  Add(Key, JSONArray);
+      {--- Transfer ownership of Item.JSON into the array:
+           - if Item.JSON is nil, treat it as empty object. }
+      if Item.FJSON = nil then
+        Item.FJSON := TJSONObject.Create;
+
+      JArr.AddElement(Item.FJSON);
+      Item.FJSON := nil;
+    finally
+      Item.Free;
+    end;
+
+    {--- transfers ownership of JArr to FJSON }
+    Add(Key, JArr);
+  except
+    JArr.Free;
+    raise;
+  end;
   Result := Self;
 end;
 
 function TJSONParam.Add(const Key: string; Value: TArray<Extended>): TJSONParam;
-var
-  JArr: TJSONArray;
-  Item: Extended;
 begin
-  JArr := TJSONArray.Create;
-  for Item in Value do
-    JArr.Add(Item);
-  Add(Key, JArr);
+  EnsureJSONAllocated;
+  var JArr := TJSONArray.Create;
+  try
+    for var Item in Value do
+      begin
+        JArr.Add(Item);
+      end;
+    Add(Key, JArr);
+  except
+    JArr.Free;
+    raise;
+  end;
   Result := Self;
 end;
 
 function TJSONParam.Add(const Key: string; Value: TArray<Integer>): TJSONParam;
-var
-  JArr: TJSONArray;
-  Item: Integer;
 begin
-  JArr := TJSONArray.Create;
-  for Item in Value do
-    JArr.Add(Item);
-  Add(Key, JArr);
+  EnsureJSONAllocated;
+  var JArr := TJSONArray.Create;
+  try
+    for var Item in Value do
+      JArr.Add(Item);
+    Add(Key, JArr);
+  except
+    JArr.Free;
+    raise;
+  end;
   Result := Self;
 end;
 
 function TJSONParam.Add(const Key: string; Value: TArray<string>): TJSONParam;
-var
-  JArr: TJSONArray;
-  Item: string;
 begin
-  JArr := TJSONArray.Create;
-  for Item in Value do
-    JArr.Add(Item);
-  Add(Key, JArr);
+  EnsureJSONAllocated;
+  var JArr := TJSONArray.Create;
+  try
+    for var Item in Value do
+      JArr.Add(Item);
+    Add(Key, JArr);
+  except
+    JArr.Free;
+    raise;
+  end;
   Result := Self;
 end;
 
@@ -256,10 +458,9 @@ begin
 end;
 
 procedure TJSONParam.Delete(const Key: string);
-var
-  Item: TJSONPair;
 begin
-  Item := FJSON.RemovePair(Key);
+  EnsureJSONAllocated;
+  var Item := FJSON.RemovePair(Key);
   if Assigned(Item) then
     Item.Free;
 end;
@@ -271,36 +472,28 @@ begin
   inherited;
 end;
 
-function TJSONParam.Detach: TJSONObject;
-begin
-  Result := JSON;
-  JSON := nil;
-  var Task: ITask := TTask.Create(
-    procedure()
-    begin
-      Sleep(30);
-      TThread.Queue(nil,
-      procedure
-      begin
-        Self.Free;
-      end);
-    end
-  );
-  Task.Start;
-end;
-
 function TJSONParam.GetCount: Integer;
 begin
+  EnsureJSONAllocated;
   Result := FJSON.Count;
 end;
 
 function TJSONParam.GetOrCreate<T>(const Name: string): T;
+var
+  ExistingValue: TJSONValue;
 begin
-  if not FJSON.TryGetValue<T>(Name, Result) then
-  begin
-    Result := T.Create;
-    FJSON.AddPair(Name, Result);
-  end;
+  EnsureJSONAllocated;
+
+  {--- Fast path: correct typed value exists }
+  if FJSON.TryGetValue<T>(Name, Result) then
+    Exit;
+
+  {--- If key exists but is wrong type (or null), replace cleanly (avoid duplicate keys) }
+  if FJSON.TryGetValue<TJSONValue>(Name, ExistingValue) then
+    Delete(Name);
+
+  Result := T.Create;
+  FJSON.AddPair(Name, Result);
 end;
 
 function TJSONParam.GetOrCreateObject(const Name: string): TJSONObject;
@@ -308,42 +501,39 @@ begin
   Result := GetOrCreate<TJSONObject>(Name);
 end;
 
-function TJSONParam.ImportJSONL(const FilePath: string): TArray<string>;
+function TJSONParam.Detach: TJSONObject;
+{--- consuming semantics (internal usage) }
 begin
-  if not FileExists(FilePath) or not ExtractFileExt(FilePath).ToLower.StartsWith('.jsonl') then
-    raise Exception.CreateFmt('File %s not found or is not jsonl type.', [FilePath]);
+  EnsureJSONAllocated;
+  Result := FJSON;
+  FJSON := nil;
+  Free;
+end;
 
-  var StreamReader := TStreamReader.Create(FilePath, TEncoding.UTF8);
-  try
-    try
-      while not StreamReader.EndOfStream do
-        begin
-          var Line := StreamReader.ReadLine;
-          if Line.Trim.IsEmpty then
-            Continue;
-
-          var JSONVlue := TJSONObject.ParseJSONValue(Line);
-          if not Assigned(JSONVlue) then
-            raise Exception.CreateFmt('Error: Malformed JSON data.'#10'%s', [Line]);
-
-          JSONVlue.Free;
-          Result := Result + [Line];
-        end;
-    except
-      raise;
-    end;
-  finally
-    StreamReader.Free;
-  end;
+procedure TJSONParam.EnsureJSONAllocated;
+begin
+  if FJSON = nil then
+    FJSON := TJSONObject.Create;
 end;
 
 procedure TJSONParam.SetJSON(const Value: TJSONObject);
 begin
-  FJSON := Value;
+  {--- Preserve ownership invariant: TJSONParam owns FJSON.
+       If Value = nil -> reset to empty object.}
+  if FJSON = Value then
+    Exit;
+
+  FJSON.Free;
+
+  if Value <> nil then
+    FJSON := Value
+  else
+    FJSON := TJSONObject.Create;
 end;
 
 function TJSONParam.ToFormat(FreeObject: Boolean): string;
 begin
+  EnsureJSONAllocated;
   Result := FJSON.Format(4);
   if FreeObject then
     Free;
@@ -351,6 +541,7 @@ end;
 
 function TJSONParam.ToJsonString(FreeObject: Boolean): string;
 begin
+  EnsureJSONAllocated;
   Result := FJSON.ToJSON;
   if FreeObject then
     Free;
@@ -360,7 +551,7 @@ function TJSONParam.ToStream: TStringStream;
 begin
   Result := TStringStream.Create;
   try
-    Result.WriteString(ToJsonString);
+    Result.WriteString(ToJsonString(False));
     Result.Position := 0;
   except
     Result.Free;
@@ -370,20 +561,43 @@ end;
 
 function TJSONParam.ToStringPairs: TArray<TPair<string, string>>;
 begin
+  EnsureJSONAllocated;
+  SetLength(Result, 0);
   for var Pair in FJSON do
     Result := Result + [TPair<string, string>.Create(Pair.JsonString.Value, Pair.JsonValue.AsType<string>)];
 end;
 
 { TUrlParam }
 
+constructor TUrlParam.Create;
+begin
+  inherited;
+  FMap := TDictionary<string,string>.Create;
+end;
+
+destructor TUrlParam.Destroy;
+begin
+  FMap.Free;
+  inherited;
+end;
+
+function TUrlParam.Encode(const S: string): string;
+begin
+  Result := TNetEncoding.URL.Encode(S).Replace('+','%20');
+end;
+
 function TUrlParam.Add(const Name, Value: string): TUrlParam;
 begin
-  Check(Name);
-  var S := Format('%s=%s', [Name, Value]);
-  if FValue.IsEmpty then
-    FValue := S else
-    FValue := FValue + '&' + S;
+  if Value.IsEmpty then
+    Exit(Self);
+
+  FMap.AddOrSetValue(Name, Encode(Value));
   Result := Self;
+end;
+
+function TUrlParam.Add(const Name: string; Value: Boolean): TUrlParam;
+begin
+  Result := Add(Name, BoolToStr(Value, True).ToLower);
 end;
 
 function TUrlParam.Add(const Name: string; Value: Integer): TUrlParam;
@@ -391,9 +605,9 @@ begin
   Result := Add(Name, Value.ToString);
 end;
 
-function TUrlParam.Add(const Name: string; Value: Boolean): TUrlParam;
+function TUrlParam.Add(const Name: string; Value: Int64): TUrlParam;
 begin
-  Result := Add(Name, BoolToStr(Value, true));
+  Result := Add(Name, Value.ToString);
 end;
 
 function TUrlParam.Add(const Name: string; Value: Double): TUrlParam;
@@ -401,39 +615,187 @@ begin
   Result := Add(Name, Value.ToString);
 end;
 
-procedure TUrlParam.Check(const Name: string);
+function TUrlParam.Add(const Name: string; const Value: TArray<string>): TUrlParam;
 begin
-  if FValue.Contains(Name) then
+  Result := Add(Name, string.Join(',', Value).Trim);
+end;
+
+function TUrlParam.Remove(const Name: string): TUrlParam;
+begin
+  FMap.Remove(Name);
+  Result := Self;
+end;
+
+function TUrlParam.ToQueryString: string;
+begin
+  var StringBuilder := TStringBuilder.Create;
+  try
+    var First := True;
+    for var Item in FMap.Keys do
+      begin
+        if not First then
+          StringBuilder.Append('&')
+        else
+          First := False;
+
+        StringBuilder.Append(
+          Encode(Item))
+            .Append('=')
+            .Append(FMap[Item]
+        );
+      end;
+    Result := '?' + StringBuilder.ToString;
+  finally
+    StringBuilder.Free;
+  end;
+end;
+
+{ TJSONFingerprint }
+
+procedure TJSONFingerprint.AfterDeserialize;
+begin
+
+end;
+
+procedure TJSONFingerprint.ContentUpdate;
+begin
+
+end;
+
+procedure TJSONFingerprint.InternalFinalizeDeserialize;
+begin
+  AfterDeserialize;
+end;
+
+procedure TJSONFingerprint.StreamEventBuilder;
+begin
+
+end;
+
+{ TJSONHelper }
+
+class function TJSONHelper.StringToJson(const Value: string): TJSONObject;
+begin
+  var JSON := TJSONObject.ParseJSONValue(Value);
+  if not Assigned(JSON) then
+    raise Exception.CreateFmt('Invalid JSON: %s', [Value]);
+
+  if not (JSON is TJSONObject) then
     begin
-      var Items := FValue.Split(['&']);
-      FValue := EmptyStr;
-      for var Item in Items do
-        begin
-          if not Item.StartsWith(Name) then
-            begin
-              if FValue.IsEmpty then
-                FValue := Item else
-                FValue := FValue + '&' + Item;
-            end;
-        end;
+      JSON.Free;
+      raise Exception.Create('JSON is not an object');
     end;
+
+  Result := TJSONObject(JSON);
 end;
 
-constructor TUrlParam.Create;
+class function TJSONHelper.StringToJsonArray(const Value: string): TJSONArray;
 begin
-  FValue := EmptyStr;
+  var JSON := TJSONObject.ParseJSONValue(Value);
+  if not Assigned(JSON) then
+    raise Exception.CreateFmt('Invalid JSON: %s', [Value]);
+
+  if not (JSON is TJSONArray) then
+    begin
+      JSON.Free;
+      raise Exception.Create('JSON is not an array');
+    end;
+
+  Result := TJSONArray(JSON);
 end;
 
-function TUrlParam.GetValue: string;
+class function TJSONHelper.ToJsonArray(
+  const Value: TArray<TJSONObject>): TJSONArray;
 begin
-  Result := FValue;
-  if not Result.IsEmpty then
-    Result := '?' + Result;
+  Result := TJSONArray.Create;
+  try
+    for var Item in Value do
+      begin
+        if Item = nil then
+          Continue;
+
+        Result.Add(Item);
+      end;
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
-function TUrlParam.Add(const Name: string; Value: TArray<string>): TUrlParam;
+class function TJSONHelper.ToJsonArray<T>(const Value: TArray<T>): TJSONArray;
 begin
-  Result := Add(Name, string.Join(',', Value).Replace(#32, #0));
+  Result := TJSONArray.Create;
+  try
+    for var Item in Value do
+      begin
+        if Item = nil then
+          Continue;
+
+        Result.Add(Item.Detach);
+      end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+class function TJSONHelper.TryGetArray(const Value: string;
+  out Arr: TJSONArray): Boolean;
+var
+  JSONValue: TJSONValue;
+begin
+  Arr := nil;
+  if not TryParse(Value, JSONValue) then
+    Exit(False);
+
+  if JSONValue is TJSONArray then
+    begin
+      Arr := TJSONArray(JSONValue);
+      Exit(True);
+    end;
+
+  JSONValue.Free;
+  Result := False;
+end;
+
+class function TJSONHelper.TryGetObject(const Value: string;
+  out Obj: TJSONObject): Boolean;
+var
+  JSONValue: TJSONValue;
+begin
+  Obj := nil;
+  if not TryParse(Value, JSONValue) then
+    Exit(False);
+
+  if JSONValue is TJSONObject then
+    begin
+      Obj := TJSONObject(JSONValue);
+      Exit(True);
+    end;
+
+  JSONValue.Free;
+  Result := False;
+end;
+
+class function TJSONHelper.TryParse(const Value: string;
+  out Json: TJSONValue): Boolean;
+begin
+  Json := nil;
+  try
+    Json := TJSONObject.ParseJSONValue(Value);
+    Result := Json <> nil;
+  except
+    Json.Free;
+    Json := nil;
+    Result := False;
+  end;
+end;
+
+{ TOptionalContent }
+
+procedure TOptionalContent.MarkHasValue;
+begin
+  FHasValue := True;
 end;
 
 end.

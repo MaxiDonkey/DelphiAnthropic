@@ -75,12 +75,12 @@ begin
       'san francisco', 'san francisco, ca',
       'paris', 'paris, fr', 'paris, france']) of
       0,1 :
-        AddToReport(JSON, 64, [
+        AddToReport(JSON, 21, [
           'sunny',
           'windy']);
 
       2,3,4 :
-        AddToReport(JSON, 55, [
+        AddToReport(JSON, 14, [
           'rainy',
           'low visibility but sunny in the late afternoon or early evening']);
     end;
@@ -123,20 +123,20 @@ begin
   var Schema := TSchemaParams.New(
     procedure (var Params: TSchemaParams)
     begin
-      Params.&Type(stOBJECT);
+      Params.&Type(TSchemaType.Object);
       Params.Properties('properties',
         procedure (var Params: TSchemaParams)
         begin
           Params.Properties('location',
             procedure (var Params: TSchemaParams)
             begin
-              Params.&Type(stSTRING);
+              Params.&Type(TSchemaType.String);
               Params.Description('The city and state, e.g. San Francisco, CA');
             end);
           Params.Properties('unit',
             procedure (var Params: TSchemaParams)
             begin
-              Params.&Type(stSTRING);
+              Params.&Type(TSchemaType.String);
               Params.Enum(['celsius', 'fahrenheit']);
             end);
         end);

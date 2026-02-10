@@ -18,9 +18,7 @@ type
 
   TErrorObject = class
   private
-    [JsonNameAttribute('type')]
     FType: string;
-    [JsonNameAttribute('message')]
     FMessage: string;
   public
     property &Type: string read FType write FType;
@@ -29,13 +27,14 @@ type
 
   TError = class(TErrorCore)
   private
-    [JsonNameAttribute('type')]
     FType: string;
-    [JsonNameAttribute('error')]
     FError: TErrorObject;
+    [JsonNameAttribute('request_id')]
+    FRequestId: string;
   public
     property &Type: string read FType write FType;
     property Error: TErrorObject read FError write FError;
+    property RequestId: string read FRequestId write FRequestId;
     destructor Destroy; override;
   end;
 

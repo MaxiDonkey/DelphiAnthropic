@@ -96,7 +96,7 @@ Anthropic Claude currently supports JPEG, PNG, GIF, and WebP image formats, spec
 
 ### Files API image
 
-To avoid repeatedly re-encoding recurring images, use the Files API.
+To avoid repeatedly re-encoding recurring images, use the [Files API](files-api.md#files-api).
 
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers;
@@ -236,7 +236,7 @@ Non-PDF documents can also be provided using the same mechanism; however, in thi
 
 ### Passing PDF by API Files
 
-When PDF files come from a local system or when no URL is available, they must be sent directly.
+When PDF files come from a local system or when no URL is available, they must be sent directly. See [Files API](files-api.md#files-api)
 
 ```pascal
   //uses Anthropic, Anthropic.Types, Anthropic.Helpers;

@@ -207,6 +207,8 @@ type
     procedure Button39Click(Sender: TObject);
     procedure Button40Click(Sender: TObject);
     procedure Label40Click(Sender: TObject);
+    procedure Button41Click(Sender: TObject);
+    procedure Button42Click(Sender: TObject);
   private
     Client: IAnthropic;
     FPageIndex: Integer;
@@ -1798,6 +1800,76 @@ begin
 //    Display(TutorialHub, Batch);
 //  finally
 //    Batch.Free;
+//  end;
+end;
+
+procedure TForm1.Button41Click(Sender: TObject);
+// Models List
+begin
+  StartRun('Models List');
+
+  // Query params creation
+  var QueryParams: TListModelsParamProc :=
+    procedure (Params: TListModelsParams)
+    begin
+      Params.Limit(10);
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Models.AsyncAwaitList(QueryParams);
+
+  Promise
+    .&Then(
+      procedure (Value: TModels)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  //Synchronous example
+//  var Value := Client.Models.List(QueryParams);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button42Click(Sender: TObject);
+// Models Retrieve
+begin
+  StartRun('Models Retrieve');
+
+  var ModelID := TInputContent.Text;
+  if ModelID.Trim.IsEmpty then
+    Exit;
+
+  // Asynchronous example
+  var Promise := Client.Models.AsyncAwaitRetrieve(ModelID);
+
+  Promise
+    .&Then(
+      procedure (Value: TModel)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  //Synchronous example
+//  var Value := Client.Models.Retrieve(ModelID);
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
 //  end;
 end;
 

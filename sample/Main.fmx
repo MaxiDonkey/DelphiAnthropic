@@ -1638,6 +1638,7 @@ object Form1: TForm1
             TabOrder = 18
             Text = 'Models List'
             TextSettings.Trimming = None
+            OnClick = Button41Click
           end
           object Label43: TLabel
             Anchors = [akTop]
@@ -1666,6 +1667,7 @@ object Form1: TForm1
             TabOrder = 17
             Text = 'Models Retrieve'
             TextSettings.Trimming = None
+            OnClick = Button42Click
           end
         end
       end

@@ -57,6 +57,8 @@ type
     function BeforeId(const Value: string): TListModelsParams;
   end;
 
+  TListModelsParamProc = TProc<TListModelsParams>;
+
   TModel = class(TJSONFingerprint)
   private
     FType: string;

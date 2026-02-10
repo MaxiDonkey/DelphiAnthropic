@@ -230,9 +230,9 @@ begin
     TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, [
     Value.Id,
-    F('Type', Value.&Type),
-    F('DisplayName', Value.DisplayName),
-    F('CreatedAt', Value.CreatedAt)
+    F('• Type', Value.&Type),
+    F('• DisplayName', Value.DisplayName),
+    F('• CreatedAt', Value.CreatedAt)
   ]);
   Display(Sender, EmptyStr);
 end;

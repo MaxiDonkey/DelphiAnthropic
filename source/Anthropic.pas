@@ -774,6 +774,7 @@ type
 {$REGION 'Anthropic.Models'}
 
   TListModelsParams = Anthropic.Models.TListModelsParams;
+  TListModelsParamProc = Anthropic.Models.TListModelsParamProc;
   TModel = Anthropic.Models.TModel;
   TAsynModel = Anthropic.Models.TAsynModel;
   TPromiseModel = Anthropic.Models.TPromiseModel;

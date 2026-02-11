@@ -5,6 +5,7 @@ Tools are the mechanism that allows Claude to go beyond text generation and take
 - [Using tools with Claude](#using-tools-with-claude)
 - [How tool use works](#how-tool-use-works)
 - [How to implement tool use](#how-to-implement-tool-use)
+- [Stable tool categories](#stable-tool-categories)
 
 ___
 
@@ -73,3 +74,47 @@ Implementation consists of encapsulating business logic as declarative tools, th
 The three levels — **using, understanding, and implementing tools** — describe the same idea from complementary angles:
 
 >Tools are a formal interface between the model’s probabilistic reasoning and deterministic system actions.
+
+<br>
+
+## Stable tool categories
+
+These tools represent the core primitives available for extending Claude beyond text generation.
+They define the main ways in which the model can interact with external systems in a stable and supported manner.
+
+- [Functions](#functions)
+- [Bash Tool](#bash-tool)
+- [Text Editor Tool](#text-editor-tool)
+- [Web Search Tool](#web-search-tool)
+
+___
+
+### Functions
+
+Functions are user-defined tools that expose application logic to Claude through an explicit interface.
+They let Claude trigger deterministic operations (e.g., computation, data access, workflows) and incorporate the returned result into its response.
+Function execution is handled outside the model, preserving a clear separation between reasoning and application-side execution.
+
+<br>
+
+### Bash Tool
+
+The Bash tool provides access to a persistent shell session for command-line automation.
+It enables system operations such as running scripts, inspecting environments, and working with files via standard shell commands.
+Session state is preserved across commands, allowing multi-step workflows to be expressed naturally.
+
+<br>
+
+### Text Editor Tool
+
+The Text Editor tool lets Claude view and modify text files using structured edit operations.
+It is suited for tasks like fixing code, refactoring, generating documentation, or creating and editing files with traceable changes.
+All edits are explicit and deterministic, making file-level interactions auditable and reproducible.
+
+<br>
+
+### Web Search Tool
+
+The Web Search tool gives Claude access to current web content beyond its training cutoff.
+It supports up-to-date, source-backed answers by retrieving information online and returning responses with citations.
+Search execution and source attribution are handled natively, ensuring traceability of external information.

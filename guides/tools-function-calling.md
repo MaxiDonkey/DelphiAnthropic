@@ -5,7 +5,7 @@ They let Claude trigger deterministic operations (e.g., computation, data access
 Function execution is handled outside the model, preserving a clear separation between reasoning and application-side execution.
 
 >[!NOTE]
-> The code examples presented below are directly included in the Sample.dpr demonstration project.
+> The code examples presented below are directly included in the `Sample.dpr` demonstration project.
 
 - [Introduction](#introduction)
 - [JSON Payload creation](#json-payload-creation)
@@ -23,7 +23,6 @@ ___
 
 ## Introduction
 
->[!NOTE]
 >The code snippets will exclusively refer to the `procedure (Params: TChatParams)`, as introduced in the sections covering non-streamed and streamed generation.
 
 ### Function calling follows a two-step workflow:

@@ -392,8 +392,8 @@ With this asynchronous approach, the `Display` method handles the second step by
 ## Function calling using plugin
 
 In this section, we will use an approach in which the function call is encapsulated within a ***plugin***. Refer to the following units:
-- **Anthropic.Functions.Core.pas:** definition of the `IFunctionCore` interface required to create the plugin;
-- **Anthropic.Functions.Example.pas:** implementation of the `IFunctionCore` interface.
+- [**Anthropic.Functions.Core.pas:**](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/source/Anthropic.Functions.Core.pas) definition of the `IFunctionCore` interface required to create the plugin;
+- [**Anthropic.Functions.Example.pas:**](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/source/Anthropic.Functions.Example.pas) implementation of the `IFunctionCore` interface.
 
 The second step is once again handled by the `Display` method, as described in the previous section.
 

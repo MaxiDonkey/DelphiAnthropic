@@ -195,7 +195,7 @@ The JSON payload above represents the canonical form; the following sections dem
 With this approach, declaring multiple functions is both efficient and visually clear. Additional functions can be added easily by calling `.Add(...)`.
 
 >[!WARNING]
-> his multiline string–based approach is only applicable when using Delphi version 12 or later. Otherwise, you can still rely on an external string in which the JSON payload is explicitly defined.
+> his multiline string–based approach is only applicable when using Delphi `version 12 or later`. Otherwise, you can still rely on an external string in which the JSON payload is explicitly defined.
 
 <br>
 
@@ -253,7 +253,7 @@ With this approach, declaring multiple functions is both efficient and visually 
 ```
 
 >[!WARNING]
-> This multiline string–based approach is only applicable when using Delphi version 12 or later. Otherwise, you can still rely on an external string in which the JSON payload is explicitly defined.
+> This multiline string–based approach is only applicable when using Delphi `version 12 or later`. Otherwise, you can still rely on an external string in which the JSON payload is explicitly defined.
 
 <br>
 

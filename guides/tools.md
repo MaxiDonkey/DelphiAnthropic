@@ -201,10 +201,10 @@ This value corresponds to a PowerShell command, `Get-ChildItem -Path . -Filter *
 
 #### Essential Points to Understand About the Bash Tool
 
-- **Execution of real bash commands**
+- **Execution of real bash commands** <br>
   The tool can run actual shell commands (`ls`, `pip`, scripts, etc.).
 
-- **Persistent session** :
+- **Persistent session** <br>
   State is preserved across commands: working directory, created files, environment variables.
 - **Schema-less tool interface** :
   Inputs are free-form (`{ "command": "…" }`) with no built-in structural validation.

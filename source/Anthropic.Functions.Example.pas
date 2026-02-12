@@ -10,7 +10,8 @@ unit Anthropic.Functions.Example;
 interface
 
 uses
-  System.SysUtils, Anthropic.Functions.Core, MistralAI.Schema, MistralAI.Types;
+  System.SysUtils, Anthropic.Functions.Core, Anthropic.Schema, Anthropic.Types,
+  Anthropic.API.JsonSafeReader;
 
 type
   TWeatherReportFunction = class(TFunctionCore)
@@ -20,7 +21,7 @@ type
     function GetInputSchema: string; override;
   public
     function Execute(const Arguments: string): string; override;
-    class function CreateInstance(const CacheControl: Boolean = False): IFunctionCore;
+    class function CreateInstance: IFunctionCore;
   end;
 
 implementation
@@ -30,11 +31,9 @@ uses
 
 { TWeatherReportFunction }
 
-class function TWeatherReportFunction.CreateInstance(
-  const CacheControl: Boolean): IFunctionCore;
+class function TWeatherReportFunction.CreateInstance;
 begin
   Result := TWeatherReportFunction.create;
-  Result.CacheControl := CacheControl;
 end;
 
 function TWeatherReportFunction.Execute(const Arguments: string): string;
@@ -47,43 +46,31 @@ function TWeatherReportFunction.Execute(const Arguments: string): string;
   end;
 
 begin
-  Result := EmptyStr;
-  var Location := EmptyStr;
-
-  {--- Parse arguments to retrieve parameters }
-  var JSON := TJSONObject.ParseJSONValue(Arguments) as TJSONObject;
-  try
-    if Assigned(JSON) then
-    try
-      Location := JSON.GetValue('location', '');
-    finally
-      JSON.Free;
-    end;
-  except
-    Location := EmptyStr;
-  end;
+  var Location := TJsonReader.Parse(Arguments).AsString('location');
 
   {--- Stop the treatment if location is empty }
   if Location.IsEmpty then
-    Exit;
+    Exit('');
 
   {--- Build the response }
-  JSON := TJSONObject.Create;
+  var JSON := TJSONObject.Create;
   try
     JSON.AddPair('location', Location);
-    case IndexStr(AnsiLowerCase(Location), [
-      'san francisco', 'san francisco, ca',
-      'paris', 'paris, fr', 'paris, france']) of
-      0,1 :
+
+    if Location.ToLower.Contains('san francisco') then
+      begin
         AddToReport(JSON, 21, [
           'sunny',
           'windy']);
-
-      2,3,4 :
-        AddToReport(JSON, 14, [
+      end
+    else
+    if Location.ToLower.Contains('paris') then
+      begin
+        AddToReport(JSON, 6, [
           'rainy',
           'low visibility but sunny in the late afternoon or early evening']);
-    end;
+      end;
+
     Result := JSON.ToJSON;
   finally
     JSON.Free;
@@ -104,44 +91,40 @@ end;
 function TWeatherReportFunction.GetInputSchema: string;
 begin
 //  Result :=
-//    '{'+
-//    '"type": "object",'+
-//    '"properties": {'+
-//         '"location": {'+
-//             '"type": "string",'+
-//             '"description": "The city and department, e.g. Marseille, 13"'+
-//         '},'+
-//         '"unit": {'+
-//             '"type": "string",'+
-//             '"enum": ["celsius", "fahrenheit"]'+
-//         '}'+
-//     '},'+
-//     '"required": ["location"]'+
-//  '}';
+//    '''
+//    {
+//      "type": "object",
+//      "properties": {
+//           "location": {
+//               "type": "string",
+//               "description": "The city and department, e.g. Marseille, 13"
+//           },
+//           "unit": {
+//               "type": "string",
+//               "enum": ["celsius", "fahrenheit"]
+//           }
+//       },
+//       "required": ["location"]
+//    }
+//    ''';
 
-  {--- If we use the TSchemaParams class defined in the MistralAI.Schema.pas unit }
-  var Schema := TSchemaParams.New(
-    procedure (var Params: TSchemaParams)
-    begin
-      Params.&Type(TSchemaType.Object);
-      Params.Properties('properties',
-        procedure (var Params: TSchemaParams)
-        begin
-          Params.Properties('location',
-            procedure (var Params: TSchemaParams)
-            begin
-              Params.&Type(TSchemaType.String);
-              Params.Description('The city and state, e.g. San Francisco, CA');
-            end);
-          Params.Properties('unit',
-            procedure (var Params: TSchemaParams)
-            begin
-              Params.&Type(TSchemaType.String);
-              Params.Enum(['celsius', 'fahrenheit']);
-            end);
-        end);
-      Params.Required(['location', 'unit']);
-    end);
+  {--- If we use the TSchemaParams class defined in the Anthropic.Schema.pas unit }
+  var Schema := TSchemaParams.Create
+        .&Type('object')
+        .Properties( TJSONObject.Create
+           .AddPair('location', TJSONObject.Create
+               .AddPair('type', 'string')
+               .AddPair('description', 'The city and state, e.g. San Francisco, CA')
+           )
+           .AddPair('unit', TJSONObject.Create
+               .AddPair('type', 'string')
+               .AddPair('enum', TJSONArray.Create
+                   .Add('celsius')
+                   .Add('fahrenheit'))
+           )
+        )
+        .Required(['location']);
+
   Result := Schema.ToJsonString(True);
 end;
 

@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 777
+  ClientHeight = 880
   ClientWidth = 1108
   Position = ScreenCenter
   FormFactor.Width = 320
@@ -14,7 +14,7 @@ object Form1: TForm1
   object Panel2: TPanel
     Align = Client
     Size.Width = 698.000000000000000000
-    Size.Height = 777.000000000000000000
+    Size.Height = 880.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     object Memo1: TMemo
@@ -31,11 +31,11 @@ object Form1: TForm1
       Position.X = 4.000000000000000000
       Position.Y = 38.000000000000000000
       Size.Width = 690.000000000000000000
-      Size.Height = 617.000000000000000000
+      Size.Height = 720.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 6
       Viewport.Width = 686.000000000000000000
-      Viewport.Height = 613.000000000000000000
+      Viewport.Height = 716.000000000000000000
     end
     object Memo2: TMemo
       Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
@@ -45,7 +45,7 @@ object Form1: TForm1
       TextSettings.Font.Size = 14.000000000000000000
       Anchors = [akLeft, akRight, akBottom]
       Position.X = 8.000000000000000000
-      Position.Y = 658.000000000000000000
+      Position.Y = 761.000000000000000000
       Size.Width = 682.000000000000000000
       Size.Height = 81.000000000000000000
       Size.PlatformDefault = False
@@ -56,7 +56,7 @@ object Form1: TForm1
     object Button1: TButton
       Anchors = [akRight, akBottom]
       Position.X = 560.000000000000000000
-      Position.Y = 747.000000000000000000
+      Position.Y = 850.000000000000000000
       Size.Width = 130.000000000000000000
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
@@ -114,14 +114,14 @@ object Form1: TForm1
     MinSize = 400.000000000000000000
     Position.X = 698.000000000000000000
     Size.Width = 6.000000000000000000
-    Size.Height = 777.000000000000000000
+    Size.Height = 880.000000000000000000
     Size.PlatformDefault = False
   end
   object Panel1: TPanel
     Align = Right
     Position.X = 704.000000000000000000
     Size.Width = 404.000000000000000000
-    Size.Height = 777.000000000000000000
+    Size.Height = 880.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
     object Panel4: TPanel
@@ -179,23 +179,27 @@ object Form1: TForm1
     object TabControl1: TTabControl
       Align = Client
       Size.Width = 404.000000000000000000
-      Size.Height = 744.000000000000000000
+      Size.Height = 847.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 4
+      TabIndex = 5
       TabOrder = 0
       TabPosition = Dots
       OnChange = TabControl1Change
       Sizes = (
         404s
-        744s
+        847s
         404s
-        744s
+        847s
         404s
-        744s
+        847s
         404s
-        744s
+        847s
         404s
-        744s)
+        847s
+        404s
+        847s
+        404s
+        847s)
       object TabItem8: TTabItem
         CustomIcon = <
           item
@@ -214,7 +218,7 @@ object Form1: TForm1
           Anchors = [akRight, akBottom]
           HitTest = True
           Position.X = 216.000000000000000000
-          Position.Y = 706.000000000000000000
+          Position.Y = 809.000000000000000000
           Size.Width = 189.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -226,7 +230,7 @@ object Form1: TForm1
           Position.X = -4.000000000000000000
           Position.Y = -7.000000000000000000
           Size.Width = 408.000000000000000000
-          Size.Height = 713.000000000000000000
+          Size.Height = 816.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           object Panel10: TPanel
@@ -274,7 +278,7 @@ object Form1: TForm1
           object Panel12: TPanel
             Align = Client
             Size.Width = 408.000000000000000000
-            Size.Height = 316.000000000000000000
+            Size.Height = 419.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 3
             object Memo4: TMemo
@@ -289,11 +293,11 @@ object Form1: TForm1
               Margins.Right = 6.000000000000000000
               Margins.Bottom = 6.000000000000000000
               Size.Width = 396.000000000000000000
-              Size.Height = 276.000000000000000000
+              Size.Height = 379.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 2
               Viewport.Width = 392.000000000000000000
-              Viewport.Height = 272.000000000000000000
+              Viewport.Height = 375.000000000000000000
             end
             object Panel13: TPanel
               Align = Top
@@ -343,7 +347,7 @@ object Form1: TForm1
           StyledSettings = [Family]
           HitTest = True
           Position.X = 22.000000000000000000
-          Position.Y = 56.000000000000000000
+          Position.Y = 144.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -359,7 +363,7 @@ object Form1: TForm1
           Anchors = [akLeft, akBottom]
           HitTest = True
           Position.X = 8.000000000000000000
-          Position.Y = 711.000000000000000000
+          Position.Y = 814.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -370,7 +374,7 @@ object Form1: TForm1
           Anchors = [akRight, akBottom]
           HitTest = True
           Position.X = 253.000000000000000000
-          Position.Y = 711.000000000000000000
+          Position.Y = 814.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -383,7 +387,7 @@ object Form1: TForm1
           StyledSettings = [Family]
           HitTest = True
           Position.X = 22.000000000000000000
-          Position.Y = 81.000000000000000000
+          Position.Y = 169.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -401,7 +405,7 @@ object Form1: TForm1
           StyledSettings = [Family]
           HitTest = True
           Position.X = 22.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 194.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -419,7 +423,7 @@ object Form1: TForm1
           StyledSettings = [Family]
           HitTest = True
           Position.X = 22.000000000000000000
-          Position.Y = 131.000000000000000000
+          Position.Y = 219.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -436,8 +440,8 @@ object Form1: TForm1
           Cursor = crHandPoint
           StyledSettings = [Family]
           HitTest = True
-          Position.X = 30.000000000000000000
-          Position.Y = 230.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 350.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -445,16 +449,17 @@ object Form1: TForm1
           TextSettings.Font.StyleExt = {04040000000000000004000000}
           TextSettings.FontColor = claCornflowerblue
           TextSettings.HorzAlign = Center
-          Text = 'Beta'
+          Text = 'Beta && Tools beta'
           TabOrder = 15
+          OnClick = Label16Click
         end
         object Label17: TLabel
           Anchors = [akTop]
           Cursor = crHandPoint
           StyledSettings = [Family]
           HitTest = True
-          Position.X = 30.000000000000000000
-          Position.Y = 280.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 464.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -464,14 +469,15 @@ object Form1: TForm1
           TextSettings.HorzAlign = Center
           Text = 'Agent Skills'
           TabOrder = 13
+          OnClick = Label17Click
         end
         object Label18: TLabel
           Anchors = [akTop]
           Cursor = crHandPoint
           StyledSettings = [Family]
           HitTest = True
-          Position.X = 30.000000000000000000
-          Position.Y = 305.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 375.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -481,14 +487,15 @@ object Form1: TForm1
           TextSettings.HorzAlign = Center
           Text = 'MCP in the API'
           TabOrder = 12
+          OnClick = Label18Click
         end
         object Label19: TLabel
           Anchors = [akTop]
           Cursor = crHandPoint
           StyledSettings = [Family]
           HitTest = True
-          Position.X = 30.000000000000000000
-          Position.Y = 255.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 325.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -498,14 +505,15 @@ object Form1: TForm1
           TextSettings.HorzAlign = Center
           Text = 'Tools'
           TabOrder = 14
+          OnClick = Label19Click
         end
         object Label20: TLabel
           Anchors = [akTop]
           Cursor = crHandPoint
           StyledSettings = [Family]
           HitTest = True
-          Position.X = 30.000000000000000000
-          Position.Y = 393.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 65.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -523,7 +531,7 @@ object Form1: TForm1
           StyledSettings = [Family]
           HitTest = True
           Position.X = 22.000000000000000000
-          Position.Y = 156.000000000000000000
+          Position.Y = 244.000000000000000000
           Size.Width = 359.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
@@ -554,7 +562,7 @@ object Form1: TForm1
           Anchors = [akLeft, akBottom]
           HitTest = True
           Position.X = 8.000000000000000000
-          Position.Y = 706.000000000000000000
+          Position.Y = 809.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -565,7 +573,7 @@ object Form1: TForm1
           Anchors = [akRight, akBottom]
           HitTest = True
           Position.X = 261.000000000000000000
-          Position.Y = 706.000000000000000000
+          Position.Y = 809.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -651,8 +659,7 @@ object Form1: TForm1
         end
         object Z: TLayout
           Anchors = [akTop]
-          Position.X = 2.000000000000000000
-          Position.Y = 151.000000000000000000
+          Position.Y = 175.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 178.000000000000000000
           Size.PlatformDefault = False
@@ -741,8 +748,7 @@ object Form1: TForm1
         end
         object Layout4: TLayout
           Anchors = [akTop]
-          Position.X = 2.000000000000000000
-          Position.Y = 329.000000000000000000
+          Position.Y = 377.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 96.000000000000000000
           Size.PlatformDefault = False
@@ -790,7 +796,7 @@ object Form1: TForm1
         object Layout5: TLayout
           Anchors = [akTop]
           Position.X = 2.000000000000000000
-          Position.Y = 422.000000000000000000
+          Position.Y = 494.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 187.000000000000000000
           Size.PlatformDefault = False
@@ -896,7 +902,7 @@ object Form1: TForm1
           Anchors = [akLeft, akBottom]
           HitTest = True
           Position.X = 8.000000000000000000
-          Position.Y = 703.000000000000000000
+          Position.Y = 806.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -907,7 +913,7 @@ object Form1: TForm1
           Anchors = [akRight, akBottom]
           HitTest = True
           Position.X = 253.000000000000000000
-          Position.Y = 703.000000000000000000
+          Position.Y = 806.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -982,7 +988,7 @@ object Form1: TForm1
         object Layout2: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 96.000000000000000000
+          Position.Y = 112.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 120.000000000000000000
           Size.PlatformDefault = False
@@ -1047,7 +1053,7 @@ object Form1: TForm1
         object Layout6: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 215.000000000000000000
+          Position.Y = 247.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 145.000000000000000000
           Size.PlatformDefault = False
@@ -1124,7 +1130,7 @@ object Form1: TForm1
         object Layout7: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 359.000000000000000000
+          Position.Y = 415.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 146.000000000000000000
           Size.PlatformDefault = False
@@ -1201,7 +1207,7 @@ object Form1: TForm1
         object Layout8: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 505.000000000000000000
+          Position.Y = 580.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 144.000000000000000000
           Size.PlatformDefault = False
@@ -1302,7 +1308,7 @@ object Form1: TForm1
         object Layout9: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 647.000000000000000000
+          Position.Y = 749.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 49.000000000000000000
           Size.PlatformDefault = False
@@ -1327,7 +1333,7 @@ object Form1: TForm1
             StyledSettings = [Family]
             HitTest = True
             Position.X = 18.000000000000000000
-            Position.Y = 25.000000000000000000
+            Position.Y = 24.000000000000000000
             Size.Width = 359.000000000000000000
             Size.Height = 17.000000000000000000
             Size.PlatformDefault = False
@@ -1346,7 +1352,7 @@ object Form1: TForm1
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = True
+        IsSelected = False
         Size.Width = 8.000000000000000000
         Size.Height = 8.000000000000000000
         Size.PlatformDefault = False
@@ -1359,7 +1365,7 @@ object Form1: TForm1
           Anchors = [akLeft, akBottom]
           HitTest = True
           Position.X = 8.000000000000000000
-          Position.Y = 703.000000000000000000
+          Position.Y = 806.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -1370,7 +1376,7 @@ object Form1: TForm1
           Anchors = [akRight, akBottom]
           HitTest = True
           Position.X = 253.000000000000000000
-          Position.Y = 703.000000000000000000
+          Position.Y = 806.000000000000000000
           Size.Width = 143.000000000000000000
           Size.Height = 33.000000000000000000
           Size.PlatformDefault = False
@@ -1656,6 +1662,7 @@ object Form1: TForm1
             TextSettings.HorzAlign = Center
             Text = 'Documentation (Github)'
             TabOrder = 22
+            OnClick = Label43Click
           end
           object Button42: TButton
             Anchors = [akTop]
@@ -1668,6 +1675,431 @@ object Form1: TForm1
             Text = 'Models Retrieve'
             TextSettings.Trimming = None
             OnClick = Button42Click
+          end
+        end
+      end
+      object TabItem4: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = True
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem4'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label44: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 806.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          OnClick = Label6Click
+        end
+        object Label45: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 253.000000000000000000
+          Position.Y = 806.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Layout13: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 265.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 24
+          object Label46: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Basic tools'
+            TabOrder = 5
+          end
+          object Label47: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 233.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 25
+            OnClick = Label47Click
+          end
+          object Button43: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 24
+            Text = 'Function calling'
+            TextSettings.Trimming = None
+            OnClick = Button43Click
+          end
+          object Button44: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 143.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Bash Tool'
+            TextSettings.Trimming = None
+          end
+          object Button45: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 173.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'Text Editor Tool'
+            TextSettings.Trimming = None
+          end
+          object Button46: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 203.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'Web Search Tool'
+            TextSettings.Trimming = None
+          end
+          object Button58: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 23
+            Text = 'Function calling using plugin'
+            TextSettings.Trimming = None
+            OnClick = Button58Click
+          end
+          object Button59: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 22
+            Text = 'Function calling using orchestration'
+            TextSettings.Trimming = None
+            OnClick = Button59Click
+          end
+        end
+        object Layout14: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 301.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 329.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 22
+          object Label48: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Beta tools'
+            TabOrder = 5
+          end
+          object Label49: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 295.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 28
+          end
+          object Button47: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 27
+            Text = 'Beta Bash Tool'
+            TextSettings.Trimming = None
+          end
+          object Button48: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 22
+            Text = 'Beta Code Execution Tool'
+            TextSettings.Trimming = None
+          end
+          object Button49: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 26
+            Text = 'Beta Computer Use Tool'
+            TextSettings.Trimming = None
+          end
+          object Button50: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 25
+            Text = 'Beta Memory Tool'
+            TextSettings.Trimming = None
+          end
+          object Button51: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 145.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 24
+            Text = 'Beta Text Editor Tool'
+            TextSettings.Trimming = None
+          end
+          object Button52: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 175.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 23
+            Text = 'Beta Web Fetch Tool'
+            TextSettings.Trimming = None
+          end
+          object Button53: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 205.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'Beta Search Tool'
+            TextSettings.Trimming = None
+          end
+          object Button54: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 235.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 20
+            Text = 'Beta Search Tool Regex'
+            TextSettings.Trimming = None
+          end
+          object Button55: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 265.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'Beta MCP Toolset'
+            TextSettings.Trimming = None
+          end
+        end
+        object Layout16: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 660.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 89.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 23
+          object Label52: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'MCP'
+            TabOrder = 5
+          end
+          object Label55: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 20
+          end
+          object Button57: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'TODO'
+            TextSettings.Trimming = None
+          end
+        end
+      end
+      object TabItem5: TTabItem
+        CustomIcon = <
+          item
+          end>
+        TextSettings.Trimming = None
+        IsSelected = False
+        Size.Width = 8.000000000000000000
+        Size.Height = 8.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'TabItem5'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
+        object Label56: TLabel
+          Anchors = [akLeft, akBottom]
+          HitTest = True
+          Position.X = 8.000000000000000000
+          Position.Y = 806.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          OnClick = Label6Click
+        end
+        object Label57: TLabel
+          Anchors = [akRight, akBottom]
+          HitTest = True
+          Position.X = 253.000000000000000000
+          Position.Y = 806.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 33.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
+          OnClick = Label7Click
+        end
+        object Layout15: TLayout
+          Anchors = [akTop]
+          Position.X = 8.000000000000000000
+          Position.Y = 8.000000000000000000
+          Size.Width = 385.000000000000000000
+          Size.Height = 369.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 24
+          object Label50: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Agent Skills'
+            TabOrder = 5
+          end
+          object Label51: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 20
+          end
+          object Button56: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 25.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 19
+            Text = 'TODO'
+            TextSettings.Trimming = None
           end
         end
       end

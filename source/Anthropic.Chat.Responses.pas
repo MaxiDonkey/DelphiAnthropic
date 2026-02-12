@@ -794,6 +794,8 @@ begin
     FToolContent.Free;
   for var Item in FCitations do
     Item.Free;
+  if Assigned(FCaller) then
+    FCaller.Free;
   inherited;
 end;
 

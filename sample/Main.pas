@@ -12,7 +12,8 @@ uses
 
   Sample.Key.Managment, Sample.UrlOpen, Sample.IniManagment,
 
-  Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.Tutorial.FMX, Anthropic.Async.Promise;
+  Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.Tutorial.FMX, Anthropic.Async.Promise,
+  Anthropic.Functions.Example;
 
 type
   TForm1 = class(TForm)
@@ -144,6 +145,41 @@ type
     Button41: TButton;
     Label43: TLabel;
     Button42: TButton;
+    TabItem4: TTabItem;
+    Label44: TLabel;
+    Label45: TLabel;
+    Layout13: TLayout;
+    Label46: TLabel;
+    Label47: TLabel;
+    Button43: TButton;
+    Button44: TButton;
+    Button45: TButton;
+    Button46: TButton;
+    Layout14: TLayout;
+    Label48: TLabel;
+    Label49: TLabel;
+    Button47: TButton;
+    Button48: TButton;
+    Button49: TButton;
+    Button50: TButton;
+    Button51: TButton;
+    Button52: TButton;
+    Button53: TButton;
+    Button54: TButton;
+    Button55: TButton;
+    Layout16: TLayout;
+    Label52: TLabel;
+    Label55: TLabel;
+    Button57: TButton;
+    TabItem5: TTabItem;
+    Label56: TLabel;
+    Label57: TLabel;
+    Layout15: TLayout;
+    Label50: TLabel;
+    Label51: TLabel;
+    Button56: TButton;
+    Button58: TButton;
+    Button59: TButton;
     procedure FormCreate(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure Label6Click(Sender: TObject);
@@ -209,6 +245,15 @@ type
     procedure Label40Click(Sender: TObject);
     procedure Button41Click(Sender: TObject);
     procedure Button42Click(Sender: TObject);
+    procedure Label43Click(Sender: TObject);
+    procedure Label19Click(Sender: TObject);
+    procedure Label16Click(Sender: TObject);
+    procedure Label18Click(Sender: TObject);
+    procedure Label17Click(Sender: TObject);
+    procedure Label47Click(Sender: TObject);
+    procedure Button43Click(Sender: TObject);
+    procedure Button58Click(Sender: TObject);
+    procedure Button59Click(Sender: TObject);
   private
     Client: IAnthropic;
     FPageIndex: Integer;
@@ -731,7 +776,7 @@ begin
 
   StartRun(Prompt);
 
-  //JSON payload generation
+  //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
@@ -1720,11 +1765,153 @@ begin
   end;
 end;
 
+procedure TForm1.Button58Click(Sender: TObject);
+// Function calling using plugin
+begin
+  // Create a plugin instance
+  var FunctionPlugin := TWeatherReportFunction.CreateInstance;
+
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'What''s the weather like in Paris?';
+
+  StartRun(Prompt);
+  TutorialHub.Tool := FunctionPlugin;
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolCustom
+                  .FunctionPlugin(FunctionPlugin)
+              )
+          )
+          .Messages( MessageParts
+              .User( Prompt )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+end;
+
+procedure TForm1.Button59Click(Sender: TObject);
+// Function calling using orchestration
+begin
+  var ModelName := 'claude-opus-4-6';
+//  ModelName := 'claude-sonnet-4-5';
+  var MaxTokens := 1024;
+  var Prompt := 'What''s the weather like in San Francisco?';
+
+  StartRun(Prompt);
+  TutorialHub.Tool := nil;
+
+  // Schema Payload creation using TSchemaParams class
+  var GetWeather := TSchemaParams.New
+    .&Type('object')
+    .Properties( TJSONObject.Create
+       .AddPair('location', TJSONObject.Create
+           .AddPair('type', 'string')
+           .AddPair('description', 'The city and state, e.g. San Francisco, CA')
+       )
+       .AddPair('unit', TJSONObject.Create
+           .AddPair('type', 'string')
+           .AddPair('enum', TJSONArray.Create
+               .Add('celsius')
+               .Add('fahrenheit'))
+       )
+    )
+    .Required(['location']);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolCustom
+                  .Name('get_weather')
+                  .Description('Get the current weather in a given location')
+                  .InputSchema(GetWeather)
+              )
+          )
+          .Messages( MessageParts
+              .User( Prompt )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  // Fist step
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      function (Value: TChat): TPromise<TChat>
+      var
+        Arguments: string;
+      begin
+        Result := nil;
+        for var Item in Value.Content do
+        begin
+          if Item.&Type = TContentBlockType.tool_use then
+            begin
+              Arguments := Item.Input;
+
+              // Second step
+              Result := Client.Chat.AsyncAwaitCreate(
+                procedure (Params: TChatParams)
+                begin
+                  Params
+                    .Model(ModelName)
+                    .MaxTokens(MaxTokens)
+                    .Messages( Generation.MessageParts
+                        .User('Announce the day''s weather forecast : ' + TutorialHub.WeatherRetrieve(Arguments))
+                    )
+                end);
+            end;
+        end;
+      end)
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+end;
+
 procedure TForm1.Button5Click(Sender: TObject);
 // Synchronous stream
 begin
 
-  var ModelName := 'claude-opus-4-6';  //sonnet-4-5';
+  var ModelName := 'claude-opus-4-6';
   var MaxTokens := 2048;
   var SystemPrompt := 'You are an expert in mathematics topology';
   var Prompt := 'Can we find accumulation points in a discrete topology?';
@@ -1871,6 +2058,71 @@ begin
 //  finally
 //    Value.Free;
 //  end;
+end;
+
+procedure TForm1.Button43Click(Sender: TObject);
+// Function calling
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'What''s the weather like in San Francisco?';
+
+  StartRun(Prompt);
+  TutorialHub.Tool := nil;
+
+  // Schema Payload creation using TSchemaParams class
+  var GetWeather := TSchemaParams.New
+    .&Type('object')
+    .Properties( TJSONObject.Create
+       .AddPair('location', TJSONObject.Create
+           .AddPair('type', 'string')
+           .AddPair('description', 'The city and state, e.g. San Francisco, CA')
+       )
+       .AddPair('unit', TJSONObject.Create
+           .AddPair('type', 'string')
+           .AddPair('enum', TJSONArray.Create
+               .Add('celsius')
+               .Add('fahrenheit'))
+       )
+    )
+    .Required(['location']);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolCustom
+                  .Name('get_weather')
+                  .Description('Get the current weather in a given location')
+                  .InputSchema(GetWeather)
+              )
+          )
+          .Messages( MessageParts
+              .User( Prompt )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
@@ -2159,6 +2411,16 @@ begin
   OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/batch-processing.md');
 end;
 
+procedure TForm1.Label43Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/models.md');
+end;
+
+procedure TForm1.Label47Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools.md');
+end;
+
 procedure TForm1.Label4Click(Sender: TObject);
 begin
   OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/content-generation-sse.md');
@@ -2177,6 +2439,26 @@ end;
 procedure TForm1.Label14Click(Sender: TObject);
 begin
   TabControl1.TabIndex := 4;
+end;
+
+procedure TForm1.Label16Click(Sender: TObject);
+begin
+  TabControl1.TabIndex := 5;
+end;
+
+procedure TForm1.Label17Click(Sender: TObject);
+begin
+  TabControl1.TabIndex := 6;
+end;
+
+procedure TForm1.Label18Click(Sender: TObject);
+begin
+  TabControl1.TabIndex := 5;
+end;
+
+procedure TForm1.Label19Click(Sender: TObject);
+begin
+  TabControl1.TabIndex := 5;
 end;
 
 procedure TForm1.Label1Click(Sender: TObject);
@@ -2272,6 +2554,10 @@ begin
       Text1.Text := 'Capabilities';
     4:
       Text1.Text := 'API Files && Batch processing';
+    5:
+      Text1.Text := 'Using Tools';
+    6:
+      Text1.Text := 'Agent skills';
   end;
 end;
 

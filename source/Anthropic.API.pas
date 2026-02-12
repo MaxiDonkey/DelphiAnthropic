@@ -476,6 +476,7 @@ begin
     finally
       ParamsBetaLess.Free;
     end;
+
   finally
     Params.Free;
     Response.Free;

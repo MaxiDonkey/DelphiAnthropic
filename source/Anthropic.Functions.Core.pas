@@ -22,57 +22,54 @@ type
   IFunctionCore = interface
     ['{D318078A-BA04-4131-A0E9-C95F0330C984}']
     /// <summary>
-    ///  Retrieves Cache control flag.
-    /// </summary>
-    function GetCacheControl: Boolean;
-    /// <summary>
-    /// Set value to Cache control flag.
-    /// </summary>
-    procedure SetCacheControl(const Value: Boolean);
-    /// <summary>
     /// Retrieves the description of the function.
     /// </summary>
     function GetDescription: string;
+
     /// <summary>
     /// Retrieves the name of the function.
     /// </summary>
     function GetName: string;
+
     /// <summary>
     /// Retrieves the InputSchema required by the function, represented as a JSON schema.
     /// </summary>
     function GetInputSchema: string;
+
     /// <summary>
     /// Executes the function with the provided arguments and returns the result as a string.
     /// </summary>
     /// <param name="Arguments">The arguments passed to the function in JSON format.</param>
     /// <returns>The result of the function execution as a string.</returns>
     function Execute(const Arguments: string): string;
+
      /// <summary>
     /// Converts the TFunctionCore instance to a JSON object that contains its type and representation.
     /// </summary>
     /// <returns>A JSON object representing the function instance.</returns>
     function ToJson: TJSONObject;
+
     /// <summary>
     /// Creates a string representation of the TFunctionCore instance in JSON format, including its description, name, and InputSchema.
     /// </summary>
     /// <returns>A string representation of the function in JSON format.</returns>
     function ToString: string;
+
     /// <summary>
     /// A brief description of the function's purpose, used by the model to determine when and how to call the function.
     /// </summary>
     property Description: string read GetDescription;
+
     /// <summary>
     /// The unique identifier of the function that will be called. It must only contain characters from a-z, A-Z, 0-9, underscores, or dashes, and should not exceed 64 characters in length.
     /// </summary>
     property Name: string read GetName;
+
     //// <summary>
     /// The InputSchema required by the function, specified as a JSON schema. If no InputSchema are required, use the schema: {"type": "object", "properties": {}}.
     /// </summary>
     property InputSchema: string read GetInputSchema;
-    /// <summary>
-    /// Caching tool option
-    /// </summary>
-    property CacheControl: Boolean read GetCacheControl write SetCacheControl;
+
   end;
 
   /// <summary>
@@ -82,29 +79,23 @@ type
   /// This class provides basic implementations for some methods and defines the structure that derived classes must follow.
   /// </remarks>
   TFunctionCore = class abstract(TinterfacedObject, IFunctionCore)
-  private
-    /// <summary>
-    ///  Retrieves Cache control flag.
-    /// </summary>
-    function GetCacheControl: Boolean;
-    /// <summary>
-    /// Set value to Cache control flag.
-    /// </summary>
-    procedure SetCacheControl(const Value: Boolean);
   protected
     FCacheControl: Boolean;
     /// <summary>
     /// Retrieves the description of the function. Derived classes must implement this method.
     /// </summary>
     function GetDescription: string; virtual; abstract;
+
      /// <summary>
     /// Retrieves the name of the function. Derived classes must implement this method.
     /// </summary>
     function GetName: string; virtual; abstract;
+
     /// <summary>
     /// Retrieves the InputSchema required by the function, represented as a JSON schema. Derived classes must implement this method.
     /// </summary>
     function GetInputSchema: string; virtual; abstract;
+
   public
     /// <summary>
     /// Executes the function with the provided arguments and returns the result as a string. Derived classes must implement this method.
@@ -112,47 +103,39 @@ type
     /// <param name="Arguments">The arguments passed to the function in JSON format.</param>
     /// <returns>The result of the function execution as a string.</returns>
     function Execute(const Arguments: string): string; virtual; abstract;
+
     /// <summary>
     /// Converts the TFunctionCore instance to a JSON object that contains its type and representation.
     /// </summary>
     /// <returns>A JSON object representing the function instance.</returns>
     function ToJson: TJSONObject;
+
     /// <summary>
     /// Creates a string representation of the TFunctionCore instance in JSON format, including its description, name, and InputSchema.
     /// </summary>
     /// <returns>A string representation of the function in JSON format.</returns>
     function ToString: string; override;
+
     /// <summary>
     /// A brief description of the function's purpose, used by the model to determine when and how to call the function.
     /// </summary>
     property Description: string read GetDescription;
+
     /// <summary>
     /// The unique identifier of the function that will be called. It must only contain characters from a-z, A-Z, 0-9, underscores, or dashes, and should not exceed 64 characters in length.
     /// </summary>
     property Name: string read GetName;
+
     /// <summary>
     /// The InputSchema required by the function, specified as a JSON schema. If no InputSchema are required, use the schema: {"type": "object", "properties": {}}.
     /// </summary>
     property InputSchema: string read GetInputSchema;
-    /// <summary>
-    /// Caching tool option
-    /// </summary>
-    property CacheControl: Boolean read GetCacheControl write SetCacheControl;
+
   end;
 
 implementation
 
 { TFunctionCore }
-
-function TFunctionCore.GetCacheControl: Boolean;
-begin
-  Result := FCacheControl;
-end;
-
-procedure TFunctionCore.SetCacheControl(const Value: Boolean);
-begin
-  FCacheControl := Value;
-end;
 
 function TFunctionCore.ToJson: TJSONObject;
 begin

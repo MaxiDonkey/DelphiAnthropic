@@ -95,6 +95,7 @@ Functions are user-defined tools that expose application logic to Claude through
 They let Claude trigger deterministic operations (e.g., computation, data access, workflows) and incorporate the returned result into its response.
 Function execution is handled outside the model, preserving a clear separation between reasoning and application-side execution.
 
+To facilitate the adoption of this feature, a dedicated tutorial has been designed for this purpose. Please refer to the [Function Calling Tutorial](tools-function-calling.md#function-calling).
 <br>
 
 ### Bash Tool

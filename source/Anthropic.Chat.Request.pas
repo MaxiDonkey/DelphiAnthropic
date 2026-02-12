@@ -730,6 +730,8 @@ type
     TTool = class(TToolUnion)
       function &Type(const Value: string = 'custom'): TTool;
 
+      function FunctionPlugin(const Value: IFunctionCore): TTool;
+
       /// <summary>
       /// JSON schema for this tool's input.
       /// </summary>
@@ -3700,6 +3702,13 @@ end;
 function TTool.Description(const Value: string): TTool;
 begin
   Result := TTool(Add('description', Value));
+end;
+
+function TTool.FunctionPlugin(const Value: IFunctionCore): TTool;
+begin
+  Result := InputSchema(Value.InputSchema)
+    .Name(Value.Name)
+    .Description(Value.Description);
 end;
 
 function TTool.InputSchema(const Value: TInputSchema): TTool;

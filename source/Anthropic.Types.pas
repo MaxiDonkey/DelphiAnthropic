@@ -154,37 +154,37 @@ type
     /// <summary>
     /// Not specified, should not be used.
     /// </summary>
-    TYPE_UNSPECIFIED,
+    type_unspecified,
 
     /// <summary>
     /// String type.
     /// </summary>
-    &STRING,
+    &string,
 
     /// <summary>
     /// Number type.
     /// </summary>
-    NUMBER,
+    number,
 
     /// <summary>
     /// Integer type.
     /// </summary>
-    &INTEGER,
+    &integer,
 
     /// <summary>
     /// Boolean type.
     /// </summary>
-    &BOOLEAN,
+    &boolean,
 
     /// <summary>
     /// Array type.
     /// </summary>
-    &ARRAY,
+    &array,
 
     /// <summary>
     /// Object type.
     /// </summary>
-    &OBJECT
+    &object
   );
 
   TSchemaTypeHelper = record helper for TSchemaType

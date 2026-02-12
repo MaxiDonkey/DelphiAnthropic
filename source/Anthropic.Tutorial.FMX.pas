@@ -17,7 +17,7 @@ uses
   FMX.Controls, FMX.Forms, Winapi.Windows, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.Media, FMX.Objects, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, System.UITypes,
   System.Types, System.JSON, system.Threading,
-  Anthropic, Anthropic.Types, Anthropic.API.Params;
+  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Helpers;
 
 type
   TToolProc = procedure (const Value: string) of object;
@@ -57,6 +57,9 @@ type
     procedure JSONUIClear;
     procedure ShowCancel;
     procedure HideCancel;
+
+    function WeatherRetrieve(const Value: string): string;
+    procedure WeatherReporter(const Value: string);
 
     constructor Create(
       const AClient: IAnthropic;
@@ -201,14 +204,14 @@ begin
       if Item.&Type = TContentBlockType.text then
         begin
           Display(Sender, Item.Text);
+          DisplayUsage(Sender, Value);
         end
       else
       if Item.&Type = TContentBlockType.web_search_tool_result then
         begin
-//          Display(Sender, Item.Content);
-
           for var Content in Item.ToolContent.WebSearchToolResultBlock.Content do
             Display(Sender, Content.Url);
+          DisplayUsage(Sender, Value);
         end
       else
       if Item.&Type = TContentBlockType.tool_use then
@@ -216,12 +219,12 @@ begin
           Display(Sender, F('Type', Item.&Type.ToString));
           Display(Sender, F('Name', Item.Name));
           Display(Sender, F('input', Item.Input));
-          if Assigned(TutorialHub.ToolCall) then
-            TutorialHub.ToolCall(TutorialHub.Tool.Execute(Item.Input));
+          DisplayUsage(Sender, Value);
+
+          TutorialHub.ToolCall(Item.Input);
         end;
     end;
   Display(Sender);
-  DisplayUsage(Sender, Value);
 end;
 
 procedure Display(Sender: TObject; Value: TModel);
@@ -531,6 +534,8 @@ begin
   Memo3 := AMemo3;
   Memo4 := AMemo4;
   Button := AButton;
+
+  ToolCall := WeatherReporter;
 end;
 
 procedure TFMXTutorialHub.HideCancel;
@@ -616,6 +621,70 @@ end;
 procedure TFMXTutorialHub.ShowCancel;
 begin
   FButton.Visible := True;
+end;
+
+procedure TFMXTutorialHub.WeatherReporter(const Value: string);
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'Announce the day''s weather forecast';
+
+  if Tool = nil then
+    Prompt := Prompt + sLineBreak + WeatherRetrieve(Value)
+  else
+    Prompt := Prompt + sLineBreak + Tool.Execute(Value);
+
+  Display(TutorialHub, #10'Second step, please wait...'#10);
+  TutorialHub.Memo2.Lines.Text := Prompt;
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt)
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+end;
+
+function TFMXTutorialHub.WeatherRetrieve(const Value: string): string;
+begin
+  var Location := TJsonReader.Parse(Value).AsString('location');
+
+  if Location.ToLower.Contains('san francisco') then
+    begin
+      var Json := TJSONObject.Create;
+      try
+      Result := Json
+        .AddPair('Location', 'San Francisco, CA')
+        .AddPair('temperature', '16°C')
+        .AddPair('forecast', 'rainy, low visibility but sunny in the late afternoon or early evening')
+        .ToJSON;
+      finally
+        Json.Free;
+      end;
+    end;
 end;
 
 initialization

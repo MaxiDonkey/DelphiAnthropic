@@ -206,27 +206,27 @@ This value corresponds to a PowerShell command, `Get-ChildItem -Path . -Filter *
 
 - **Persistent session** <br>
   State is preserved across commands: working directory, created files, environment variables.
-- **Schema-less tool interface** :
+- **Schema-less tool interface** <br>
   Inputs are free-form (`{ "command": "…" }`) with no built-in structural validation.
-- **High attack surface** :
+- **High attack surface** <br>
   ***Grants near-direct system access if not tightly constrained.***
-- **Security is the implementer’s responsibility** :
+- **Security is the implementer’s responsibility** <br>
   Requires isolation (Docker/VM), command filtering, timeouts, resource limits, and logging.
-- **Blocking dangerous commands is mandatory** :
+- **Blocking dangerous commands is mandatory** <br>
   Examples: `rm -rf`, `sudo`, fork bombs, disk formatting.
-- **Explicit error handling** :
+- **Explicit error handling** <br>
   Documented cases include timeouts, command not found, and permission errors.
-- **Functional limitations** :
+- **Functional limitations** <br>
   No interactive commands (`vim`, `less`), no GUI applications, no streaming output, large outputs must be truncated.
-- **Session scope is limited** :
+- **Session scope is limited** <br>
   Persistence exists only within the current session, not across separate API calls.
-- **Non-trivial token cost** :
+- **Non-trivial token cost** <br>
   Tool activation and command outputs (stdout/stderr) consume tokens.
-- **Intended use cases** :
+- **Intended use cases** <br>
   Automation, CI/CD pipelines, data processing, and reproducible scripting.
-- **Not suitable for free-form shell exploration** : 
+- **Not suitable for free-form shell exploration** <br> 
   Designed for ***controlled agent workflows***, not as a human-like terminal.
-- **Implicit takeaway** :
+- **Implicit takeaway** <br>
   Using this tool is equivalent to exposing a remote shell and therefore ***requires strict governance***.
 
 <br>

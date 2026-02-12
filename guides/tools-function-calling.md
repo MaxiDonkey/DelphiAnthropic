@@ -42,6 +42,8 @@ The example used throughout this section is: "What's the weather like in San Fra
 
 ## JSON Payload creation
 
+Before executing a function call, it is necessary to build a JSON payload that describes both the user request and the functions exposed to the model.
+
 ### Expected JSON payload
 
 ```json

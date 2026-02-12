@@ -474,25 +474,25 @@ Now define the method that ***orchestrates the two promises*** required to retri
         Result := nil;
 
         for var Item in Value.Content do
-        begin
-          if Item.&Type = TContentBlockType.tool_use then
-            begin
-              var Arguments := Item.Input;
+          begin
+            if Item.&Type = TContentBlockType.tool_use then
+              begin
+                var Arguments := Item.Input;
 
-              // Second step
-              Result := Client.Chat.AsyncAwaitCreate(
-                procedure (Params: TChatParams)
-                begin
-                  Params
-                    .Model(ModelName)
-                    .MaxTokens(MaxTokens)
-                    .Messages( Generation.MessageParts
-                        .User('Announce the day''s weather forecast : ' + TutorialHub.WeatherRetrieve(Arguments))
-                    )
-                end);
+                // Second step
+                Result := Client.Chat.AsyncAwaitCreate(
+                  procedure (Params: TChatParams)
+                  begin
+                    Params
+                      .Model(ModelName)
+                      .MaxTokens(MaxTokens)
+                      .Messages( Generation.MessageParts
+                          .User('Announce the day''s weather forecast : ' + TutorialHub.WeatherRetrieve(Arguments))
+                      )
+                  end);
 
-            end;
-        end;
+              end;
+          end;
       end)
     .&Then(
       procedure (Value: TChat)

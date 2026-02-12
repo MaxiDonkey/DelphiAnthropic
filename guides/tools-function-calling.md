@@ -85,9 +85,15 @@ Before executing a function call, it is necessary to build a JSON payload that d
 }
 ```
 
+The JSON payload above represents the canonical form; the following sections demonstrate three equivalent ways to map this structure into Delphi code.
+
+- [Approach using the `TSchemaParams` class and the `Generation` record helper](#approach-using-the-tschemaparams-class-and-the-generation-record-helper)
+- [Approach using only the `Generation` record helper](#approach-using-only-the-generation-record-helper)
+- [Approach based on using a string](#approach-based-on-using-a-string)
+
 <br>
 
-### Approach using the `TSchemaParams` class and the `Generation` record helper.
+### Approach using the `TSchemaParams` class and the `Generation` record helper
 
 ```pascal
   var ModelName := 'claude-opus-4-6';
@@ -134,7 +140,7 @@ Before executing a function call, it is necessary to build a JSON payload that d
 
 <br>
 
-### Approach using only the `Generation` record helper.
+### Approach using only the `Generation` record helper
 
 ```pascal
   var ModelName := 'claude-opus-4-6';
@@ -193,7 +199,7 @@ With this approach, declaring multiple functions is both efficient and visually 
 
 <br>
 
-### Approach based on using a string.
+### Approach based on using a string
 
 ```pascal
   var ModelName := 'claude-opus-4-6';

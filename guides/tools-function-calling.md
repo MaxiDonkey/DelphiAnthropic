@@ -330,11 +330,11 @@ With this asynchronous approach, the `Display` method handles the second step by
       begin
         var Json := TJSONObject.Create;
         try
-        Result := Json
-          .AddPair('Location', 'San Francisco, CA')
-          .AddPair('temperature', '16°C')
-          .AddPair('forecast', 'rainy, low visibility but sunny in the late afternoon or early evening')
-          .ToJSON;
+          Result := Json
+            .AddPair('Location', 'San Francisco, CA')
+            .AddPair('temperature', '16°C')
+            .AddPair('forecast', 'rainy, low visibility but sunny in the late afternoon or early evening')
+            .ToJSON;
         finally
          Json.Free;
         end;

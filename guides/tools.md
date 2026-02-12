@@ -104,6 +104,131 @@ The Bash tool provides access to a persistent shell session for command-line aut
 It enables system operations such as running scripts, inspecting environments, and working with files via standard shell commands.
 Session state is preserved across commands, allowing multi-step workflows to be expressed naturally.
 
+
+#### Code example
+
+```pascal
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'Using PowerShell, display the list of executable (.exe) files in the current directory';
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolBash20250124 )
+          )
+          .Messages( MessageParts
+              .User( Prompt )
+          );
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+```
+
+- JSON result
+
+  ```json
+  {
+    "model": "claude-opus-4-6",
+    "id": "msg_018JN634XZPNFgKQHweRgsa1",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+        {
+            "type": "text",
+            "text": "\n\nHere's how to display the list of executable (`.exe`) files in the current directory using PowerShell:"
+        },
+        {
+            "type": "tool_use",
+            "id": "toolu_01RDAjuY1QPHSjHpz6dxoGQn",
+            "name": "bash",
+            "input": {
+                "command": "pwsh -Command \"Get-ChildItem -Path . -Filter *.exe\""
+            }
+        }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+        "input_tokens": 766,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 94,
+        "service_tier": "standard",
+        "inference_geo": "global"
+    }
+  }
+  ```
+
+The `input` property contains the value `{"command": "pwsh -Command \"Get-ChildItem -Path . -Filter *.exe\""}`.
+
+This value corresponds to a PowerShell command, `Get-ChildItem -Path . -Filter *.exe`, whose purpose is to list the executable files in the current directory.
+
+<br>
+
+#### Essential Points to Understand About the Bash Tool
+
+- **Execution of real bash commands**
+  The tool can run actual shell commands (`ls`, `pip`, scripts, etc.).
+
+- **Persistent session**
+  State is preserved across commands: working directory, created files, environment variables.
+- **Schema-less tool interface**
+  Inputs are free-form (`{ "command": "…" }`) with no built-in structural validation.
+- **High attack surface**
+  ***Grants near-direct system access if not tightly constrained.***
+- **Security is the implementer’s responsibility**
+  Requires isolation (Docker/VM), command filtering, timeouts, resource limits, and logging.
+- **Blocking dangerous commands is mandatory**
+  Examples: `rm -rf`, `sudo`, fork bombs, disk formatting.
+- **Explicit error handling**
+  Documented cases include timeouts, command not found, and permission errors.
+- **Functional limitations**
+  No interactive commands (`vim`, `less`), no GUI applications, no streaming output, large outputs must be truncated.
+- **Session scope is limited**
+  Persistence exists only within the current session, not across separate API calls.
+- **Non-trivial token cost**
+  Tool activation and command outputs (stdout/stderr) consume tokens.
+- **Intended use cases**
+  Automation, CI/CD pipelines, data processing, and reproducible scripting.
+- **Not suitable for free-form shell exploration**
+  Designed for ***controlled agent workflows***, not as a human-like terminal.
+- **Implicit takeaway**
+  Using this tool is equivalent to exposing a remote shell and therefore ***requires strict governance***.
+
 <br>
 
 ### Text Editor Tool

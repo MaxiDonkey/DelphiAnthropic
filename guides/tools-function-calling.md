@@ -385,7 +385,7 @@ With this asynchronous approach, the `Display` method handles the second step by
   ```
 
 >[!NOTE]
-> The Display methods are available in the support units Anthropic.Tutorial.FMX.pas and Anthropic.Tutorial.VCL.pas. These units are intended to facilitate the reader’s skill development.
+> The Display methods are available in the support units `Anthropic.Tutorial.FMX.pas` and `Anthropic.Tutorial.VCL.pas`. These units are intended to facilitate the reader’s skill development.
 
 <br>
 

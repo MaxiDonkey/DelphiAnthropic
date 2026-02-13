@@ -48,7 +48,7 @@ A request is sent to the model with access to the text editor tool.
 
 <br>
 
-Model response (excerpt)
+### Model response (excerpt)
 
 The model does not read the file directly. <br>
 Instead, it explicitly requests access to it:

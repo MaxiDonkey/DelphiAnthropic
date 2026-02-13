@@ -4,6 +4,8 @@ The Text Editor tool lets Claude view and modify text files using structured edi
 It is suited for tasks like fixing code, refactoring, generating documentation, or creating and editing files with traceable changes.
 All edits are explicit and deterministic, making file-level interactions auditable and reproducible.
 
+>[!NOTE]
+> This tool is intentionally more complex than function calling, because it exposes file-level operations that must remain fully controlled by the host application.
 
 - [Minimal example](#minimal-example)
 - [Implementation: detailed behavior](#implementation-detailed-behavior)
@@ -289,3 +291,6 @@ Each interaction follows this sequence:
 - d. next model decision
 
 There is no hidden state and no implicit access.
+
+>[!IMPORTANT]
+> This pattern scales to refactoring, multi-file edits, and documentation generation, but always preserves the same explicit control loop.

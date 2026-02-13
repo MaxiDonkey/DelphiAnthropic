@@ -246,3 +246,116 @@ To facilitate the adoption of this feature, a dedicated tutorial has been design
 The Web Search tool gives Claude access to current web content beyond its training cutoff.
 It supports up-to-date, source-backed answers by retrieving information online and returning responses with citations.
 Search execution and source attribution are handled natively, ensuring traceability of external information.
+
+#### Code example
+
+```pascal
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'What is the weather in NYC?';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .Tools( ToolParts
+              .Add( Tool.CreateWebSearchTool20250305
+                  .MaxUses(5)
+              )
+          );
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+```
+
+>[!NOTE]
+> This example intentionally uses a minimal configuration to illustrate the execution flow. <br>
+> For advanced options such as domain filtering, localization, and citation controls, refer to the official [Anthropic documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)
+
+<br>
+
+#### API Implementation
+
+##### 1. Prerequisites
+- Web search enabled at the organization level (Console)
+- Supported model selected with pinned version
+- Internal validation for external content usage and citations
+- Web search budget allocated
+
+<br>
+
+##### 2. Model
+- Select the smallest sufficient compatible model
+- Explicitly verify tool compatibility
+- Pin model version (avoid “latest” aliases)
+
+<br>
+
+##### 3. Tool declaration
+- Add `web_search_20250305` to the `tools` field
+- Set a defensive `max_uses`
+- Optional configuration:
+  - `allowed_domains` or `blocked_domains`
+  - `user_location` for geo-dependent results 
+
+<br>
+
+##### 4. Prompt
+- Do not explicitly instruct the model to use web search
+- Clearly state freshness requirements
+- Require citations if needed
+- Avoid ambiguous phrasing (*"latest"*, *"now"* without context)
+
+<br>
+
+##### 5. Multi-turn handling
+- Re-inject full `web_search_tool_result` blocks
+- Preserve `encrypted_content`
+- Validate citation–answer consistency at each turn
+
+<br>
+
+##### 6. Prompt caching
+- Place `cache_control` after the last search result block
+- Reuse cached content across turns
+- Monitor cache metrics (read / creation)
+
+<br> 
+
+##### 7. Streaming
+- Explicitly handle search execution pauses
+- Accept delayed search results
+- Do not expose final answers without complete citations 

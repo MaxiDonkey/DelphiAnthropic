@@ -1,4 +1,4 @@
-# DelphiAnthropic – Anthropic Claude API Wrapper for Delphi
+# DelphiAnthropic – Claude API Wrapper for Delphi
 
 ![Delphi async/await supported](https://img.shields.io/badge/Delphi%20async%2Fawait-supported-blue)
 ![GitHub](https://img.shields.io/badge/IDE%20Version-Delphi%2010.4/11/12-ffffba)

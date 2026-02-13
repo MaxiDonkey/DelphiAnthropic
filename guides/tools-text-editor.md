@@ -273,7 +273,7 @@ Each action requested by the model is one of the following commands:
 - `view`: read a file or list a directory
 - `str_replace`: replace an exact string
 - `insert`: insert text at a specific line
-- `create: create a new file
+- `create`: create a new file
 
 <br>
 

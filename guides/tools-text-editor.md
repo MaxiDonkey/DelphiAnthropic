@@ -49,6 +49,22 @@ A request is sent to the model with access to the text editor tool.
               .User(Prompt)
           );
     end; 
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
 ```
 
 <br>
@@ -125,22 +141,7 @@ The application reads the file locally and returns its contents:
               )
             );
     end;  
-
-    // Asynchronous creation (promise-based)
-    var Promise := Client.Chat.AsyncAwaitCreate(Payload);
-
-    // Simple processing or orchestration of promise
-    Promise
-      .&Then(
-        procedure (Value: TChat)
-        begin
-          Display(TutorialHub, Value);
-        end)
-      .&Catch(
-        procedure (E: Exception)
-        begin
-          Display(TutorialHub, E.Message);
-        end);
+    ...
   ```
 
 - The Delphi code responsible for creating the payload produces the following JSON.

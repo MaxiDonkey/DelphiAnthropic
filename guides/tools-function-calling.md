@@ -312,7 +312,8 @@ With this asynchronous approach, the `Display` method handles the second step by
        ... 
        if Item.&Type = TContentBlockType.tool_use then  
          begin
-           TutorialHub.ToolCall(Item.Input); // <-- Execute the second step
+           if Item.Name = 'get_weather' then   // <-- "get_weather": Name of the function
+             TutorialHub.ToolCall(Item.Input); // <-- Execute the second step
          end;
       end;
   end;

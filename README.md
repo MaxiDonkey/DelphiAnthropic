@@ -18,8 +18,7 @@ ___
 ## Two simple illustrative examples of synchronous text generation
 
 >[!TIP]
->To obtain an Anthropic API key, refer to  
->https://platform.claude.com/account/keys
+>To obtain an Anthropic API key, refer to https://platform.claude.com/account/keys
 
 <br>
 

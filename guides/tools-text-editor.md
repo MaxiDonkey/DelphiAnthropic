@@ -20,7 +20,7 @@ Fix a for loop that is missing a :.
 
 <br>
 
-### Initial request
+### 1. Initial request
 
 A request is sent to the model with access to the text editor tool.
 
@@ -48,7 +48,7 @@ A request is sent to the model with access to the text editor tool.
 
 <br>
 
-### Model response (excerpt)
+### 2. Model response (excerpt)
 
 The model does not read the file directly. <br>
 Instead, it explicitly requests access to it:

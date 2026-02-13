@@ -2114,6 +2114,9 @@ type
     /// <para>
     /// • "skills-2025-10-02"
     /// </para>
+    /// <para>
+    /// • "compact-2026-01-12"
+    /// </para>
     /// </remarks>
     function Beta(const Value: TArray<string>): TChatParams; overload;
 
@@ -2287,7 +2290,16 @@ type
     /// This allows you to control how Claude manages context across multiple requests, such as whether
     /// to clear function results or not.
     /// </remarks>
-    function ContextManagement(const Value: TContextManagementConfig): TChatParams;
+    function ContextManagement(const Value: TContextManagementConfig): TChatParams; overload;
+
+    /// <summary>
+    /// Context management configuration.
+    /// </summary>
+    /// <remarks>
+    /// This allows you to control how Claude manages context across multiple requests, such as whether
+    /// to clear function results or not.
+    /// </remarks>
+    function ContextManagement(const Value: string): TChatParams; overload;
 
     /// <summary>
     /// Specifies the geographic region for inference processing. If not specified, the workspace's
@@ -2546,6 +2558,16 @@ end;
 function TChatParams.Container(const Value: TContainerParams): TChatParams;
 begin
   Result := TChatParams(Add('container', Value.Detach));
+end;
+
+function TChatParams.ContextManagement(const Value: string): TChatParams;
+var
+  JSONObject: TJSONObject;
+begin
+  if TJSONHelper.TryGetObject(Value, JSONObject) then
+    Exit(TChatParams(Add('context_management', JSONObject)));
+
+  raise EAnthropicException.Create('Invalid JSON Object');
 end;
 
 function TChatParams.ContextManagement(

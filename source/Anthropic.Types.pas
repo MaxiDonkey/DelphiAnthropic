@@ -314,7 +314,8 @@ type
     model_context_window_exceeded_2025_08_26,
     skills_2025_10_02,
     fast_mode_2026_02_01,
-    structured_outputs_2025_11_13  // deprecated since january 29, 2026
+    structured_outputs_2025_11_13,  // deprecated since january 29, 2026
+    compact_2026_01_12
   );
 
   TBetaHelper = record Helper for TBeta
@@ -340,7 +341,8 @@ type
       'model-context-window-exceeded-2025-08-26',
       'skills-2025-10-02',
       'fast-mode-2026-02-01',
-      'structured-outputs-2025-11-13'  // deprecated since january 29, 2026
+      'structured-outputs-2025-11-13',  // deprecated since january 29, 2026
+      'compact-2026-01-12'
     );
   public
     function ToString: string;

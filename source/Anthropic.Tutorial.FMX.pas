@@ -33,6 +33,9 @@ type
     FTool: IFunctionCore;
     FToolCall: TToolProc;
     FCancel: Boolean;
+    FEditorId: string;
+    FEditorText: string;
+    FEditorInput: string;
     procedure OnButtonClick(Sender: TObject);
     procedure SetButton(const Value: TButton);
     procedure SetMemo1(const Value: TMemo);
@@ -49,6 +52,9 @@ type
     property Memo4: TMemo read FMemo4 write SetMemo4;
     property Button: TButton read FButton write SetButton;
     property Cancel: Boolean read FCancel write FCancel;
+    property EditorId: string read FEditorId write FEditorId;
+    property EditorText: string read FEditorText write FEditorText;
+    property EditorInput: string read FEditorInput write FEditorInput;
     property Tool: IFunctionCore read FTool write FTool;
     property ToolCall: TToolProc read FToolCall write FToolCall;
     property JSONRequest: string write SetJSONRequest;
@@ -203,15 +209,16 @@ begin
     begin
       if Item.&Type = TContentBlockType.text then
         begin
+          TutorialHub.EditorText := Item.Text;
           Display(Sender, Item.Text);
-          DisplayUsage(Sender, Value);
+          //DisplayUsage(Sender, Value);
         end
       else
       if Item.&Type = TContentBlockType.web_search_tool_result then
         begin
           for var Content in Item.ToolContent.WebSearchToolResultBlock.Content do
             Display(Sender, Content.Url);
-          DisplayUsage(Sender, Value);
+          //DisplayUsage(Sender, Value);
         end
       else
       if Item.&Type = TContentBlockType.tool_use then
@@ -219,9 +226,16 @@ begin
           Display(Sender, F('Type', Item.&Type.ToString));
           Display(Sender, F('Name', Item.Name));
           Display(Sender, F('input', Item.Input));
-          DisplayUsage(Sender, Value);
+          //DisplayUsage(Sender, Value);
 
-          TutorialHub.ToolCall(Item.Input);
+          if Item.Name = 'str_replace_based_edit_tool' then
+            begin
+              TutorialHub.EditorID := Item.Id;
+              TutorialHub.EditorInput := Item.Input;
+            end;
+
+          if Item.Name = 'get_weather' then
+            TutorialHub.ToolCall(Item.Input);
         end;
     end;
   Display(Sender);

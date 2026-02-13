@@ -315,9 +315,9 @@ The application:
 ### 6. The flow is strictly sequential
 
 Each interaction follows this sequence:
-- 1. model request
-- 2. local execution
-- 3. result returned
-- 4. next model decision
+- a. model request
+- b. local execution
+- c. result returned
+- d. next model decision
 
 There is no hidden state and no implicit access.

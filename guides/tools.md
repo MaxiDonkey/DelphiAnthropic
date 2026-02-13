@@ -237,6 +237,8 @@ The Text Editor tool lets Claude view and modify text files using structured edi
 It is suited for tasks like fixing code, refactoring, generating documentation, or creating and editing files with traceable changes.
 All edits are explicit and deterministic, making file-level interactions auditable and reproducible.
 
+To facilitate the adoption of this feature, a dedicated tutorial has been designed for this purpose. Please refer to the [Text editor Tutorial](tools-text-editor.md#text-editor).
+
 <br>
 
 ### Web Search Tool

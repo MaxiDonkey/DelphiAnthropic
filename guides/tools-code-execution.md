@@ -11,6 +11,9 @@ Code execution tools are tooled capabilities exposed to a model to execute opera
 
 ___
 
+>[!NOTE]
+> This tutorial presents the minimal  for clarity. More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
+
 ## API Overview
 
 ### Objective
@@ -110,7 +113,7 @@ Enable a model to execute code and system operations inside an ***isolated conta
 
 ### Basic example 
 
-Ask Claude to check system information and install packages:
+Ask Claude to check system information:
 
 ```pascal
   var ModelName := 'claude-opus-4-6';
@@ -159,6 +162,8 @@ Ask Claude to check system information and install packages:
 //  end;
 ```
 
+See [official documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#create-and-edit-files-directly)
+
 ### Result
 
 ```text
@@ -186,16 +191,212 @@ Here are some notable ones grouped by category:
 | **AI/ML Runtime** | `onnxruntime`, `huggingface-hub` |
 | **Utilities** | `tqdm`, `rich`, `click`, `networkx`, `sympy`, `graphviz` |
 
+- JSON result (excerpt)
+
+```json
+"content": [
+        {
+            "type": "text",
+            "text": "\n\nI'll check the Python version and list the installed packages simultaneously."
+        },
+        {
+            "type": "server_tool_use",
+            "id": "srvtoolu_012cyAPUZzNLiLzkTPnpnPyy",
+            "name": "bash_code_execution",
+            "input": {
+                "command": "python3 --version"
+            },
+            "caller": {
+                "type": "direct"
+            }
+        },
+        {
+            "type": "server_tool_use",
+            "id": "srvtoolu_01BWPkHsvCLXc5zxry6W9jEn",
+            "name": "bash_code_execution",
+            "input": {
+                "command": "pip list 2>\/dev\/null || pip3 list 2>\/dev\/null"
+            },
+            "caller": {
+                "type": "direct"
+            }
+        },
+        {
+            "type": "bash_code_execution_tool_result",
+            "tool_use_id": "srvtoolu_012cyAPUZzNLiLzkTPnpnPyy",
+            "content": {
+                "type": "bash_code_execution_result",
+                "stdout": "Python 3.11.13\n",
+                "stderr": "",
+                "return_code": 0,
+                "content": [
+                ]
+            }
+        },
+        {
+            "type": "bash_code_execution_tool_result",
+            "tool_use_id": "srvtoolu_01BWPkHsvCLXc5zxry6W9jEn",
+            "content": {
+                "type": "bash_code_execution_result",
+                "stdout": "Package                   Version\n--- ... 3.18.1\n",
+                "stderr": "",
+                "return_code": 0,
+                "content": [
+                ]
+            }
+        },
+        {
+            "type": "text",
+            "text": "Here's a summary of the environment:\n\n### ... learning, document processing, and visualization tasks!"
+        }
+    ],
+    "container": {
+        "id": "container_011CY7NJtwv7RuL8EKzCV5aU",
+        "expires_at": "2026-02-14T05:57:17.692767Z"
+    }
+```
+> ***This final JSON includes a `container` identifier, the notion of which is addressed in the following section.***
+
+<br>
+
 ## Using and Reusing Containers
 
+### Principle
+
+Each execution runs inside a container. The same container can be reused across requests to preserve state (files, scripts, intermediate outputs).
+
+### Mechanism
+
+- First request: the API creates a container and returns a `container.id`
+- Subsequent requests: pass this `container.id` to resume the same environment
+
+### Benefits
+
+- Multi-step pipelines (preprocessing → analysis → export)
+- Reduced redundant uploads
+- Iterative work on temporary codebases or datasets
+
+### Limitations
+
+- Containers expire after a retention period
+- No network access
+- Requires strict hygiene: naming, directory structure, explicit artifacts
+
+### Basic example with container ID
+
+```pascal
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt)
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          )
+          .Container('container_011CY7NJtwv7RuL8EKzCV5aU');  // <--- Add container ID
+    end;
+```
+
+<br>
+
+## Recommendations (Design and Architecture Focus)
+
+### Architecture and contract
+
+- Encapsulate tool usage behind a dedicated layer:
+  - request construction (headers, tools),
+  - response block parsing,
+  - error and artifact handling.
+- Explicitly version the tool contract (header + tool type) and plan for format evolution.
+
+### State strategy
+
+- Clearly separate:
+  - stateless mode (ephemeral container),
+  - stateful mode (reused container).
+- Design workflows to be idempotent: container loss must not break the pipeline.
+
+### Artifacts-first approach
+
+- Prefer producing files (reports, plots, dumps) over returning large textual outputs.
+- Standardize a directory structure such as:
+  ```bash
+  /workspace/<job_id>/
+  ```
+  along with a manifest listing generated outputs.
+
+### Observability and governance
+
+- Systematically log:
+  - executed commands,
+  - return codes,
+  - stderr output,
+  - produced file paths.
+- Enforce strict policies for:
+  - secrets (never store keys in clear text),
+  - Bash command surface,
+  - data size and volume limits.
+
+### Cost and latency
+
+- Reuse containers only when retained state provides tangible value.
+- Minimize uploads and favor compact data formats.
+- Chunk long-running jobs and checkpoint progress via intermediate files.
 
 <br>
 
 ## Quick Selection Guide
 
+**Objective: quickly select the appropriate configuration for a given use case.**
+
+- **One-off computation / demo / notebook-style (no state)** <br>
+  → Single request, ephemeral container <br>
+  Typical cases: quick statistics, inspection, simple transformations <br>
+
+- **Multi-step workflow (analysis → visualization → export)** <br>
+  → Reused container + artifacts <br>
+  Typical cases: processing pipelines, report generation
+- **User file analysis (CSV, Excel, images)** <br>
+  → Files API + file_id (+ Files API beta header if required) <br>
+  Typical cases: datasets, documents, images to be analyzed
+- **System-level orchestration (bash, scripts, directory layout)** <br>
+  → Structured Bash usage + directory conventions + logging <br>
+  Typical cases: environment preparation, local batch jobs, temporary project generation
 
 <br>
 
 ## Practical Notes
 
+**Request-side contract**
+- Enable `code-execution-2025-08-25`
+- Explicitly declare the `code_execution_20250825` tool
+
+**Result handling**
+- Parse separately:
+  - Bash execution results,
+  - file operation results,
+  - artifacts.
+- Treat any `return_code ≠ 0` as a tool execution failure, regardless of generated explanation.
+
+**File handling**
+- Inputs: upload via Files API and reference by `file_id` (See [Files API](files-api.md#files-api))
+- Outputs: retrieve artifacts via Files API (avoid passing large outputs through tokens)
+
+**Container reuse**
+- Capture the initial `container.id`
+- Pass it in subsequent requests to preserve state
+- Design workflows to be resumable in case of container expiration
+
+**Runtime constraints**
+- No internet access
+- Bounded resources
+- Explicitly handle: <br>
+  `execution_time_exceeded`, `too_many_requests`, `container_expired`, `pause_turn`
 

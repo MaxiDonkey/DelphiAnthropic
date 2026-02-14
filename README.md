@@ -234,8 +234,8 @@ Each topic has its own Markdown document, directly linked from the guides.
 | File management (Files API)                       | ● | ● |
 | Data residency (inference geo)                    | ● | |
 
-- Supported: support provided by `DelphiAnthropic`
-- Anthropic API (Beta): feature available uniquement via l’API Anthropic en beta
+>- Supported: support provided by `DelphiAnthropic`
+>- Anthropic API (Beta): feature available uniquement via l’API Anthropic en beta
 
 <br>
 

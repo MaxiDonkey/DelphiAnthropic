@@ -173,7 +173,7 @@ The documentation is organized as **focused Markdown guides**, each covering one
   - [text editor](guides/tools-text-editor.md#text-editor) 
   - [bash tools](guides/tools.md#bash-tool)
   - [web search](guides/tools.md#web-search-tool)
-  - [structured outputs](guides/structured-outputs.md#structured-outputs)
+  - [beta tools](guides/tools-beta.md)
 - [Reasoning](guides/thinking.md#thinking) & control
   - [adaptive thinking](guides/thinking.md#adaptive-reasoning)
   - [extended thinking](guides/thinking.md#extended-reasoning)
@@ -187,6 +187,7 @@ Each section includes Delphi-first examples, not raw JSON.
 ## Going Further
 
 Advanced or cross-cutting topics are documented separately to keep the core readable:
+- [structured outputs](guides/structured-outputs.md#structured-outputs)
 - [Batch processing](guides/batch-processing.md#batch-processing)
 - [Prompt caching](guides/prompt-caching.md#prompt-caching) (5 min / 1 hour)
 - [Token counting](guides/token-counting.md#token-counting)

@@ -1,6 +1,6 @@
 # Code execution tool [beta]
 
-Code execution tools are tooled capabilities exposed to a model to execute operations (computation, shell commands, file manipulation) within a sandboxed environment, in order to produce concrete and reproducible results.
+The Code Execution tool is a server-side capability exposed to the model to execute operations (computation, shell commands, file manipulation) within a sandboxed environment, in order to produce concrete and reproducible results.
 
 - [API Overview](#api-overview)
 - [How to Use the Tool](#how-to-use-the-tool)
@@ -12,7 +12,7 @@ Code execution tools are tooled capabilities exposed to a model to execute opera
 ___
 
 >[!NOTE]
-> This tutorial presents the minimal  for clarity. More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
+> This tutorial presents the minimal usage pattern for clarity. More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
 
 ## API Overview
 
@@ -400,3 +400,7 @@ Each execution runs inside a container. The same container can be reused across 
 - Explicitly handle: <br>
   `execution_time_exceeded`, `too_many_requests`, `container_expired`, `pause_turn`
 
+<br>
+
+>[!IMPORTANT]
+> The model performs the reasoning, the container handles execution, and the application governs the process.

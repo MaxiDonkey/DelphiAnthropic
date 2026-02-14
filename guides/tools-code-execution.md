@@ -108,6 +108,84 @@ Enable a model to execute code and system operations inside an ***isolated conta
 
 <br>
 
+### Basic example 
+
+Ask Claude to check system information and install packages:
+
+```pascal
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 4096;
+  var Prompt := 'Check the Python version and list installed packages';
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt)
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          );
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+```
+
+### Result
+
+```text
+I'll check the Python version and list the installed packages simultaneously.
+Here's a summary of the environment:
+
+### Python Version
+- **Python 3.11.13**
+
+### Installed Packages (170+ packages)
+Here are some notable ones grouped by category:
+```
+
+| Category | Packages |
+|---|---|
+| **Data Science & ML** | `numpy`, `pandas`, `scipy`, `scikit-learn`, `xgboost`, `shap`, `statsmodels`, `numba` |
+| **Visualization** | `matplotlib`, `seaborn`, `bokeh`, `altair`, `holoviews`, `hvplot`, `wordcloud` |
+| **Image Processing** | `pillow`, `opencv-python-headless`, `scikit-image`, `imageio`, `ImageMagick` (CLI) |
+| **PDF & Documents** | `PyMuPDF`, `pdfplumber`, `pdfminer.six`, `pypdf`, `pikepdf`, `pdf2image`, `reportlab`, `img2pdf` |
+| **Office Files** | `openpyxl`, `xlrd`, `XlsxWriter`, `python-docx`, `python-pptx`, `tabula-py` |
+| **Geospatial** | `geopandas`, `shapely`, `Fiona`, `pyproj` |
+| **Web & Parsing** | `beautifulsoup4`, `requests`, `lxml`, `markdownify`, `markitdown` |
+| **NLP** | `nltk`, `regex`, `tokenizers` |
+| **Data Formats** | `pyarrow`, `h5py`, `PyYAML`, `jq` (CLI) |
+| **AI/ML Runtime** | `onnxruntime`, `huggingface-hub` |
+| **Utilities** | `tqdm`, `rich`, `click`, `networkx`, `sympy`, `graphviz` |
+
 ## Using and Reusing Containers
 
 

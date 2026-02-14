@@ -77,14 +77,10 @@ Enable a model to execute code and system operations inside an ***isolated conta
 - `.beta(['code-execution-2025-08-25'])`
 - `.tools('[{ "type": "code_execution_20250825", "name": "code_execution" }]')`
 
-<br>
-
 #### 2. The model decides whether to invoke the tool and may chain multiple actions:
 
 - shell commands,
 - file operations.
-
-<br>
 
 #### 3. The response contains typed result blocks:
 

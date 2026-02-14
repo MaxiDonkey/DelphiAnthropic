@@ -235,7 +235,7 @@ Each topic has its own Markdown document, directly linked from the guides.
 | Data residency (inference geo)                    | ● | |
 
 >- Supported: support provided by `DelphiAnthropic`
->- Anthropic API (Beta): feature available uniquement via l’API Anthropic en beta
+>- Anthropic API (Beta): Feature available only via the Anthropic API (beta).
 
 <br>
 

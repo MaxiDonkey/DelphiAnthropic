@@ -1,6 +1,11 @@
-[Back to README](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/README.md)
+#### 2026, February 14 version 1.2.0
 
-**2025, january 7** version 1.1.0
+A comprehensive revision of the wrapper was carried out to ensure consistency with the Anthropic offering as of February 7, 2026.
+
+<br>
+
+#### 2025, January 7 version 1.1.0
+
 - Add Batch Delete API.
 - Add PDF support.
 - Integrating Model Service APIs.

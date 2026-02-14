@@ -173,7 +173,7 @@ The documentation is organized as **focused Markdown guides**, each covering one
   - [text editor](guides/tools-text-editor.md#text-editor) 
   - [bash tools](guides/tools.md#bash-tool)
   - [web search](guides/tools.md#web-search-tool)
-  - [beta tools](guides/tools-beta.md)
+  - [***[beta]*** tools](guides/tools-beta.md)
 - [Reasoning](guides/thinking.md#thinking) & control
   - [adaptive thinking](guides/thinking.md#adaptive-reasoning)
   - [extended thinking](guides/thinking.md#extended-reasoning)

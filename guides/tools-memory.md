@@ -52,11 +52,10 @@ This example shows how to integrate Claude’s memory tool to manage persistent 
 
 The interaction follows three steps:
 
-1. Claude first reads the `/memories` directory to check whether user data already exists.
-
 >[!NOTE]
 > The code example relies on context reconstruction from the interaction history (see [this section](tools-text-editor.md#using-context-builder-from-history)).
 
+1. Claude first reads the `/memories` directory to check whether user data already exists.
 
     ```pascal
       TutorialHub.ToolTurns := TTurns.CreateInstance;  // <--- Instanciate ToolTurns: ITurns

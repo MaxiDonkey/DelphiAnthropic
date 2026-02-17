@@ -298,19 +298,19 @@ In the provided ***Sample.dpr*** project, an implementation of the `ITurn` inter
 
     //JSON payload generation
     var Payload: TChatParamProc :=
-    procedure (Params: TChatParams)
-    begin
-      with Generation do
-        Params
-          .Model(ModelName)
-          .MaxTokens(MaxTokens)
-          .Tools( ToolParts
-                .Add( Tool.CreateToolTextEditor20250728 )
-          )
-          .Messages( Turns
-                .BuildContextFromHistory('str_replace_based_edit_tool', Prompt)  // <--- Automatic reconstruction
-          );
-    end;
+      procedure (Params: TChatParams)
+      begin
+        with Generation do
+          Params
+            .Model(ModelName)
+            .MaxTokens(MaxTokens)
+            .Tools( ToolParts
+                  .Add( Tool.CreateToolTextEditor20250728 )
+            )
+            .Messages( Turns
+                  .BuildContextFromHistory('str_replace_based_edit_tool', Prompt)  // <--- Automatic reconstruction
+            );
+      end;
     ...
   ```
 

@@ -153,13 +153,17 @@ type
     class function Empty: TToolBetaManager; static; inline;
   public
     class function CreateCodeExecutionTool20250825: TCodeExecutionTool20250825; static;
+
+    /// <summary>
+    /// Python only - version legacy
+    /// </summary>
     class function CreateCodeExecutionTool20250522: TCodeExecutionTool20250522; static;
 
     class function CreateMCPToolset: TMCPToolset; static;
 
     class function CreateMemoryTool20250818: TMemoryTool20250818; static;
 
-    class function CreateToolBash20241022: TToolBash20241022; static;
+    class function CreateToolBash20241022: TToolBash20241022; static; deprecated 'used with Sonnet 3.7 (deprecated)';
 
     class function CreateToolComputerUse20251124: TToolComputerUse20251124; static;
     class function CreateToolComputerUse20250124: TToolComputerUse20250124; static;

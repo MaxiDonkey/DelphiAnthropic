@@ -16,7 +16,7 @@ uses
   Anthropic.Schema, Anthropic.Chat.Responses, Anthropic.Chat.Request, Anthropic.Chat.StreamEvents,
   Anthropic.Monitoring, Anthropic.Net.MediaCodec, Anthropic.Chat.StreamEngine,
   Anthropic.Chat.StreamCallbacks, Anthropic.Chat.Beta, Anthropic.API.JsonSafeReader,
-  Anthropic.Files, Anthropic.Skills, Anthropic.JSONL;
+  Anthropic.Files, Anthropic.Skills, Anthropic.JSONL, Anthropic.Context.Helper;
 
 const
   VERSION = '1.2.0';
@@ -824,6 +824,17 @@ type
 {$REGION 'Anthropic.JSONL'}
 
   TJSONLHelper = Anthropic.JSONL.TJSONLHelper;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Context.Helper'}
+
+  TToolResponse = Anthropic.Context.Helper.TToolResponse;
+  TTurnItem = Anthropic.Context.Helper.TTurnItem;
+
+  TPayloadReader = Anthropic.Context.Helper.TPayloadReader;
+  ITurns = Anthropic.Context.Helper.ITurns;
+  TTurns = Anthropic.Context.Helper.TTurns;
 
 {$ENDREGION}
 

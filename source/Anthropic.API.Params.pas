@@ -63,6 +63,7 @@ type
   /// </remarks>
   TJSONFingerprint = class
   private
+    FJSONPayload: string;
     FJSONResponse: string;
 
   protected
@@ -144,6 +145,8 @@ type
     /// </para>
     /// </remarks>
     procedure InternalFinalizeDeserialize;
+
+    property JSONPayload: string read FJSONPayload write FJSONPayload;
 
     /// <summary>
     /// Gets or sets the raw JSON string returned by the API.

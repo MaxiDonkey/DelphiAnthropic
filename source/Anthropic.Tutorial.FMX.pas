@@ -17,7 +17,7 @@ uses
   FMX.Controls, FMX.Forms, Winapi.Windows, FMX.Graphics, FMX.Dialogs, FMX.Memo.Types,
   FMX.Media, FMX.Objects, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, System.UITypes,
   System.Types, System.JSON, system.Threading,
-  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Helpers;
+  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Helpers, Anthropic.Context.Helper;
 
 type
   TToolProc = procedure (const Value: string) of object;
@@ -33,9 +33,7 @@ type
     FTool: IFunctionCore;
     FToolCall: TToolProc;
     FCancel: Boolean;
-    FEditorId: string;
-    FEditorText: string;
-    FEditorInput: string;
+    FToolTurns: ITurns;
     procedure OnButtonClick(Sender: TObject);
     procedure SetButton(const Value: TButton);
     procedure SetMemo1(const Value: TMemo);
@@ -52,13 +50,12 @@ type
     property Memo4: TMemo read FMemo4 write SetMemo4;
     property Button: TButton read FButton write SetButton;
     property Cancel: Boolean read FCancel write FCancel;
-    property EditorId: string read FEditorId write FEditorId;
-    property EditorText: string read FEditorText write FEditorText;
-    property EditorInput: string read FEditorInput write FEditorInput;
     property Tool: IFunctionCore read FTool write FTool;
     property ToolCall: TToolProc read FToolCall write FToolCall;
     property JSONRequest: string write SetJSONRequest;
     property JSONResponse: string write SetJSONResponse;
+
+    property ToolTurns: ITurns read FToolTurns write FToolTurns;
 
     procedure JSONUIClear;
     procedure ShowCancel;
@@ -94,6 +91,7 @@ type
   procedure Display(Sender: TObject; Value: TFile); overload;
   procedure Display(Sender: TObject; Value: TFileList); overload;
   procedure Display(Sender: TObject; Value: TFileDeleted); overload;
+  procedure Display(Sender: TObject; Value: TTurnItem); overload;
 
   procedure DisplayStream(Sender: TObject; Value: string); overload;
   procedure DisplayStream(Sender: TObject; Value: TChatStream); overload;
@@ -209,7 +207,6 @@ begin
     begin
       if Item.&Type = TContentBlockType.text then
         begin
-          TutorialHub.EditorText := Item.Text;
           Display(Sender, Item.Text);
           //DisplayUsage(Sender, Value);
         end
@@ -227,12 +224,6 @@ begin
           Display(Sender, F('Name', Item.Name));
           Display(Sender, F('input', Item.Input));
           //DisplayUsage(Sender, Value);
-
-          if Item.Name = 'str_replace_based_edit_tool' then
-            begin
-              TutorialHub.EditorID := Item.Id;
-              TutorialHub.EditorInput := Item.Input;
-            end;
 
           if Item.Name = 'get_weather' then
             TutorialHub.ToolCall(Item.Input);
@@ -382,6 +373,21 @@ procedure Display(Sender: TObject; Value: TFileDeleted);
 begin
   TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, Value.Id + ' deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TTurnItem);
+begin
+  Display(Sender, F('• count', Value.Turns.Count.ToString));
+  Display(Sender, F('• index', Value.Index.ToString));
+  for var Item in Value.ToolResponse do
+    begin
+      Display(Sender, F('  • type', Item.&Type.ToString));
+      Display(Sender, F('  • id', Item.Id));
+      Display(Sender, F('  • name', Item.Name));
+      Display(Sender, F('  • text', Item.Text.Trim));
+      Display(Sender, F('  • input', Item.Input));
+    end;
+  Display(Sender);
 end;
 
 procedure DisplayStream(Sender: TObject; Value: string);

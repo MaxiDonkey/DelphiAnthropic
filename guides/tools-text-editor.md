@@ -8,6 +8,7 @@ All edits are explicit and deterministic, making file-level interactions auditab
 > This tool is intentionally more complex than function calling, because it exposes file-level operations that must remain fully controlled by the host application.
 
 - [Minimal example](#minimal-example)
+- [Using context builder from history](#using-context-builder-from-history)
 - [Implementation: detailed behavior](#implementation-detailed-behavior)
 
 ___
@@ -145,6 +146,9 @@ The application reads the file locally and returns its contents:
     end;  
     ...
   ```
+  > To eliminate the need for manual reconstruction of multi-turn interaction history, refer to the `BuildContextFromHistory` method described in [this section](#using-context-builder-from-history).
+
+<br>
 
 - The Delphi code responsible for creating the payload produces the following JSON.
   ```json
@@ -222,6 +226,95 @@ After applying the change, the application confirms the operation:
 ```
 
 At this point, the model can conclude and explain the fix.
+
+<br>
+
+## Using context builder from history 
+
+To avoid repeatedly reconstructing message context from the history of exchanges with the model, the ***DelphiAnthropic SDK*** provides the `BuildContextFromHistory` method through the `ITurns` interface exposed in the `Anthropic.Context.Helper` unit.
+
+This interface enables recording and managing the history of multi-turn interactions. The `BuildContextFromHistory` method also supports reconstructing tool-related interactions from this history.
+
+In the provided ***Sample.dpr*** project, an implementation of the `ITurn` interface is available in the `TutorialHub` class. This implementation offers a deliberately simple mechanism to demonstrate how tools can be integrated and used in multi-turn interaction scenarios.
+
+### Usage Example
+
+- First Turn
+  ```pascal
+    TutorialHub.ToolTurns := TTurns.CreateInstance;  // <--- Instanciate ToolTurns: ITurns
+
+    var ModelName := 'claude-opus-4-6';
+    var MaxTokens := 512;
+    var Prompt := 'Fix the syntax error in primes.py.';
+
+    //JSON payload creation
+    var Payload: TChatParamProc :=
+      procedure (Params: TChatParams)
+      begin
+        with Generation do
+          Params
+            .Model(ModelName)
+            .MaxTokens(MaxTokens)
+            .Tools( ToolParts
+                .Add( Tool.CreateToolTextEditor20250728)
+            )
+            .Messages( MessageParts
+                .User(Prompt)
+            );
+      end;
+
+    // Asynchronous creation (promise-based)
+    var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+    // Simple processing or orchestration of promise
+    Promise
+      .&Then(
+        procedure (Value: TChat)
+        begin
+          var TurnItem := TutorialHub.ToolTurns.AddItem(Value);  // <--- Save first turn into ToolTurns
+          Display(TutorialHub, TurnItem);
+          Display(TutorialHub, Value);
+        end)
+      .&Catch(
+        procedure (E: Exception)
+        begin
+          Display(TutorialHub, E.Message);
+        end);
+  ```
+
+<br>
+
+- Second Turn 
+  Automatic reconstruction of the message history for the `messages` property
+
+  ```pascal
+    var Primes :=  System.IOUtils.TFile.ReadAllText('..\media\Primes.py');
+
+    var ModelName := 'claude-opus-4-6';
+    var MaxTokens := 1024;
+    var Prompt := Primes;
+
+    var Turns := TutorialHub.ToolTurns;
+
+    //JSON payload generation
+    var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+                .Add( Tool.CreateToolTextEditor20250728 )
+          )
+          .Messages( Turns
+                .BuildContextFromHistory('str_replace_based_edit_tool', Prompt)  // <--- Automatic reconstruction
+          );
+    end;
+    ...
+  ```
+
+<br>
 
 ## Implementation: detailed behavior
 

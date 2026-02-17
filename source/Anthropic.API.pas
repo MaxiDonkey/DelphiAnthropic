@@ -208,7 +208,9 @@ type
     /// parsing mode (for example metadata preprocessing requirements not satisfied).
     /// </exception>
     function Deserialize<T: class, constructor>(const Code: Int64;
-      const ResponseText: string; DisabledShield: Boolean = False): T;
+      const Payload: string;
+      const ResponseText: string;
+      DisabledShield: Boolean = False): T;
 
   public
     class constructor Create;
@@ -305,7 +307,12 @@ type
     /// Raised when <see cref="MetadataAsObject"/> is <c>False</c> and <see cref="MetadataManager"/> is <c>nil</c>,
     /// or when the JSON payload cannot be mapped to <typeparamref name="T"/> under the active mode.
     /// </exception>
-    class function Parse<T: class, constructor>(const Value: string; DisabledShield: Boolean = False): T;
+    class function Parse<T: class, constructor>(const Value: string;
+      const Payload: string;
+      DisabledShield: Boolean = False): T; overload;
+
+    class function Parse<T: class, constructor>(const Value: string;
+      DisabledShield: Boolean = False): T; overload;
   end;
 
   TAnthropicAPI = class(TApiDeserializer)
@@ -455,13 +462,17 @@ var
   Params: TParams;
   Code: Integer;
   BetaValues: TArray<string>;
+  JSONPayload: string;
 begin
   Monitoring.Inc;
   Response := TStringStream.Create('', TEncoding.UTF8);
   Params := TParams.Create;
   try
     if Assigned(ParamProc) then
-      ParamProc(Params);
+      begin
+        ParamProc(Params);
+        JSONPayload := Params.ToJsonString();
+      end;
 
     var ParamsBetaLess := JsonObjectRemoveBeta(Params.JSON, BetaValues);
     try
@@ -472,7 +483,7 @@ begin
         Response,
         GetHeaders(Path, Params.JSON, BetaValues));
 
-      Result := Deserialize<TResult>(Code, Response.DataString, NullConversion);
+      Result := Deserialize<TResult>(Code, JSONPayload, Response.DataString, NullConversion);
     finally
       ParamsBetaLess.Free;
     end;
@@ -502,7 +513,7 @@ begin
       GetHeaders(Path, ParamJSON, [])
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Response.Free;
     Monitoring.Dec;
@@ -577,7 +588,7 @@ begin
       GetHeaders(Path, nil, [], '')
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Response.Free;
     Monitoring.Dec;
@@ -599,7 +610,7 @@ begin
       GetHeaders(Path, nil, [], '')
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Response.Free;
     Monitoring.Dec;
@@ -629,7 +640,7 @@ begin
       GetHeaders(Path, nil, [], '')
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Params.Free;
     Response.Free;
@@ -684,7 +695,7 @@ begin
       GetHeaders(Path, nil, [], '')
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Response.Free;
     Params.Free;
@@ -707,7 +718,7 @@ begin
       GetHeaders(Path, nil, [], '')
     );
 
-    Result := Deserialize<TResult>(Code, Response.DataString);
+    Result := Deserialize<TResult>(Code, '', Response.DataString);
   finally
     Response.Free;
     Monitoring.Dec;
@@ -792,7 +803,7 @@ begin
   var Stream := TMemoryStream.Create;
   try
     var Code := GetFile(Endpoint, Stream);
-    Result := Deserialize<TResult>(Code, MockJsonFile(JSONFieldName, Stream));
+    Result := Deserialize<TResult>(Code, '', MockJsonFile(JSONFieldName, Stream));
   finally
     Stream.Free;
     Monitoring.Dec;
@@ -949,13 +960,15 @@ begin
 end;
 
 function TApiDeserializer.Deserialize<T>(const Code: Int64;
-  const ResponseText: string; DisabledShield: Boolean): T;
+  const Payload: string;
+  const ResponseText: string;
+  DisabledShield: Boolean): T;
 begin
   Result := nil;
   case Code of
     200..299:
       try
-        Result := Parse<T>(ResponseText, DisabledShield);
+        Result := Parse<T>(ResponseText, Payload, DisabledShield);
       except
         raise;
       end;
@@ -990,6 +1003,13 @@ begin
 end;
 
 class function TApiDeserializer.Parse<T>(const Value: string;
+  DisabledShield: Boolean): T;
+begin
+  Result := Parse<T>(Value, '', DisabledShield);
+end;
+
+class function TApiDeserializer.Parse<T>(const Value: string;
+  const Payload: string;
   DisabledShield: Boolean): T;
 {$REGION 'Dev note'}
   (*
@@ -1051,6 +1071,8 @@ begin
 
           (Result as TJSONFingerprint).JSONResponse := Formatted;
           TJSONFingerprintBinder.Bind(Result, Formatted);
+
+          (Result as TJSONFingerprint).JSONPayload := Payload;
 
           (Result as TJSONFingerprint).InternalFinalizeDeserialize;
         finally

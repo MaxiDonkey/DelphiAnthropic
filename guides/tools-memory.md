@@ -128,8 +128,6 @@ The interaction follows three steps:
 
       var Turns := TutorialHub.ToolTurns;
 
-      StartRun(Prompt);
-
       //JSON payload creation
       var Payload: TChatParamProc :=
         procedure (Params: TChatParams)

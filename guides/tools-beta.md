@@ -8,6 +8,7 @@ At Anthropic, “beta” tools are features that are accessed through explicit b
 - [Memory tool](tools-memory.md#memory-tool)
 - [Computer use](tools-computer-use.md#computer-use)
 - [Web fetch tool](tools-web-fetch.md#web-fetch-tool)
+- [Tool search](tools-search.md#tool-search-beta)
 
 ___
 

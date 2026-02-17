@@ -168,7 +168,7 @@ The documentation is organized as **focused Markdown guides**, each covering one
   - [PDF analysis](guides/document-understanding.md#document-pdf-understanding)
   - [Files API integration](guides/files-api.md#using-a-file-in-messages)
 - [Tools](guides/tools.md#tools)
-  - [function calling](tools-function-calling.md#function-calling)
+  - [function calling](guides/tools-function-calling.md#function-calling)
   - [tool orchestration](guides/tools.md#using-tools-with-claude)
   - [text editor](guides/tools-text-editor.md#text-editor) 
   - [bash tools](guides/tools.md#bash-tool)

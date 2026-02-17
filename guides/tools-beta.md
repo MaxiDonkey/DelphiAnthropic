@@ -7,6 +7,7 @@ At Anthropic, “beta” tools are features that are accessed through explicit b
 - [Code execution](tools-code-execution.md#code-execution-tool-beta)
 - [Memory tool](tools-memory.md#memory-tool)
 - [Computer use](tools-computer-use.md#computer-use)
+- [Web fetch tool](tools-web-fetch.md#web-fetch-tool)
 
 ___
 

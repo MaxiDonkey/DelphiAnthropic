@@ -14,6 +14,8 @@ ___
 >[!NOTE]
 > This tutorial presents the minimal usage pattern for clarity. More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
 
+<br>
+
 ## API Overview
 
 ### Objective

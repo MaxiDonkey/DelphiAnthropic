@@ -21,6 +21,8 @@ ___
 > This tutorial presents the minimal two-call workflow for clarity.
 > More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
 
+<br>
+
 ## Introduction
 
 >The code snippets will exclusively refer to the `procedure (Params: TChatParams)`, as introduced in the sections covering non-streamed and streamed generation.

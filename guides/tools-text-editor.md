@@ -13,6 +13,8 @@ All edits are explicit and deterministic, making file-level interactions auditab
 
 ___
 
+<br>
+
 ## Minimal example
 
 The following example shows how a model fixes a simple syntax error in a file called `primes.py`.

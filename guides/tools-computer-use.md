@@ -159,3 +159,7 @@ A strong pattern:
 2. bash to execute / prepare
 3. text editor to apply clean edits
 4. computer use to visually verify the outcome
+
+<br>
+
+See [official documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool)

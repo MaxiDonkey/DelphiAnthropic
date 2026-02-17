@@ -13,6 +13,8 @@ ___
 >[!NOTE]
 > This tutorial presents the minimal two-call workflow for clarity. More advanced patterns (multiple or chained tool calls) can be built on top of this foundation.
 
+<br>
+
 ## High-level overview of the computer use API
 
 Computer use is a beta tool that lets Claude interact with a sandboxed desktop environment through:

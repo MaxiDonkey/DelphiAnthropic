@@ -9,6 +9,8 @@ The **Web Fetch API** is a controlled mechanism that allows a model to ingest th
 
 ___
 
+<br>
+
 ## Overview of the Web Fetch API
 
 The Web Fetch API enables a Claude model to **retrieve and process the complete text** of a static web page or a PDF document, using URLs that are **already present in the conversation context**

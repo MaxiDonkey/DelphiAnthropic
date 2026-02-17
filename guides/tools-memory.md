@@ -12,6 +12,8 @@ The memory API provides Claude with an explicit, persistent, and user-controlled
 
 ___
 
+<br>
+
 ## High-level overview of the memory API
 
 The memory API is an ***external persistence mechanism*** that allows Claude to read from and write to a `/memories` directory managed by the client application.

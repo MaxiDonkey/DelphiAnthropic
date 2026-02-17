@@ -231,7 +231,7 @@ At this point, the model can conclude and explain the fix.
 
 ## Using context builder from history 
 
-To avoid repeatedly reconstructing message context from the history of exchanges with the model, the ***DelphiAnthropic SDK*** provides the `BuildContextFromHistory` method through the `ITurns` interface exposed in the `Anthropic.Context.Helper` unit.
+To avoid repeatedly reconstructing message context from the history of exchanges with the model, the ***DelphiAnthropic SDK*** provides the `BuildContextFromHistory` method through the `ITurns` interface exposed in the [`Anthropic.Context.Helper`](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/source/Anthropic.Context.Helper.pas) unit.
 
 This interface enables recording and managing the history of multi-turn interactions. The `BuildContextFromHistory` method also supports reconstructing tool-related interactions from this history.
 

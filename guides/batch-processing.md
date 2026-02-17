@@ -11,6 +11,8 @@ Batch processing means grouping many requests together to run asynchronously and
 
 ___
 
+<br>
+
 ## How the Message Batches API works
 
 The Message Batches API lets you submit ***one batch*** containing a list of Messages API requests, then have the server execute them ***asynchronously*** and ***independently***.

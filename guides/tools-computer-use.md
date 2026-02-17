@@ -1,4 +1,4 @@
-# Computer Use
+# Computer Use [beta]
 
 The computer use API extends a tool-using agent by giving it an actionable ***see → decide → act → verify*** loop over a virtual desktop, which naturally complements the persistence *(memory)* and context-management mechanisms discussed earlier.
 

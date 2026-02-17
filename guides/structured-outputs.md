@@ -11,6 +11,8 @@ Structured outputs make responses reliable, automatically verifiable, and easy t
 
 ___
 
+<br>
+
 ## JSON outputs
 
 ***JSON outputs*** constrain the model to return valid JSON that matches a provided schema.

@@ -13,6 +13,8 @@ Prompt caching optimizes API performance by reusing prompt prefixes, making repe
 
 ___
 
+<br>
+
 ## How to implement
 
 Prompt Caching optimizes API usage by caching prompt prefixes, reducing processing time and costs for repetitive tasks. If a prompt prefix is cached from a recent query, it's reused; otherwise, the full prompt is processed and cached for future use. The cache lasts 5 minutes and is refreshed with each use, making it ideal for prompts with many examples, background information, or consistent instructions.

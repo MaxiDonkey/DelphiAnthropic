@@ -11,6 +11,8 @@ Token counting acts as a universal preview layer, shared across all models and c
 
 ___
 
+<br>
+
 ## Supported models
 
 The token counting mechanism is supported by ***all active Claude models***.

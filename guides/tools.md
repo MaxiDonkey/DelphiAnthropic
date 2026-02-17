@@ -9,6 +9,8 @@ Tools are the mechanism that allows Claude to go beyond text generation and take
 
 ___
 
+<br>
+
 ## Using tools with Claude
 
 Using tools means ***explicitly exposing a set of operational capabilities*** to Claude (client tools, server tools, or MCP tools), each defined by a name, semantics, and an input schema.

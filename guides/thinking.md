@@ -10,6 +10,8 @@ Reasoning refers to the model’s ability to engage in internal analysis of vary
 
 ___
 
+<br>
+
 ## Extended Reasoning
 
 ***Extended reasoning*** allows the model to perform explicit internal reasoning before producing its final answer.

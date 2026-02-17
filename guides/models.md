@@ -8,6 +8,8 @@ Models are the core building blocks of the Claude API: they define the capabilit
 
 ___
 
+<br>
+
 ## Overview of the model API
 
 The Claude API exposes a family ***of versioned models***, each identified by a stable model ID (e.g. `claude-opus-4-6`).

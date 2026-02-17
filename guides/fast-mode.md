@@ -9,6 +9,8 @@ Fast mode is an execution option that accelerates response generation for Claude
 
 ___
 
+<br>
+
 ## How fast mode works
 
 Fast mode runs the same model with the same weights, but uses an inference setup optimized to increase output tokens per second (OTPS), up to approximately 2.5× compared to standard mode.

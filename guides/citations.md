@@ -10,6 +10,8 @@ The citations feature establishes an explicit link between each model-generated 
 - [Note on Haiku models and citations](#note-on-haiku-models-and-citations)
 ___
 
+<br>
+
 ## How to use citations
 
 Using citations relies on three core steps:

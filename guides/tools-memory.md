@@ -1,4 +1,4 @@
-# Memory Tool
+# Memory Tool [beta]
 
 The memory API provides Claude with an explicit, persistent, and user-controlled memory, decoupling agent continuity from the context window while remaining entirely client-managed.
 

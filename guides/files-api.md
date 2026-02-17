@@ -11,6 +11,8 @@ The ***Files API*** provides a persistence and referencing layer for files, allo
 
 ___
 
+<br>
+
 ## Uploading a file
 
 Uploading consists of storing a file once in the API’s secure storage in order to obtain a stable `file_id`.

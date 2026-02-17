@@ -1,4 +1,4 @@
-# Web Fetch Tool
+# Web Fetch Tool [beta]
 
 The **Web Fetch API** is a controlled mechanism that allows a model to ingest the **full content of explicitly provided web sources** in order to analyze them accurately within a secure framework.
 

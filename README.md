@@ -10,7 +10,6 @@ ___
 - [changelog v1.2](Changelog.md)
 - [adaptive thinking](guides/thinking.md#adaptive-reasoning)
 - [fast mode](guides/fast-mode.md#fast-mode-research-preview)
-- compaction
 
 ___
 

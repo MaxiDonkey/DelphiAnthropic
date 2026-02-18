@@ -9,6 +9,7 @@ They are designed to support document generation, data processing, and domain-sp
 - [Minimal orchestration example](#minimal-orchestration-example)
 - [Key constraints & limits](#key-constraints--limits)
 - [References](#references)
+- [Custom Skill lifecycle and API details](agent-skills-custom.md)
 
 ___
 

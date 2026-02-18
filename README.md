@@ -132,7 +132,7 @@ Anthropic exposes ***a single, unified Messages API***.
 This wrapper therefore focuses on:
 - **faithful mapping** of the Messages API
 - **explicit modeling** of execution modes
-- **clear separation between stable and beta features**
+- **clear separation between always-on API features and features gated by explicit Anthropic beta headers**
 - **Delphi-first ergonomics**, not JSON-first usage
 
 

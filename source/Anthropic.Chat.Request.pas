@@ -1664,7 +1664,7 @@ type
     {$REGION '[beta] ToolSearchToolRegex20251119'}
 
     TToolSearchToolRegex20251119 = class(TToolUnion)
-      function &Type(const Value: string = 'tool_search_tool_regex'): TToolSearchToolRegex20251119;
+      function &Type(const Value: string = 'tool_search_tool_regex_20251119'): TToolSearchToolRegex20251119;
 
       /// <summary>
       /// Name of the tool.
@@ -2310,7 +2310,12 @@ type
     /// <summary>
     /// MCP servers to be utilized in this request
     /// </summary>
-    function McpServers(const Value: TArray<TRequestMCPServerURLDefinition>): TChatParams;
+    function McpServers(const Value: TArray<TRequestMCPServerURLDefinition>): TChatParams; overload;
+
+    /// <summary>
+    /// MCP servers to be utilized in this request
+    /// </summary>
+    function McpServers(const Value: string): TChatParams; overload;
 
     /// <summary>
     /// An external identifier for the user who is associated with the request.
@@ -2589,6 +2594,16 @@ end;
 function TChatParams.MaxTokens(const Value: Integer): TChatParams;
 begin
   Result := TChatParams(Add('max_tokens', Value));
+end;
+
+function TChatParams.McpServers(const Value: string): TChatParams;
+var
+  JSONArray: TJSONArray;
+begin
+  if TJSONHelper.TryGetArray(Value, JSONArray) then
+    Exit(TChatParams(Add('mcp_servers', JSONArray)));
+
+  raise EAnthropicException.Create('Invalid JSON Array');
 end;
 
 function TChatParams.McpServers(

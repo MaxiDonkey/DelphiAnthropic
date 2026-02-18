@@ -63,7 +63,7 @@ type
 
   IMessageBuilder = interface
     ['{1C886848-358D-4957-8B61-0FBBCFA37624}']
-    function MessageBuild(const ToolName: string; const Prompt: string): TArray<TMessageParam>;
+    function BuildContextFromHistory(const ToolName: string; const Prompt: string): TArray<TMessageParam>;
   end;
 
   ITurns = interface(IMessageBuilder)
@@ -105,7 +105,7 @@ type
     function SetResponse(const Index: Integer; const AResponse: string): TTurnItem; overload;
     function SetResponse(const Index: Integer; const Value: TChat): TTurnItem; overload;
 
-    function MessageBuild(const ToolName: string; const Prompt: string): TArray<TMessageParam>;
+    function BuildContextFromHistory(const ToolName: string; const Prompt: string): TArray<TMessageParam>;
 
     property Count: Integer read GetCount;
     property CurrentItem: TTurnItem read FCurrentItem write FCurrentItem;
@@ -239,7 +239,7 @@ begin
   Result := Item[GetCount - 1];
 end;
 
-function TTurns.MessageBuild(const ToolName,
+function TTurns.BuildContextFromHistory(const ToolName,
   Prompt: string): TArray<TMessageParam>;
 var
   ToolId: string;

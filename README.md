@@ -30,6 +30,7 @@ ___
 
   var Client := TAnthropicFactory.CreateInstance('ANTHROPIC_API_KEY');
 
+  //JSON payload
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
@@ -41,6 +42,7 @@ ___
         .MaxTokens(1024);
     end;
 
+  //Synchronous example
   var Chat := Client.Chat.Create(Payload);
 
   try
@@ -61,6 +63,7 @@ ___
   // uses Anthropic, Anthropic.Types, Anthropic.Helpers;
   // Client: IAnthropic;
 
+  //JSON payload
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
@@ -73,6 +76,7 @@ ___
         .Stream;
     end;
 
+  // Streaming callback
   var StreamEvent: TChatEvent :=
     procedure (var Event: TChatStream; IsDone: Boolean; var Cancel: Boolean)
     begin
@@ -82,6 +86,7 @@ ___
       Application.ProcessMessages;
     end;
 
+  //Synchronous example
   Client.Chat.CreateStream(Payload, StreamEvent);
   ```
 

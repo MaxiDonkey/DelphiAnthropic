@@ -38,15 +38,15 @@ When Skills generate files, the Files API is additionally required to retrieve o
 Skills integrate with the Messages API through the execution container.
 
 At a high level:
-1. Skill metadata exposure <br>
+1. **Skill metadata exposure** <br>
    Claude sees each Skill’s name and description to determine relevance.
-2. Automatic selection <br>
+2. **Automatic selection** <br>
    Claude decides when a Skill should be used based on the user request.
-3. Progressive disclosure <br>
+3. **Progressive disclosure** <br>
    Full Skill instructions and files are loaded only when needed.
-4. Execution <br>
+4. **Execution** <br>
    Skill code runs inside the code execution environment.
-5. Outputs <br>
+5. **Outputs** <br>
    Generated files are returned as file_id references and retrieved via the Files API.
 
 Anthropic-managed and custom Skills follow the exact same execution path. <br>

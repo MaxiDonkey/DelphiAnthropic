@@ -7,6 +7,7 @@ The MCP connector is a simple way to give models access to remote tools, without
 - [How it works](#how-it-works)
 - [Minimal example](#minimal-example)
 - [Key things to know](#Key-things-to-know)
+- [Remote MCP servers](#remote-mcp-servers)
 
 ___
 
@@ -173,3 +174,9 @@ Before going further, keep in mind:
 - only **tool usage** is exposed
 - OAuth authentication is handled by the client; the connector only forwards the token
 - tool configuration now lives in the toolset, not in the server definition (this is a breaking change from older versions)
+
+<br>
+
+## Remote MCP servers
+
+See [official documentation](https://platform.claude.com/docs/en/agents-and-tools/remote-mcp-servers).

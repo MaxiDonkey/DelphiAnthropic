@@ -187,6 +187,9 @@ The documentation is organized as **focused Markdown guides**, each covering one
 
 Each section includes Delphi-first examples, not raw JSON.
 
+>[!WARNING]
+> In Anthropic terminology, `beta` means ***"feature gated by explicit beta headers"***, not a prerelease SDK version.
+
 <br>
 
 ## Going Further

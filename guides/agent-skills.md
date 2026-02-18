@@ -1,6 +1,6 @@
 # Skills [beta]
 
-Agent Skills extend Claude’s capabilities through packaged, executable capabilities—combining instructions, scripts, and resources—loaded and executed on demand during Messages requests.
+**Agent Skills** extend Claude’s capabilities through packaged, executable capabilities ***combining instructions, scripts, and resources***, loaded and executed on demand during Messages requests.
 
 They are designed to support document generation, data processing, and domain-specific workflows, while keeping the client-side API surface minimal.
 
@@ -16,7 +16,7 @@ ___
 
 ## Overview
 
-Agent Skills can be used from two sources:
+**Agent Skills** can be used from two sources:
 - **Anthropic-managed Skills** (e.g. pptx, xlsx, docx, pdf) <br>
   Pre-built, versioned, and maintained by Anthropic.
 - **Custom Skills** <br>
@@ -35,7 +35,7 @@ When Skills generate files, the Files API is additionally required to retrieve o
 
 ## Execution model
 
-Skills integrate with the Messages API through the execution container.
+**Skills** integrate with the Messages API through the execution container.
 
 At a high level:
 1. **Skill metadata exposure** <br>

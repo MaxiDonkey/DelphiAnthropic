@@ -58,6 +58,111 @@ Request flow:
 
 ## Minimal example
 
+```pascal
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var SystemPrompt := 'Today is ''' + FormatDateTime('dd"u"mmmm"t"yyyy', Date) + ''' (' + FormatDateTime('yyyy-mm-dd', Date) + ').';
+  var Prompt := 'What is the weather like in New York today?';
+
+  var McpUrl := 'https://gemini-api-demos.uc.r.appspot.com/mcp';
+  var McpName := 'weather_service';
+  var McpToken := '';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['mcp-client-2025-11-20'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .System( SystemPrompt )
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .McpServers( MCPServerParts
+               .Add( MCPServer.CreateMCPServer
+                   .Url( McpUrl )
+                   .Name( McpName )
+                   .AuthorizationToken( McpToken )
+               )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateMCPToolset
+                  .McpServerName( McpName )
+              )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+  //  var Value := Client.Chat.Create(Payload);
+  //
+  //  try
+  //    Display(TutorialHub, Value);
+  //  finally
+  //    Value.Free;
+  //  end;
+```
+
+<br>
+
+- JSON Result (exerpt)
+
+```json
+"content": [
+        {
+            "type": "text",
+            "text": "\n\nLet me check the current weather in New York for you!"
+        },
+        {
+            "type": "mcp_tool_use",
+            "id": "mcptoolu_014nxMAWGJJed9tkKMWAjPNz",
+            "name": "get_weather",
+            "input": {
+                "location": "New York",
+                "startDate": "2026-02-18",
+                "endDate": "2026-02-18"
+            },
+            "server_name": "weather_service"
+        },
+        {
+            "type": "mcp_tool_result",
+            "tool_use_id": "mcptoolu_014nxMAWGJJed9tkKMWAjPNz",
+            "is_error": false,
+            "content": [
+                {
+                    "type": "text",
+                    "text": "{\"2026-02-18T00:00\":\"5.1°C\",\"2026-02-18T01:00\":\"3.8°C\",\"2026-02-18T02:00\":\"3°C\",\"2026-02-18T03:00\":\"2.6°C\",\"2026-02-18T04:00\":\"2.7°C\",\"2026-02-18T05:00\":\"2°C\",\"2026-02-18T06:00\":\"1.4°C\",\"2026-02-18T07:00\":\"0.9°C\",\"2026-02-18T08:00\":\"1°C\",\"2026-02-18T09:00\":\"1.6°C\",\"2026-02-18T10:00\":\"1.8°C\",\"2026-02-18T11:00\":\"2.6°C\",\"2026-02-18T12:00\":\"2.1°C\",\"2026-02-18T13:00\":\"2.6°C\",\"2026-02-18T14:00\":\"3.2°C\",\"2026-02-18T15:00\":\"3.3°C\",\"2026-02-18T16:00\":\"4.2°C\",\"2026-02-18T17:00\":\"5.2°C\",\"2026-02-18T18:00\":\"6.7°C\",\"2026-02-18T19:00\":\"7.9°C\",\"2026-02-18T20:00\":\"8.6°C\",\"2026-02-18T21:00\":\"8°C\",\"2026-02-18T22:00\":\"6.8°C\",\"2026-02-18T23:00\":\"5.8°C\"}"
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "text": "Here's the weather forecast for **New York** today, **February 18, 2026**:\n\n🌡️ **Temperature Summary:**\n- **Low:** 0.9°C (33.6°F) — around 7:00 AM\n- **High:** 8.6°C (47.5°F) — around 8:00 PM\n- **Current trend:** Cool morning, gradually warming through the afternoon and evening\n\n📋 **Hourly Breakdown:**\n\n| Time of Day | Temperature |\n|---|---|\n| 🌙 Overnight (12–6 AM) | 5.1°C → 1.4°C (cooling) |\n| 🌅 Morning (7–11 AM) | 0.9°C → 2.6°C (slowly warming) |\n| ☀️ Afternoon (12–4 PM) | 2.1°C → 4.2°C (mild) |\n| 🌆 Evening (5–8 PM) | 5.2°C → 8.6°C (warmest) |\n| 🌙 Night (9–11 PM) | 8.0°C → 5.8°C (cooling off) |\n\nOverall, it's a **chilly winter day** in New York with temperatures hovering between about **1°C and 9°C (33–47°F)**. You'll want to dress warmly with layers! 🧥\n\nWould you like me to check the rain forecast or anything else?"
+        }
+    ]
+```
+
 <br>
 
 ## Key things to know

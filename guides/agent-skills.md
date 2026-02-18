@@ -63,7 +63,62 @@ The example below illustrates the minimal orchestration pattern:
 - send a standard Messages request
 
 ```pascal
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 4096;
+  var Prompt := 'Create an Excel file with a simple budget spreadsheet.';
 
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25', 'skills-2025-10-02'])
+          .Model( ModelName )
+          .MaxTokens( MaxTokens )
+          .Container( CreateContainer
+              .Skills( SkillParts
+                  .Add( Skill.CreateSkill('anthropic')
+                     .SkillId('xlsx')
+                     .Version('latest')
+                  )
+              )
+          )
+          .Messages( MessageParts
+              .User( ContentParts
+                 .AddText( Prompt )
+              )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          );
+    end;
+
+  // Set response delay for 10 min
+  Client.HttpClient.ResponseTimeout := 600000;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+  //  var Value := Client.Chat.Create(Payload);
+  //
+  //  try
+  //    Display(TutorialHub, Value);
+  //  finally
+  //    Value.Free;
+  //  end;
 ```
 
 This is sufficient for:
@@ -72,6 +127,22 @@ This is sufficient for:
 - multi-Skill composition
 
 No additional orchestration logic is required on the client side.
+
+### How to Use the Model Outputs
+
+In addition to returning a detailed explanation of the methodology it applied, the model also generated an Excel file named `budget.xlsx`.
+
+This file is available for download. Its identifier can be retrieved via the Files API using the [List files](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/files-api.md#1-list-of-files) endpoint.
+
+```text
+file_011CYFimkP5krGhRedLGQMxE
+    • filename: monthly_budget.xlsx
+    • mimeType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    • sizeBytes: 7510
+    • downloadable: True
+``` 
+
+You can download the generated file at any time using the Files API with the [Download file](https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/files-api.md#4-download-a-file) endpoint.
 
 <br>
 

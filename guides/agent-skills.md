@@ -94,4 +94,4 @@ Skills should be kept narrow and purposeful to preserve reliable trigger behavio
 - Agent Skills overview
 - Best practices for authoring Skills
 - Code execution tool documentation
-- Custom Skill lifecycle and API details: agent-skills-custom.md
+- Custom Skill lifecycle and API details: see [agent-skills-custom](agent-skills-custom.md)

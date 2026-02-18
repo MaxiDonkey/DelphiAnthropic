@@ -1,11 +1,12 @@
 # Skills [beta]
 
-**Agent Skills** extend Claude’s capabilities through packaged, executable capabilities ***combining instructions, scripts, and resources***, loaded and executed on demand during Messages requests.
+**Agent Skills** extend Claude’s capabilities through packaged, executable capabilities units ***combining instructions, scripts, and resources***, loaded and executed on demand during Messages requests.
 
 They are designed to support document generation, data processing, and domain-specific workflows, while keeping the client-side API surface minimal.
 
 - [Overview](#overview)
 - [Execution model](#execution-model)
+- [Custom Skills (overview)](#custom-skills-overview)
 - [Minimal orchestration example](#minimal-orchestration-example)
 - [Key constraints & limits](#key-constraints--limits)
 - [References](#references)
@@ -43,6 +44,7 @@ At a high level:
    Claude sees each Skill’s name and description to determine relevance.
 2. **Automatic selection** <br>
    Claude decides when a Skill should be used based on the user request.
+   ***Skills are never invoked explicitly by the client; once attached to the container, Claude decides when (and if) they should be used.***
 3. **Progressive disclosure** <br>
    Full Skill instructions and files are loaded only when needed.
 4. **Execution** <br>
@@ -52,6 +54,36 @@ At a high level:
 
 Anthropic-managed and custom Skills follow the exact same execution path. <br>
 They differ only in origin and lifecycle management, not in runtime behavior.
+
+<br>
+
+## Custom Skills (overview)
+
+In addition to Anthropic-managed Skills, you can create **custom Skills** to package domain-specific workflows, reusable procedures, or organization-specific logic.
+
+A custom Skill is defined as a **directory-based bundle** containing:
+- a mandatory `SKILL.md` file (metadata and instructions)
+- optional scripts, references, and supporting resources
+
+```text
+my-skill/
+├── SKILL.md
+├── reference.md
+└── scripts/
+    └── tool.py
+```
+
+>[!IMPORTANT]
+>The uploaded files must belong to a single top-level directory, and this directory must contain `SKILL.md` at its root. 
+
+<br>
+
+Once uploaded, custom Skills:
+- behave exactly like Anthropic-managed Skills at runtime
+- are attached and executed through `container.skills`
+- can be composed with other Skills in the same request
+
+The creation, versioning, and deletion of custom Skills are handled through the [Skills API](agent-skills-custom.md) and are documented separately.
 
 <br>
 
@@ -164,8 +196,8 @@ Skills should be kept narrow and purposeful to preserve reliable trigger behavio
 
 ## References
 
-- Using Skills with the API
-- Agent Skills overview
-- Best practices for authoring Skills
-- Code execution tool documentation
+- [Using Skills with the API](https://platform.claude.com/docs/en/build-with-claude/skills-guide)
+- [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+- [Best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) for authoring Skills
+- [Code execution tool documentation](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/enterprise)
 - Custom Skill lifecycle and API details: see [agent-skills-custom](agent-skills-custom.md)

@@ -128,6 +128,8 @@ This is sufficient for:
 
 No additional orchestration logic is required on the client side.
 
+<br>
+
 ### How to Use the Model Outputs
 
 In addition to returning a detailed explanation of the methodology it applied, the model also generated an Excel file named `budget.xlsx`.

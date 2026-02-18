@@ -215,23 +215,23 @@ Each topic has its own Markdown document, directly linked from the guides.
 |--------------------------------------------------|:---------:|:--------------------:|
 | Text generation                                   | ● | |
 | Multimodal (image, PDF input)                     | ● | |
-| SSE / streaming                                  | ● | |
+| SSE / streaming                                   | ● | |
 | Persistent conversations                          | ● | |
-| Agent skills                                     | ● | ● |
-| Batch processing                                 | ● | |
+| Agent skills                                      | ● | ● |
+| Batch processing                                  | ● | |
 | Structured outputs (JSON / strict tools)          | ● | |
 | Function / tool calling                           | ● | |
 | Programmatic tool calling                         | ● | ● |
 | Tool search (dynamic discovery)                   | ● | ● |
 | Fine-grained tool streaming                       | ● | |
 | Code execution (Python sandbox)                   | ● | ● |
-| Computer use                                     | ● | ● |
+| Computer use                                      | ● | ● |
 | Memory (cross-conversation)                       | ● | ● |
-| Web search                                       | ● | |
+| Web search                                        | ● | |
 | Web fetch (URL / PDF content)                     | ● | ● |
-| Citations                                        | ● | |
+| Citations                                         | ● | |
 | Search results grounding                          | ● | |
-| Large context window (1M tokens)                  | ● | |
+| Large context window (1M tokens)                  | ● | ● |
 | Adaptive thinking                                 | ● | |
 | Extended thinking                                 | ● | |
 | Effort control                                    | ● | |
@@ -242,6 +242,7 @@ Each topic has its own Markdown document, directly linked from the guides.
 | Token counting                                    | ● | |
 | File management (Files API)                       | ● | ● |
 | Data residency (inference geo)                    | ● | |
+| Fast mode (research preview)                      | ● | ● |
 
 >- Supported: support provided by `DelphiAnthropic`
 >- Anthropic API (Beta): Feature available only via the Anthropic API (beta).

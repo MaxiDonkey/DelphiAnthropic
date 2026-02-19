@@ -66,6 +66,7 @@ object Form1: TForm1
     end
     object ButtonUndo: TButton
       StyledSettings = [FontColor]
+      Hint = 'Back to current page'
       Position.X = 2.000000000000000000
       Position.Y = 2.000000000000000000
       Size.Width = 39.000000000000000000
@@ -81,6 +82,7 @@ object Form1: TForm1
     end
     object ButtonFinger: TButton
       StyledSettings = [FontColor]
+      Hint = 'JSON view'
       Position.X = 49.000000000000000000
       Position.Y = 2.000000000000000000
       Size.Width = 39.000000000000000000
@@ -95,6 +97,7 @@ object Form1: TForm1
     end
     object ButtonMainMenu: TButton
       StyledSettings = [FontColor]
+      Hint = 'Summary'
       Position.X = 96.000000000000000000
       Position.Y = 2.000000000000000000
       Size.Width = 39.000000000000000000

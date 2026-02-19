@@ -185,7 +185,7 @@ The documentation is organized as **focused Markdown guides**, each covering one
   - [effort control](guides/thinking.md#effort)
   - [fast mode](guides/fast-mode.md#fast-mode-research-preview)
 - [Agent Skills](guides/agent-skills.md#skills-beta)
-  - [Skills API - CRUD](guides/agent-skills-custom.md)
+  - [Custom Skills – API & Versioning](guides/agent-skills-custom.md)
 
 Each section includes Delphi-first examples, not raw JSON.
 

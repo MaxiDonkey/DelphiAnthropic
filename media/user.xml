@@ -1,0 +1,18 @@
+<user_profile> 
+<last_updated>2025-01-01</last_updated>
+  <interests>  
+     <!-- Add interests as they are shared -->  
+  </interests>  
+  <current_work>    
+     <!-- Add current work/projects as they are shared -->  
+     </current_work> 
+     <preferences>   
+        <!-- Add preferences as they are shared -->  
+     </preferences>  
+  <background>    
+     <!-- Add background info as shared -->  
+  </background>
+  <notes>    
+    <note> Profile initialized. Awaiting user details to populate. </note>  
+  </notes>
+</user_profile>

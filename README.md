@@ -159,6 +159,18 @@ These distinctions are applied consistently at the API level and in the document
 
 <br>
 
+### About the FMX Example project
+
+>[!IMPORTANT]
+>The **FMX Example** project provided in the folder [sample](https://github.com/MaxiDonkey/DelphiAnthropic/tree/main/sample) is **not intended to demonstrate elegant or idiomatic architecture**. <br>
+>It is **deliberately non-factorized** to remain *isomorphic to the documentation*:
+>- each code block corresponds directly to a section of the guides
+>- the priority is **documentation → code correspondence**, not reuse or abstraction
+> <br>
+>This trade-off favors **readability and traceability** over architectural refinement.
+
+<br>
+
 ## Documentation – Overview
 
 The documentation is organized as **focused Markdown guides**, each covering one major capability.

@@ -181,7 +181,7 @@ object Form1: TForm1
       Size.Width = 404.000000000000000000
       Size.Height = 847.000000000000000000
       Size.PlatformDefault = False
-      TabIndex = 5
+      TabIndex = 6
       TabOrder = 0
       TabPosition = Dots
       OnChange = TabControl1Change
@@ -1683,7 +1683,7 @@ object Form1: TForm1
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = True
+        IsSelected = False
         Size.Width = 8.000000000000000000
         Size.Height = 8.000000000000000000
         Size.PlatformDefault = False
@@ -1751,7 +1751,7 @@ object Form1: TForm1
             TextSettings.FontColor = claCornflowerblue
             TextSettings.HorzAlign = Center
             Text = 'Documentation (Github)'
-            TabOrder = 25
+            TabOrder = 27
             OnClick = Label47Click
           end
           object Button43: TButton
@@ -1761,7 +1761,7 @@ object Form1: TForm1
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 24
+            TabOrder = 25
             Text = 'Function calling'
             TextSettings.Trimming = None
             OnClick = Button43Click
@@ -1776,17 +1776,19 @@ object Form1: TForm1
             TabOrder = 19
             Text = 'Bash Tool'
             TextSettings.Trimming = None
+            OnClick = Button44Click
           end
           object Button45: TButton
             Anchors = [akTop]
-            Position.X = 85.000000000000000000
+            Position.X = 61.000000000000000000
             Position.Y = 173.000000000000000000
-            Size.Width = 231.000000000000000000
+            Size.Width = 140.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 21
-            Text = 'Text Editor Tool'
+            TabOrder = 22
+            Text = 'Text Editor Tool - 1'
             TextSettings.Trimming = None
+            OnClick = Button45Click
           end
           object Button46: TButton
             Anchors = [akTop]
@@ -1798,6 +1800,7 @@ object Form1: TForm1
             TabOrder = 20
             Text = 'Web Search Tool'
             TextSettings.Trimming = None
+            OnClick = Button46Click
           end
           object Button58: TButton
             Anchors = [akTop]
@@ -1806,7 +1809,7 @@ object Form1: TForm1
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 23
+            TabOrder = 24
             Text = 'Function calling using plugin'
             TextSettings.Trimming = None
             OnClick = Button58Click
@@ -1818,10 +1821,41 @@ object Form1: TForm1
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 22
+            TabOrder = 23
             Text = 'Function calling using orchestration'
             TextSettings.Trimming = None
             OnClick = Button59Click
+          end
+          object Label58: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 115.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 26
+            OnClick = Label58Click
+          end
+          object Button60: TButton
+            Anchors = [akTop]
+            Enabled = False
+            Position.X = 209.000000000000000000
+            Position.Y = 173.000000000000000000
+            Size.Width = 140.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 21
+            Text = 'Text Editor Tool - 2'
+            TextSettings.Trimming = None
+            OnClick = Button60Click
           end
         end
         object Layout14: TLayout
@@ -1829,7 +1863,7 @@ object Form1: TForm1
           Position.X = 8.000000000000000000
           Position.Y = 301.000000000000000000
           Size.Width = 385.000000000000000000
-          Size.Height = 329.000000000000000000
+          Size.Height = 212.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 22
           object Label48: TLabel
@@ -1852,7 +1886,7 @@ object Form1: TForm1
             StyledSettings = [Family]
             HitTest = True
             Position.X = 18.000000000000000000
-            Position.Y = 295.000000000000000000
+            Position.Y = 175.000000000000000000
             Size.Width = 359.000000000000000000
             Size.Height = 17.000000000000000000
             Size.PlatformDefault = False
@@ -1861,29 +1895,20 @@ object Form1: TForm1
             TextSettings.FontColor = claCornflowerblue
             TextSettings.HorzAlign = Center
             Text = 'Documentation (Github)'
-            TabOrder = 28
+            TabOrder = 26
+            OnClick = Label49Click
           end
-          object Button47: TButton
+          object Button48: TButton
             Anchors = [akTop]
             Position.X = 85.000000000000000000
             Position.Y = 25.000000000000000000
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 27
-            Text = 'Beta Bash Tool'
-            TextSettings.Trimming = None
-          end
-          object Button48: TButton
-            Anchors = [akTop]
-            Position.X = 85.000000000000000000
-            Position.Y = 55.000000000000000000
-            Size.Width = 231.000000000000000000
-            Size.Height = 22.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 22
+            TabOrder = 20
             Text = 'Beta Code Execution Tool'
             TextSettings.Trimming = None
+            OnClick = Button48Click
           end
           object Button49: TButton
             Anchors = [akTop]
@@ -1892,81 +1917,78 @@ object Form1: TForm1
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 26
+            TabOrder = 25
             Text = 'Beta Computer Use Tool'
             TextSettings.Trimming = None
+            OnClick = Button49Click
           end
           object Button50: TButton
+            Anchors = [akTop]
+            Position.X = 21.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 140.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 24
+            Text = 'Beta Memory Tool - 1'
+            TextSettings.Trimming = None
+            OnClick = Button50Click
+          end
+          object Button52: TButton
             Anchors = [akTop]
             Position.X = 85.000000000000000000
             Position.Y = 115.000000000000000000
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 25
-            Text = 'Beta Memory Tool'
+            TabOrder = 21
+            Text = 'Beta Web Fetch Tool'
             TextSettings.Trimming = None
+            OnClick = Button52Click
           end
-          object Button51: TButton
+          object Button53: TButton
             Anchors = [akTop]
             Position.X = 85.000000000000000000
             Position.Y = 145.000000000000000000
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 24
-            Text = 'Beta Text Editor Tool'
+            TabOrder = 19
+            Text = 'Beta Search Tool'
             TextSettings.Trimming = None
+            OnClick = Button53Click
           end
-          object Button52: TButton
+          object Button47: TButton
             Anchors = [akTop]
-            Position.X = 85.000000000000000000
-            Position.Y = 175.000000000000000000
-            Size.Width = 231.000000000000000000
+            Enabled = False
+            Position.X = 169.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 86.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 23
-            Text = 'Beta Web Fetch Tool'
+            Text = 'Step - 2'
             TextSettings.Trimming = None
+            OnClick = Button47Click
           end
-          object Button53: TButton
+          object Button61: TButton
             Anchors = [akTop]
-            Position.X = 85.000000000000000000
-            Position.Y = 205.000000000000000000
-            Size.Width = 231.000000000000000000
+            Enabled = False
+            Position.X = 263.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 86.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 21
-            Text = 'Beta Search Tool'
+            TabOrder = 22
+            Text = 'Step - 3'
             TextSettings.Trimming = None
-          end
-          object Button54: TButton
-            Anchors = [akTop]
-            Position.X = 85.000000000000000000
-            Position.Y = 235.000000000000000000
-            Size.Width = 231.000000000000000000
-            Size.Height = 22.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 20
-            Text = 'Beta Search Tool Regex'
-            TextSettings.Trimming = None
-          end
-          object Button55: TButton
-            Anchors = [akTop]
-            Position.X = 85.000000000000000000
-            Position.Y = 265.000000000000000000
-            Size.Width = 231.000000000000000000
-            Size.Height = 22.000000000000000000
-            Size.PlatformDefault = False
-            TabOrder = 19
-            Text = 'Beta MCP Toolset'
-            TextSettings.Trimming = None
+            OnClick = Button61Click
           end
         end
         object Layout16: TLayout
           Anchors = [akTop]
           Position.X = 8.000000000000000000
-          Position.Y = 660.000000000000000000
+          Position.Y = 540.000000000000000000
           Size.Width = 385.000000000000000000
           Size.Height = 89.000000000000000000
           Size.PlatformDefault = False
@@ -2001,6 +2023,7 @@ object Form1: TForm1
             TextSettings.HorzAlign = Center
             Text = 'Documentation (Github)'
             TabOrder = 20
+            OnClick = Label55Click
           end
           object Button57: TButton
             Anchors = [akTop]
@@ -2010,8 +2033,9 @@ object Form1: TForm1
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 19
-            Text = 'TODO'
+            Text = 'Beta MCP Toolset'
             TextSettings.Trimming = None
+            OnClick = Button57Click
           end
         end
       end
@@ -2020,7 +2044,7 @@ object Form1: TForm1
           item
           end>
         TextSettings.Trimming = None
-        IsSelected = False
+        IsSelected = True
         Size.Width = 8.000000000000000000
         Size.Height = 8.000000000000000000
         Size.PlatformDefault = False
@@ -2056,7 +2080,7 @@ object Form1: TForm1
           Position.X = 8.000000000000000000
           Position.Y = 8.000000000000000000
           Size.Width = 385.000000000000000000
-          Size.Height = 369.000000000000000000
+          Size.Height = 717.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 24
           object Label50: TLabel
@@ -2071,7 +2095,7 @@ object Form1: TForm1
             TextSettings.FontColor = claGoldenrod
             TextSettings.HorzAlign = Center
             Text = 'Agent Skills'
-            TabOrder = 5
+            TabOrder = 8
           end
           object Label51: TLabel
             Anchors = [akTop]
@@ -2079,7 +2103,7 @@ object Form1: TForm1
             StyledSettings = [Family]
             HitTest = True
             Position.X = 18.000000000000000000
-            Position.Y = 55.000000000000000000
+            Position.Y = 115.000000000000000000
             Size.Width = 359.000000000000000000
             Size.Height = 17.000000000000000000
             Size.PlatformDefault = False
@@ -2088,7 +2112,8 @@ object Form1: TForm1
             TextSettings.FontColor = claCornflowerblue
             TextSettings.HorzAlign = Center
             Text = 'Documentation (Github)'
-            TabOrder = 20
+            TabOrder = 35
+            OnClick = Label51Click
           end
           object Button56: TButton
             Anchors = [akTop]
@@ -2097,9 +2122,282 @@ object Form1: TForm1
             Size.Width = 231.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
-            TabOrder = 19
-            Text = 'TODO'
+            TabOrder = 33
+            Text = 'Beta skill - xlsx creation'
             TextSettings.Trimming = None
+            OnClick = Button56Click
+          end
+          object Button51: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 177.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 30
+            Text = 'Create'
+            TextSettings.Trimming = None
+            OnClick = Button51Click
+          end
+          object Label61: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 152.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Skills - CRUD'
+            TabOrder = 7
+          end
+          object Button54: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 207.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 24
+            Text = 'List'
+            TextSettings.Trimming = None
+            OnClick = Button54Click
+          end
+          object Button55: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 283.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 23
+            Text = 'Retrieve'
+            TextSettings.Trimming = None
+            OnClick = Button55Click
+          end
+          object Button62: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 313.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 22
+            Text = 'Delete'
+            TextSettings.Trimming = None
+            OnClick = Button62Click
+          end
+          object Label62: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 352.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Skills version - CRUD'
+            TabOrder = 6
+          end
+          object Button63: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 407.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 29
+            Text = 'Create skill version'
+            TextSettings.Trimming = None
+            OnClick = Button63Click
+          end
+          object Button64: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 377.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 28
+            Text = 'List skill versions'
+            TextSettings.Trimming = None
+            OnClick = Button64Click
+          end
+          object Button65: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 510.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 27
+            Text = 'Retrieve skill version'
+            TextSettings.Trimming = None
+            OnClick = Button65Click
+          end
+          object Button66: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 540.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 26
+            Text = 'Delete skill version'
+            TextSettings.Trimming = None
+            OnClick = Button66Click
+          end
+          object SkillIDEdit: TEdit
+            Touch.InteractiveGestures = [LongTap, DoubleTap]
+            TabOrder = 37
+            Position.X = 160.000000000000000000
+            Position.Y = 247.000000000000000000
+            Size.Width = 153.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TextPrompt = 'skill ID'
+          end
+          object VersionEdit: TEdit
+            Touch.InteractiveGestures = [LongTap, DoubleTap]
+            TabOrder = 36
+            Position.X = 160.000000000000000000
+            Position.Y = 468.000000000000000000
+            Size.Width = 153.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TextPrompt = 'version'
+          end
+          object S: TLabel
+            Anchors = [akTop]
+            Cursor = crHandPoint
+            StyledSettings = [Family]
+            HitTest = True
+            Position.X = 18.000000000000000000
+            Position.Y = 570.000000000000000000
+            Size.Width = 359.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {04040000000000000004000000}
+            TextSettings.FontColor = claCornflowerblue
+            TextSettings.HorzAlign = Center
+            Text = 'Documentation (Github)'
+            TabOrder = 34
+            OnClick = SClick
+          end
+          object Label63: TLabel
+            Anchors = [akTop]
+            StyledSettings = [Family]
+            Position.X = 8.000000000000000000
+            Position.Y = 616.000000000000000000
+            Size.Width = 369.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.Size = 14.000000000000000000
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claGoldenrod
+            TextSettings.HorzAlign = Center
+            Text = 'Skills version - CRUD'
+            TabOrder = 5
+          end
+          object Button67: TButton
+            Anchors = [akTop]
+            Position.X = 85.000000000000000000
+            Position.Y = 641.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 25
+            Text = 'Use custom skill (pdf-extract)'
+            TextSettings.Trimming = None
+            OnClick = Button67Click
+          end
+          object Label64: TLabel
+            StyledSettings = [Family, Size]
+            Position.X = 56.000000000000000000
+            Position.Y = 671.000000000000000000
+            Size.Width = 289.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claRoyalblue
+            TextSettings.HorzAlign = Center
+            Text = '>> Use Skill ID of "pdf-extract" skill created <<'
+            TabOrder = 40
+          end
+          object Label65: TLabel
+            StyledSettings = [Family, Size]
+            Position.X = 24.000000000000000000
+            Position.Y = 249.000000000000000000
+            Size.Width = 289.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claForestgreen
+            Text = 'Using Skill ID with ...'
+            TabOrder = 39
+          end
+          object Rectangle1: TRectangle
+            Fill.Color = claForestgreen
+            Position.X = 24.000000000000000000
+            Position.Y = 274.000000000000000000
+            Size.Width = 4.000000000000000000
+            Size.Height = 288.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Color = claForestgreen
+          end
+          object Label66: TLabel
+            StyledSettings = [Family, Size]
+            Position.X = 36.000000000000000000
+            Position.Y = 471.000000000000000000
+            Size.Width = 289.000000000000000000
+            Size.Height = 17.000000000000000000
+            Size.PlatformDefault = False
+            TextSettings.Font.StyleExt = {00070000000000000004000000}
+            TextSettings.FontColor = claIndigo
+            Text = 'Using version with ...'
+            TabOrder = 38
+          end
+          object Rectangle2: TRectangle
+            Fill.Color = claIndigo
+            Position.X = 36.000000000000000000
+            Position.Y = 496.000000000000000000
+            Size.Width = 4.000000000000000000
+            Size.Height = 66.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Color = claIndigo
+          end
+          object Button68: TButton
+            Anchors = [akTop]
+            Default = True
+            Position.X = 85.000000000000000000
+            Position.Y = 55.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 32
+            Text = 'Files API - List'
+            TextSettings.Trimming = None
+            OnClick = Button33Click
+          end
+          object Button69: TButton
+            Anchors = [akTop]
+            Default = True
+            Position.X = 85.000000000000000000
+            Position.Y = 85.000000000000000000
+            Size.Width = 231.000000000000000000
+            Size.Height = 22.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 31
+            Text = 'Files API - Download'
+            TextSettings.Trimming = None
+            OnClick = Button36Click
           end
         end
       end

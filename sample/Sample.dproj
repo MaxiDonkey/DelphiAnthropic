@@ -221,6 +221,9 @@
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="..\source\Anthropic.JSONL.pas"/>
+        <DCCReference Include="..\source\Anthropic.Context.Helper.pas"/>
+        <DCCReference Include="..\source\Anthropic.API.MultiFormData.pas"/>
+        <DCCReference Include="..\source\Anthropic.Files.Helper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

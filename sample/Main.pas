@@ -5,15 +5,16 @@ interface
 uses
   Winapi.ShellAPI, Winapi.Windows,
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
+  System.IOUtils,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Layouts, FMX.TabControl, FMX.Memo.Types, FMX.ScrollBox,
-  FMX.Memo, FMX.DialogService, FMX.Objects, FMX.Edit, System.JSON, System.IOUtils,
+  FMX.Memo, FMX.DialogService, FMX.Objects, FMX.Edit, System.JSON,
   FMX.ComboEdit, FMX.ListBox,
 
   Sample.Key.Managment, Sample.UrlOpen, Sample.IniManagment,
 
   Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.Tutorial.FMX, Anthropic.Async.Promise,
-  Anthropic.Functions.Example;
+  Anthropic.Functions.Example, Anthropic.Exceptions;
 
 type
   TForm1 = class(TForm)
@@ -158,15 +159,11 @@ type
     Layout14: TLayout;
     Label48: TLabel;
     Label49: TLabel;
-    Button47: TButton;
     Button48: TButton;
     Button49: TButton;
     Button50: TButton;
-    Button51: TButton;
     Button52: TButton;
     Button53: TButton;
-    Button54: TButton;
-    Button55: TButton;
     Layout16: TLayout;
     Label52: TLabel;
     Label55: TLabel;
@@ -180,6 +177,32 @@ type
     Button56: TButton;
     Button58: TButton;
     Button59: TButton;
+    Label58: TLabel;
+    Button60: TButton;
+    Button47: TButton;
+    Button61: TButton;
+    Button51: TButton;
+    Label61: TLabel;
+    Button54: TButton;
+    Button55: TButton;
+    Button62: TButton;
+    Label62: TLabel;
+    Button63: TButton;
+    Button64: TButton;
+    Button65: TButton;
+    Button66: TButton;
+    SkillIDEdit: TEdit;
+    VersionEdit: TEdit;
+    S: TLabel;
+    Label63: TLabel;
+    Button67: TButton;
+    Label64: TLabel;
+    Label65: TLabel;
+    Rectangle1: TRectangle;
+    Label66: TLabel;
+    Rectangle2: TRectangle;
+    Button68: TButton;
+    Button69: TButton;
     procedure FormCreate(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure Label6Click(Sender: TObject);
@@ -254,6 +277,33 @@ type
     procedure Button43Click(Sender: TObject);
     procedure Button58Click(Sender: TObject);
     procedure Button59Click(Sender: TObject);
+    procedure Label58Click(Sender: TObject);
+    procedure Button44Click(Sender: TObject);
+    procedure Button45Click(Sender: TObject);
+    procedure Button60Click(Sender: TObject);
+    procedure Button46Click(Sender: TObject);
+    procedure Button48Click(Sender: TObject);
+    procedure Label49Click(Sender: TObject);
+    procedure Button50Click(Sender: TObject);
+    procedure Button47Click(Sender: TObject);
+    procedure Button61Click(Sender: TObject);
+    procedure Button49Click(Sender: TObject);
+    procedure Button52Click(Sender: TObject);
+    procedure Button53Click(Sender: TObject);
+    procedure Button57Click(Sender: TObject);
+    procedure Label55Click(Sender: TObject);
+    procedure Label51Click(Sender: TObject);
+    procedure Button56Click(Sender: TObject);
+    procedure Button51Click(Sender: TObject);
+    procedure Button54Click(Sender: TObject);
+    procedure Button55Click(Sender: TObject);
+    procedure Button62Click(Sender: TObject);
+    procedure Button64Click(Sender: TObject);
+    procedure Button66Click(Sender: TObject);
+    procedure Button65Click(Sender: TObject);
+    procedure Button67Click(Sender: TObject);
+    procedure Button63Click(Sender: TObject);
+    procedure SClick(Sender: TObject);
   private
     Client: IAnthropic;
     FPageIndex: Integer;
@@ -1484,13 +1534,14 @@ procedure TForm1.Button33Click(Sender: TObject);
 begin
   StartRun('List of files');
 
+  //Query params creation
   var QueryParams: TFilesListParamProc :=
     procedure (Params: TFilesListParams)
     begin
       Params.Limit(5);
     end;
 
-  // Asynchronous generation (promise-based)
+  // Asynchronous example
   var Promise := Client.Files.AsyncAwaitList(QueryParams);
 
   Promise
@@ -1505,7 +1556,7 @@ begin
         Display(TutorialHub, E.Message);
       end);
 
-  // Synchronous generation
+  // Synchronous example
 //  var Value := Client.Files.List(QueryParams);
 //
 //  try
@@ -1765,6 +1816,478 @@ begin
   end;
 end;
 
+procedure TForm1.Button50Click(Sender: TObject);
+// Beta Memory Tool - 1
+begin
+  TutorialHub.ToolTurns := TTurns.CreateInstance;
+
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
+  var Prompt := 'Maintain a persistent profile about me (interests, current work). Initialize it if necessary.';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['context-management-2025-06-27'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .System(SystemPrompt)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateMemoryTool20250818 )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+        Display(TutorialHub, TurnItem);
+        Display(TutorialHub, Value);
+
+        Button47.Enabled := True;
+        ButtonUndo.OnClick(nil);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+//    Display(TutorialHub, TurnItem);
+//    Display(TutorialHub, Value);
+//
+//    Button47.Enabled := True;
+//    ButtonUndo.OnClick(nil);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button51Click(Sender: TObject);
+begin
+  var Folder := '..\media\pdf-extract';
+
+  StartRun(Folder);
+
+  for var Item in TFileHelper.FilesFromDir(Folder) do
+    begin
+      Display(TutorialHub, Item);
+    end;
+
+  //Multipart payload creation
+  var Payload: TSkillFormDataParamProc :=
+    procedure (Params: TSkillFormDataParams)
+    begin
+      Params
+        .DisplayTitle('PDF extract')
+        .Files(Folder);
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkill)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  //Synchronous example
+//  var Skill := Client.Skills.Create(Payload);
+//  try
+//    Display(TutorialHub, Skill);
+//  finally
+//    Skill.Free;
+//  end;
+end;
+
+procedure TForm1.Button52Click(Sender: TObject);
+// Beta Web Fetch Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'Please analyze the content at https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool#url-validation';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['web-fetch-2025-09-10'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateWebFetchTool20250910
+                  .MaxUses(5)
+              )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button53Click(Sender: TObject);
+// Beta Search Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 2048;
+  var Prompt := 'What is the weather in San Francisco?';
+
+  // Schema Payload creation using TSchemaParams class
+  var GetWeather := TSchemaParams.New
+    .&Type('object')
+    .Properties( TJSONObject.Create
+       .AddPair('location', TJSONObject.Create
+           .AddPair('type', 'string')
+       )
+       .AddPair('unit', TJSONObject.Create
+           .AddPair('type', 'string')
+           .AddPair('enum', TJSONArray.Create
+               .Add('celsius')
+               .Add('fahrenheit'))
+       )
+    )
+    .Required(['location']);
+
+  var GetSearchFiles := TSchemaParams.New
+    .&Type('object')
+    .Properties( TJSONObject.Create
+       .AddPair('query', TJSONObject.Create
+           .AddPair('type', 'string')
+       )
+       .AddPair('file_types', TJSONObject.Create
+           .AddPair('type', 'array')
+           .AddPair('items', TJSONObject.Create
+               .AddPair('type', 'string')
+           )
+       )
+    )
+    .Required(['query']);
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['advanced-tool-use-2025-11-20'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateToolSearchToolRegex20251119 )
+              .Add( Tool.CreateToolCustom
+                 .Name( 'get_weather' )
+                 .Description( 'Get the weather at a specific location' )
+                 .InputSchema( GetWeather )
+                 .DeferLoading(True)
+              )
+              .Add( Tool.CreateToolCustom
+                 .Name( 'search_files' )
+                 .Description( 'Search through files in the workspace' )
+                 .InputSchema( GetSearchFiles )
+                 .DeferLoading(True)
+              )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+  //  var Value := Client.Chat.Create(Payload);
+  //
+  //  try
+  //    Display(TutorialHub, Value);
+  //  finally
+  //    Value.Free;
+  //  end;
+end;
+
+procedure TForm1.Button54Click(Sender: TObject);
+// Skill list
+begin
+  StartRun('List of skills');
+
+  //Query params creation
+  var QueryParams: TSkillListParamProc :=
+    procedure (Params: TSkillListParams)
+    begin
+      Params.Limit(10);
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitList(QueryParams);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillList)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.List(QueryParams);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button55Click(Sender: TObject);
+// Retrieve skill
+begin
+  StartRun('Retrieve a skill by it''s ID');
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitRetrieve(SkillID);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkill)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.Retrieve(SkillId);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button56Click(Sender: TObject);
+// Beta skill - xlsx creation
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 4096;
+  var Prompt := 'Create an Excel file with a simple budget spreadsheet.';
+
+  StartRun(Prompt);
+
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25', 'skills-2025-10-02'])
+          .Model( ModelName )
+          .MaxTokens( MaxTokens )
+          .Container( CreateContainer
+              .Skills( SkillParts
+                  .Add( Skill.CreateSkill('anthropic')
+                     .SkillId('xlsx')
+                     .Version('latest')
+                  )
+              )
+          )
+          .Messages( MessageParts
+              .User( ContentParts
+                 .AddText( Prompt )
+              )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Set response delay for 10 min
+  Client.HttpClient.ResponseTimeout := 600000;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+  //  var Value := Client.Chat.Create(Payload);
+  //
+  //  try
+  //    Display(TutorialHub, Value);
+  //  finally
+  //    Value.Free;
+  //  end;
+
+end;
+
+procedure TForm1.Button57Click(Sender: TObject);
+// Beta MCP Toolset
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var SystemPrompt := 'Today is ''' + FormatDateTime('dd"u"mmmm"t"yyyy', Date) + ''' (' + FormatDateTime('yyyy-mm-dd', Date) + ').';
+  var Prompt := 'What is the weather like in New York today?';
+
+  var McpUrl := 'https://gemini-api-demos.uc.r.appspot.com/mcp';
+  var McpName := 'weather_service';
+  var McpToken := '';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['mcp-client-2025-11-20'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .System( SystemPrompt )
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .McpServers( MCPServerParts
+               .Add( MCPServer.CreateMCPServer
+                   .Url( McpUrl )
+                   .Name( McpName )
+                   .AuthorizationToken( McpToken )
+               )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateMCPToolset
+                  .McpServerName( McpName )
+              )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+  //  var Value := Client.Chat.Create(Payload);
+  //
+  //  try
+  //    Display(TutorialHub, Value);
+  //  finally
+  //    Value.Free;
+  //  end;
+end;
+
 procedure TForm1.Button58Click(Sender: TObject);
 // Function calling using plugin
 begin
@@ -1812,6 +2335,15 @@ begin
       begin
         Display(TutorialHub, E.Message);
       end);
+
+    // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
 end;
 
 procedure TForm1.Button59Click(Sender: TObject);
@@ -1871,29 +2403,29 @@ begin
   Promise
     .&Then(
       function (Value: TChat): TPromise<TChat>
-      var
-        Arguments: string;
       begin
         Result := nil;
-        for var Item in Value.Content do
-        begin
-          if Item.&Type = TContentBlockType.tool_use then
-            begin
-              Arguments := Item.Input;
 
-              // Second step
-              Result := Client.Chat.AsyncAwaitCreate(
-                procedure (Params: TChatParams)
-                begin
-                  Params
-                    .Model(ModelName)
-                    .MaxTokens(MaxTokens)
-                    .Messages( Generation.MessageParts
-                        .User('Announce the day''s weather forecast : ' + TutorialHub.WeatherRetrieve(Arguments))
-                    )
-                end);
-            end;
-        end;
+        for var Item in Value.Content do
+          begin
+            if Item.&Type = TContentBlockType.tool_use then
+              begin
+                var Arguments := Item.Input;
+
+                // Second step
+                Result := Client.Chat.AsyncAwaitCreate(
+                  procedure (Params: TChatParams)
+                  begin
+                    Params
+                      .Model(ModelName)
+                      .MaxTokens(MaxTokens)
+                      .Messages( Generation.MessageParts
+                          .User('Announce the day''s weather forecast : ' + TutorialHub.WeatherRetrieve(Arguments))
+                      )
+                  end);
+
+              end;
+          end;
       end)
     .&Then(
       procedure (Value: TChat)
@@ -2123,6 +2655,366 @@ begin
       begin
         Display(TutorialHub, E.Message);
       end);
+
+    // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button44Click(Sender: TObject);
+// Bash Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'Using PowerShell, display the list of executable (.exe) files in the current directory';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolBash20250124 )
+          )
+          .Messages( MessageParts
+              .User( Prompt )
+          );
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button45Click(Sender: TObject);
+// Text Editor Tool - 1
+begin
+  TutorialHub.ToolTurns := TTurns.CreateInstance;
+
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 512;
+  var Prompt := 'Fix the syntax error in primes.py.';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.CreateToolTextEditor20250728)
+          )
+          .Messages( MessageParts
+              .User(Prompt)
+          );
+      TutorialHub.JSONRequest := Params.ToFormat;
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+        Display(TutorialHub, TurnItem);
+        Display(TutorialHub, Value);
+
+        Button60.Enabled := True;
+        ButtonUndo.OnClick(nil);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+//    Display(TutorialHub, TurnItem);
+//    Display(TutorialHub, Value);
+//
+//    Button60.Enabled := True;
+//    ButtonUndo.OnClick(nil);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button46Click(Sender: TObject);
+// Web Search Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'What is the weather in NYC?';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt )
+          )
+          .Tools( ToolParts
+              .Add( Tool.CreateWebSearchTool20250305
+                  .MaxUses(5)
+              )
+          );
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button47Click(Sender: TObject);
+// Beta Memory Tool - 2
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
+  var Prompt := 'Directory: /memories';
+
+  var Turns := TutorialHub.ToolTurns;
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['context-management-2025-06-27'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .System(SystemPrompt)
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateMemoryTool20250818 )
+          )
+          .Messages( Turns
+              .BuildContextFromHistory('memory', Prompt) );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+        Display(TutorialHub, TurnItem);
+        Display(TutorialHub, Value);
+
+        Button61.Enabled := True;
+        ButtonUndo.OnClick(nil);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    var TurnItem := TutorialHub.ToolTurns.AddItem(Value);
+//    Display(TutorialHub, TurnItem);
+//    Display(TutorialHub, Value);
+//
+//    Button61.Enabled := True;
+//    ButtonUndo.OnClick(nil);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button48Click(Sender: TObject);
+// Beta Code Execution Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 4096;
+  var Prompt := 'Check the Python version and list installed packages';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Messages( MessageParts
+              .User( Prompt)
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          )
+          .Container('container_011CY7NJtwv7RuL8EKzCV5aU');
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+
+end;
+
+procedure TForm1.Button49Click(Sender: TObject);
+// Beta Computer Use Tool
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := 'Save a picture of a cat to my desktop.';
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['computer-use-2025-11-24'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateToolComputerUse20251124
+                  .DisplayWidthPx(1024)
+                  .DisplayHeightPx(768)
+                  .DisplayNumber(1)
+              )
+              .Add( Tool.CreateToolTextEditor20250728 )
+              .Add( Tool.CreateToolBash20250124 )
+          )
+          .Messages( MessageParts
+              .User( Prompt)
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+    // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
@@ -2138,7 +3030,7 @@ begin
 
   StartRun(Prompt);
 
-  //JSON payload generation
+  //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
@@ -2155,10 +3047,441 @@ begin
       TutorialHub.JSONRequest := Params.ToFormat();
     end;
 
-  // Asynchronous generation (promise-based)
+  // Asynchronous creation (promise-based)
   var Promise := Client.Chat.AsyncAwaitCreate(Payload);
 
   // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+end;
+
+procedure TForm1.Button60Click(Sender: TObject);
+// Text Editor Tool - 2
+begin
+  var Primes :=  System.IOUtils.TFile.ReadAllText('..\media\Primes.py');
+
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var Prompt := Primes;
+
+  var Turns := TutorialHub.ToolTurns;
+
+  StartRun(Prompt, True);
+
+  //JSON payload generation
+  var Payload: TChatParamProc :=
+  procedure (Params: TChatParams)
+  begin
+    with Generation do
+      Params
+        .Model(ModelName)
+        .MaxTokens(MaxTokens)
+        .Tools( ToolParts
+              .Add( Tool.CreateToolTextEditor20250728 )
+        )
+        .Messages( Turns
+              .BuildContextFromHistory('str_replace_based_edit_tool', Prompt)
+        );
+
+    TutorialHub.JSONRequest := Params.ToFormat();
+  end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+        Button60.Enabled := False;
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//    Button60.Enabled := False;
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button61Click(Sender: TObject);
+// Beta Memory Tool - 2
+begin
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 1024;
+  var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
+  var Prompt := 'File created successfully at /memories/user.xml';
+
+  var Turns := TutorialHub.ToolTurns;
+
+  StartRun(Prompt);
+
+  //JSON payload creation
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['context-management-2025-06-27'])
+          .Model(ModelName)
+          .MaxTokens(MaxTokens)
+          .System(SystemPrompt)
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateMemoryTool20250818 )
+          )
+          .Messages( Turns
+              .BuildContextFromHistory('memory', Prompt) );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Asynchronous creation (promise-based)
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
+  // Simple processing or orchestration of promise
+  Promise
+    .&Then(
+      procedure (Value: TChat)
+      begin
+        Display(TutorialHub, Value);
+
+        Button47.Enabled := False;
+        Button61.Enabled := False;
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Chat.Create(Payload);
+//
+//  try
+//    Display(TutorialHub, Value);
+//
+//    Button47.Enabled := False;
+//    Button61.Enabled := False;
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button62Click(Sender: TObject);
+// Skill Delete
+begin
+  StartRun('Delete a skill by it''s ID');
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitDelete(SkillID);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillDeleted)
+      begin
+        Display(TutorialHub, Value);
+        SkillIDEdit.Text := '';
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.Delete(SkillId);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button63Click(Sender: TObject);
+// Create skill version
+begin
+  var Folder := '..\media\pdf-extract';
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  StartRun(Folder);
+
+  for var Item in TFileHelper.FilesFromDir(Folder) do
+    begin
+      Display(TutorialHub, Item);
+    end;
+
+  //Multipart payload creation
+  var Payload: TSkillFormDataParamProc :=
+    procedure (Params: TSkillFormDataParams)
+    begin
+      Params
+        .Files(Folder);
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitCreate(SkillID, Payload);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillVersion)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  //Synchronous example
+//  var SkillVersion := Client.Skills.Create(SkillID, version, Payload);
+//  try
+//    Display(TutorialHub, SkillVersion);
+//  finally
+//    SkillVersion.Free;
+//  end;
+end;
+
+procedure TForm1.Button64Click(Sender: TObject);
+// List skill versions
+begin
+  StartRun('List of skill versions');
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  //Query params creation
+  var QueryParams: TSkillListParamProc :=
+    procedure (Params: TSkillListParams)
+    begin
+      Params.Limit(10);
+    end;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitList(SkillID, QueryParams);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillVersionList)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.List(SkillID, QueryParams);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button65Click(Sender: TObject);
+// Retrieve skill version
+begin
+  StartRun('Retrieve a skill by it''s ID');
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  var version := VersionEdit.Text;
+
+  if version.Trim.IsEmpty then
+    version := TInputContent.Text;
+
+  VersionEdit.Text := version;
+
+  if version.Trim.IsEmpty then
+    Exit;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitRetrieve(SkillID, version);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillVersion)
+      begin
+        Display(TutorialHub, Value);
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.Retrieve(SkillId, version);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button66Click(Sender: TObject);
+begin
+  StartRun('Delete a skill by it''s ID');
+
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  var version := VersionEdit.Text;
+
+  if version.Trim.IsEmpty then
+    version := TInputContent.Text;
+
+  VersionEdit.Text := version;
+
+  if version.Trim.IsEmpty then
+    Exit;
+
+  // Asynchronous example
+  var Promise := Client.Skills.AsyncAwaitDelete(SkillID, version);
+
+  Promise
+    .&Then(
+      procedure (Value: TSkillDeleted)
+      begin
+        Display(TutorialHub, Value);
+        VersionEdit.Text := '';
+      end)
+    .&Catch(
+      procedure (E: Exception)
+      begin
+        Display(TutorialHub, E.Message);
+      end);
+
+  // Synchronous example
+//  var Value := Client.Skills.Delete(SkillId, version);
+//
+//  try
+//    Display(TutorialHub, Value);
+//  finally
+//    Value.Free;
+//  end;
+end;
+
+procedure TForm1.Button67Click(Sender: TObject);
+// Use custom skill
+begin
+  var SkillID := SkillIDEdit.Text;
+
+  if SkillID.Trim.IsEmpty then
+    SkillID := TInputContent.Text;
+
+  SkillIDEdit.Text := SkillID;
+
+  if SkillID.Trim.IsEmpty then
+    Exit;
+
+  var Document := '..\media\File_Search_file.pdf';
+  var Base64 := TMediaCodec.EncodeBase64(Document);
+
+  var ModelName := 'claude-opus-4-6';
+  var MaxTokens := 4096;
+  var Prompt := 'Extraire les informations sensibles du fichier PDF';
+
+  StartRun(Prompt);
+
+  var Payload: TChatParamProc :=
+    procedure (Params: TChatParams)
+    begin
+      with Generation do
+        Params
+          .Beta(['code-execution-2025-08-25', 'skills-2025-10-02'])
+          .Model( ModelName )
+          .MaxTokens( MaxTokens )
+          .Container( CreateContainer
+              .Skills( SkillParts
+                  .Add( Skill.CreateSkill('custom')
+                     .SkillId( SkillID )
+                     .Version('latest')
+                  )
+              )
+          )
+          .Messages( MessageParts
+              .User( ContentParts
+                 .AddText( Prompt )
+                 .AddPDF(Base64)
+              )
+          )
+          .Tools( ToolParts
+              .Add( Tool.Beta.CreateCodeExecutionTool20250825 )
+          );
+
+      TutorialHub.JSONRequest := Params.ToFormat();
+    end;
+
+  // Set response delay for 10 min
+  Client.HttpClient.ResponseTimeout := 600000;
+
+  // Asynchronous example
+  var Promise := Client.Chat.AsyncAwaitCreate(Payload);
+
   Promise
     .&Then(
       procedure (Value: TChat)
@@ -2408,22 +3731,42 @@ end;
 
 procedure TForm1.Label40Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/batch-processing.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/batch-processing.md#batch-processing');
 end;
 
 procedure TForm1.Label43Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/models.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/models.md#models');
 end;
 
 procedure TForm1.Label47Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools.md#stable-tool-categories');
+end;
+
+procedure TForm1.Label49Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools-beta.md');
 end;
 
 procedure TForm1.Label4Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/content-generation-sse.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/content-generation-sse.md#content-generation-sse-streaming');
+end;
+
+procedure TForm1.Label51Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/agent-skills.md');
+end;
+
+procedure TForm1.Label55Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools-mcp-connector.md#mcp-connector-beta');
+end;
+
+procedure TForm1.Label58Click(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/tools-function-calling.md#function-calling');
 end;
 
 procedure TForm1.Label10Click(Sender: TObject);
@@ -2473,47 +3816,47 @@ end;
 
 procedure TForm1.Label22Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/document-understanding.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/document-understanding.md#document-understanding');
 end;
 
 procedure TForm1.Label23Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/fast-mode.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/fast-mode.md#fast-mode-research-preview');
 end;
 
 procedure TForm1.Label26Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/prompt-caching.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/prompt-caching.md#prompt-caching');
 end;
 
 procedure TForm1.Label27Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/thinking.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/thinking.md#thinking');
 end;
 
 procedure TForm1.Label29Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/structured-outputs.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/structured-outputs.md#structured-outputs');
 end;
 
 procedure TForm1.Label31Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/citations.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/citations.md#citations');
 end;
 
 procedure TForm1.Label33Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/token-counting.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/token-counting.md#token-counting');
 end;
 
 procedure TForm1.Label37Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/files-api.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/files-api.md#files-api');
 end;
 
 procedure TForm1.Label3Click(Sender: TObject);
 begin
-  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/content-generation.md');
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/content-generation.md#content-generation-non-streamed');
 end;
 
 procedure TForm1.Label6Click(Sender: TObject);
@@ -2576,6 +3919,11 @@ begin
   PageUpdate;
 end;
 
+procedure TForm1.SClick(Sender: TObject);
+begin
+  OpenUrl('https://github.com/MaxiDonkey/DelphiAnthropic/blob/main/guides/agent-skills-custom.md#custom-skills--api--versioning-beta');
+end;
+
 procedure TForm1.SetPageIndex(const Value: Integer);
 begin
   FPageIndex := Value;
@@ -2628,3 +3976,4 @@ begin
 end;
 
 end.
+

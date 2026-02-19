@@ -7,7 +7,6 @@ unit Anthropic.Chat.Request;
 
  ------------------------------------------------------------------------------}
 
-
 interface
 
 uses
@@ -2587,8 +2586,16 @@ begin
 end;
 
 function TChatParams.Container(const Value: string): TChatParams;
+var
+  JSONObject: TJSONObject;
 begin
-  Result := TChatParams(Add('container', Value));
+  if not ( Value.Trim.StartsWith('{') and Value.Trim.EndsWith('}') ) then
+    Exit( TChatParams(Add('container', Value)) );
+
+  if TJSONHelper.TryGetObject(Value, JSONObject) then
+    Exit( TChatParams(Add('container', JSONObject)) );
+
+  raise EAnthropicException.Create('Invalid JSON Object');
 end;
 
 function TChatParams.MaxTokens(const Value: Integer): TChatParams;

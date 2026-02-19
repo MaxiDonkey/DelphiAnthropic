@@ -12,12 +12,68 @@ interface
 uses
   System.SysUtils, System.Classes, System.JSON,
   REST.JsonReflect, REST.Json.Types,
-  Anthropic.API.Params, Anthropic.API, Anthropic.Types,
-  Anthropic.Async.Support, Anthropic.Async.Promise;
+  Anthropic.API.Params, Anthropic.API.MultiFormData, Anthropic.API, Anthropic.Types,
+  Anthropic.Files.Helper, Anthropic.Async.Support, Anthropic.Async.Promise;
 
 type
+  TSkillFormDataParams = class(TMultiFormDataParams)
+    /// <summary>
+    /// Optional header to specify the beta version(s) you want to use.
+    /// </summary>
+    function DisplayTitle(const Value: string): TSkillFormDataParams;
+
+    /// <summary>
+    /// Adds a set of files to the multipart payload for a Skill upload.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • Each item in <paramref name="Value"/> must be an existing file path.
+    /// </para>
+    /// <para>
+    /// • Files are added as repeated <c>files[]</c> multipart form parts, and the multipart
+    /// <c>filename</c> attribute is built from the common root directory so that the server
+    /// receives a directory tree (e.g. <c>my_skill/SKILL.md</c>, <c>my_skill/scripts/tool.py</c>).
+    /// </para>
+    /// <para>
+    /// • When an empty array is provided, this method does nothing.
+    /// </para>
+    /// </remarks>
+    /// <param name="Value">
+    /// Absolute or relative file paths to upload.
+    /// All files should share a common root directory when used with Skills.
+    /// </param>
+    /// <returns>
+    /// The current <c>TSkillFormDataParams</c> instance (fluent API).
+    /// </returns>
+    function Files(const RootDir: string; const Value: TArray<string>): TSkillFormDataParams; overload;
+
+    /// <summary>
+    /// Adds all files from a folder (recursively) to the multipart payload for a Skill upload.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This overload scans <paramref name="Folder"/> and includes every file found in the folder
+    /// and its subdirectories.
+    /// </para>
+    /// <para>
+    /// • Files are added as repeated <c>files[]</c> multipart form parts.
+    /// </para>
+    /// <para>
+    /// • The folder must exist; otherwise an exception is raised by the underlying helper.
+    /// </para>
+    /// </remarks>
+    /// <param name="Folder">
+    /// Root folder containing the Skill files. All files under this folder are included recursively.
+    /// </param>
+    /// <returns>
+    /// The current <c>TSkillFormDataParams</c> instance (fluent API).
+    /// </returns>
+    function Files(const Folder: string): TSkillFormDataParams; overload;
+  end;
+
+  TSkillFormDataParamProc = TProc<TSkillFormDataParams>;
+
   TSkillListParams = class(TUrlParam)
-  public
     /// <summary>
     /// Number of results to return per page.
     /// </summary>
@@ -48,6 +104,8 @@ type
     /// </remarks>
     function Source(const Value: string): TSkillListParams;
   end;
+
+  TSkillListParamProc = TProc<TSkillListParams>;
 
   TSkill = class(TJSONFingerprint)
   private
@@ -129,6 +187,108 @@ type
     /// List of skills.
     /// </summary>
     property Data: TArray<TSkill> read FData write FData;
+
+    /// <summary>
+    /// Whether there are more results available.
+    /// </summary>
+    /// <remarks>
+    /// If true, there are additional results that can be fetched using the next_page token.
+    /// </remarks>
+    property HasMore: Boolean read FHasMore write FHasMore;
+
+    /// <summary>
+    /// Token for fetching the next page of results.
+    /// </summary>
+    /// <remarks>
+    /// If null, there are no more results available. Pass this value to the page_token parameter
+    /// in the next request to get the next page.
+    /// </remarks>
+    property NextPage: string read FNextPage write FNextPage;
+
+    destructor Destroy; override;
+  end;
+
+  TSkillVersion = class(TJSONFingerprint)
+  private
+    FId: string;
+    [JsonNameAttribute('created_at')]
+    FCreatedAt: string;
+    FDescription: string;
+    FDirectory: string;
+    FName: string;
+    [JsonNameAttribute('skill_id')]
+    FSkillId: string;
+    FType: string;
+    FVersion: string;
+  public
+    /// <summary>
+    /// Unique identifier for the skill.
+    /// </summary>
+    /// <remarks>
+    /// The format and length of IDs may change over time.
+    /// </remarks>
+    property Id: string read FId write FId;
+
+    /// <summary>
+    /// ISO 8601 timestamp of when the skill was created.
+    /// </summary>
+    property CreatedAt: string read FCreatedAt write FCreatedAt;
+
+    /// <summary>
+    /// Description of the skill version.
+    /// </summary>
+    /// <remarks>
+    /// This is extracted from the SKILL.md file in the skill upload.
+    /// </remarks>
+    property Description: string read FDescription write FDescription;
+
+    /// <summary>
+    /// Directory name of the skill version.
+    /// </summary>
+    /// <remarks>
+    /// This is the top-level directory name that was extracted from the uploaded files.
+    /// </remarks>
+    property Directory: string read FDirectory write FDirectory;
+
+    /// <summary>
+    /// Human-readable name of the skill version.
+    /// </summary>
+    /// <remarks>
+    /// This is extracted from the SKILL.md file in the skill upload.
+    /// </remarks>
+    property Name: string read FName write FName;
+
+    /// <summary>
+    /// Identifier for the skill that this version belongs to.
+    /// </summary>
+    property SkillId: string read FSkillId write FSkillId;
+
+    /// <summary>
+    /// For Skill Versions, this is always "skill_version".
+    /// </summary>
+    property &Type: string read FType write FType;
+
+    /// <summary>
+    /// Version identifier for the skill.
+    /// </summary>
+    /// <remarks>
+    /// Each version is identified by a Unix epoch timestamp (e.g., "1759178010641129").
+    /// </remarks>
+    property Version: string read FVersion write FVersion;
+  end;
+
+  TSkillVersionList = class(TJSONFingerprint)
+  private
+    FData: TArray<TSkillVersion>;
+    [JsonNameAttribute('has_more')]
+    FHasMore: Boolean;
+    [JsonNameAttribute('next_page')]
+    FNextPage: string;
+  public
+    /// <summary>
+    /// List of skills.
+    /// </summary>
+    property Data: TArray<TSkillVersion> read FData write FData;
 
     /// <summary>
     /// Whether there are more results available.
@@ -307,11 +467,20 @@ type
   /// </remarks>
   TPromiseSkillDeleted = TPromiseCallback<TSkillDeleted>;
 
+  TAsynSkillVersion = TAsynCallBack<TSkillVersion>;
+
+  TPromiseSkillVersion = TPromiseCallback<TSkillVersion>;
+
+  TAsynSkillVersionList = TAsynCallBack<TSkillVersionList>;
+
+  TPromiseSkillVersionList = TPromiseCallback<TSkillVersionList>;
+
   TAbstractSupport = class(TAnthropicAPIRoute)
   protected
-    function Create: TSkill; overload; virtual; abstract;
+    function Create(const ParamProc: TProc<TSkillFormDataParams>): TSkill; overload; virtual; abstract;
 
-    function Create(const SkillId: string): TSkill; overload; virtual; abstract;
+    function Create(const SkillId: string;
+      const ParamProc: TProc<TSkillFormDataParams>): TSkillVersion; overload; virtual; abstract;
 
     function Delete(const SkillId: string): TSkillDeleted; overload; virtual; abstract;
 
@@ -319,24 +488,27 @@ type
 
     function List: TSkillList; overload; virtual; abstract;
 
-    function List(const SkillId: string): TSkillList; overload; virtual; abstract;
-
     function List(const ParamProc: TProc<TSkillListParams>): TSkillList; overload; virtual; abstract;
 
-    function List(const SkillId: string; const ParamProc: TProc<TSkillListParams>): TSkillList; overload; virtual; abstract;
+    function List(const SkillId: string): TSkillVersionList; overload; virtual; abstract;
+
+    function List(const SkillId: string; const ParamProc: TProc<TSkillListParams>): TSkillVersionList; overload; virtual; abstract;
 
     function Retrieve(const SkillId: string): TSkill; overload; virtual; abstract;
 
-    function Retrieve(const SkillId: string; const Version: string): TSkill; overload; virtual; abstract;
+    function Retrieve(const SkillId: string; const Version: string): TSkillVersion; overload; virtual; abstract;
   end;
 
   TAsynchronousSupport = class(TAbstractSupport)
   protected
-    procedure AsynCreate(const CallBacks: TFunc<TAsynSkill>); overload;
+    procedure AsynCreate(
+      const ParamProc: TProc<TSkillFormDataParams>;
+      const CallBacks: TFunc<TAsynSkill>); overload;
 
     procedure AsynCreate(
       const SkillId: string;
-      const CallBacks: TFunc<TAsynSkill>); overload;
+      const ParamProc: TProc<TSkillFormDataParams>;
+      const CallBacks: TFunc<TAsynSkillVersion>); overload;
 
     procedure AsynDelete(
       const SkillId: string;
@@ -351,17 +523,17 @@ type
       const CallBacks: TFunc<TAsynSkillList>); overload;
 
     procedure AsynList(
-      const SkillId: string;
-      const CallBacks: TFunc<TAsynSkillList>); overload;
-
-    procedure AsynList(
       const ParamProc: TProc<TSkillListParams>;
       const CallBacks: TFunc<TAsynSkillList>); overload;
 
     procedure AsynList(
       const SkillId: string;
+      const CallBacks: TFunc<TAsynSkillVersionList>); overload;
+
+    procedure AsynList(
+      const SkillId: string;
       const ParamProc: TProc<TSkillListParams>;
-      const CallBacks: TFunc<TAsynSkillList>); overload;
+      const CallBacks: TFunc<TAsynSkillVersionList>); overload;
 
     procedure AsynRetrieve(
       const SkillId: string;
@@ -370,7 +542,7 @@ type
     procedure AsynRetrieve(
       const SkillId: string;
       const Version: string;
-      const CallBacks: TFunc<TAsynSkill>); overload;
+      const CallBacks: TFunc<TAsynSkillVersion>); overload;
   end;
 
   TSkillsRoute = class(TAsynchronousSupport)
@@ -394,7 +566,7 @@ type
     /// • Use this method when creating a new skill without predefining its identifier.
     /// </para>
     /// </remarks>
-    function Create: TSkill; overload; override;
+    function Create(const ParamProc: TProc<TSkillFormDataParams>): TSkill; overload; override;
 
     /// <summary>
     /// Creates a new skill with an explicit identifier.
@@ -414,7 +586,8 @@ type
     /// • Use this overload when you need to control or predefine the skill identifier.
     /// </para>
     /// </remarks>
-    function Create(const SkillId: string): TSkill; overload; override;
+    function Create(const SkillId: string;
+      const ParamProc: TProc<TSkillFormDataParams>): TSkillVersion; overload; override;
 
     /// <summary>
     /// Deletes a skill.
@@ -474,25 +647,6 @@ type
     function List: TSkillList; overload; override;
 
     /// <summary>
-    /// Retrieves the list of versions for a specific skill.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// • This method returns a paginated list of all versions associated with the specified skill.
-    /// </para>
-    /// <para>
-    /// • Each entry in the result represents a distinct version of the skill.
-    /// </para>
-    /// <para>
-    /// • Pagination behavior follows server defaults when no additional parameters are provided.
-    /// </para>
-    /// <para>
-    /// • Use this overload when you need to enumerate versions of a particular skill.
-    /// </para>
-    /// </remarks>
-    function List(const SkillId: string): TSkillList; overload; override;
-
-    /// <summary>
     /// Retrieves the list of skills with query parameters applied.
     /// </summary>
     /// <remarks>
@@ -513,6 +667,25 @@ type
     function List(const ParamProc: TProc<TSkillListParams>): TSkillList; overload; override;
 
     /// <summary>
+    /// Retrieves the list of versions for a specific skill.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method returns a paginated list of all versions associated with the specified skill.
+    /// </para>
+    /// <para>
+    /// • Each entry in the result represents a distinct version of the skill.
+    /// </para>
+    /// <para>
+    /// • Pagination behavior follows server defaults when no additional parameters are provided.
+    /// </para>
+    /// <para>
+    /// • Use this overload when you need to enumerate versions of a particular skill.
+    /// </para>
+    /// </remarks>
+    function List(const SkillId: string): TSkillVersionList; overload; override;
+
+    /// <summary>
     /// Retrieves the list of versions for a specific skill with query parameters applied.
     /// </summary>
     /// <remarks>
@@ -531,7 +704,7 @@ type
     /// pagination settings.
     /// </para>
     /// </remarks>
-    function List(const SkillId: string; const ParamProc: TProc<TSkillListParams>): TSkillList; overload; override;
+    function List(const SkillId: string; const ParamProc: TProc<TSkillListParams>): TSkillVersionList; overload; override;
 
     /// <summary>
     /// Retrieves a skill by its identifier.
@@ -569,7 +742,7 @@ type
     /// • Use this overload when you need to retrieve a precise version of a skill.
     /// </para>
     /// </remarks>
-    function Retrieve(const SkillId: string; const Version: string): TSkill; overload; override;
+    function Retrieve(const SkillId: string; const Version: string): TSkillVersion; overload; override;
 
     /// <summary>
     /// Asynchronously creates a new skill using promise-based semantics.
@@ -591,6 +764,7 @@ type
     /// </para>
     /// </remarks>
     function AsyncAwaitCreate(
+      const ParamProc: TProc<TSkillFormDataParams>;
       const Callbacks: TFunc<TPromiseSkill> = nil): TPromise<TSkill>; overload;
 
     /// <summary>
@@ -613,7 +787,8 @@ type
     /// </remarks>
     function AsyncAwaitCreate(
       const SkillId: string;
-      const Callbacks: TFunc<TPromiseSkill> = nil): TPromise<TSkill>; overload;
+      const ParamProc: TProc<TSkillFormDataParams>;
+      const Callbacks: TFunc<TPromiseSkillVersion> = nil): TPromise<TSkillVersion>; overload;
 
     /// <summary>
     /// Asynchronously deletes a skill using promise-based semantics.
@@ -682,28 +857,6 @@ type
       const Callbacks: TFunc<TPromiseSkillList> = nil): TPromise<TSkillList>; overload;
 
     /// <summary>
-    /// Asynchronously retrieves the list of versions for a specific skill using promise-based semantics.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// • This method initiates asynchronous retrieval of all versions associated with the specified
-    /// skill and returns a promise that resolves to a <c>TSkillList</c> instance.
-    /// </para>
-    /// <para>
-    /// • Each entry in the result represents a distinct version of the skill.
-    /// </para>
-    /// <para>
-    /// • Pagination behavior follows server defaults when no additional parameters are provided.
-    /// </para>
-    /// <para>
-    /// • Use this overload when enumerating skill versions within promise-based asynchronous workflows.
-    /// </para>
-    /// </remarks>
-    function AsyncAwaitList(
-      const SkillId: string;
-      const Callbacks: TFunc<TPromiseSkillList> = nil): TPromise<TSkillList>; overload;
-
-    /// <summary>
     /// Asynchronously retrieves the list of skills with query parameters applied using promise-based semantics.
     /// </summary>
     /// <remarks>
@@ -725,6 +878,28 @@ type
     function AsyncAwaitList(
       const ParamProc: TProc<TSkillListParams>;
       const Callbacks: TFunc<TPromiseSkillList> = nil): TPromise<TSkillList>; overload;
+
+    /// <summary>
+    /// Asynchronously retrieves the list of versions for a specific skill using promise-based semantics.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This method initiates asynchronous retrieval of all versions associated with the specified
+    /// skill and returns a promise that resolves to a <c>TSkillList</c> instance.
+    /// </para>
+    /// <para>
+    /// • Each entry in the result represents a distinct version of the skill.
+    /// </para>
+    /// <para>
+    /// • Pagination behavior follows server defaults when no additional parameters are provided.
+    /// </para>
+    /// <para>
+    /// • Use this overload when enumerating skill versions within promise-based asynchronous workflows.
+    /// </para>
+    /// </remarks>
+    function AsyncAwaitList(
+      const SkillId: string;
+      const Callbacks: TFunc<TPromiseSkillVersionList> = nil): TPromise<TSkillVersionList>; overload;
 
     /// <summary>
     /// Asynchronously retrieves the list of versions for a specific skill with query parameters applied
@@ -750,7 +925,7 @@ type
     function AsyncAwaitList(
       const SkillId: string;
       const ParamProc: TProc<TSkillListParams>;
-      const Callbacks: TFunc<TPromiseSkillList> = nil): TPromise<TSkillList>; overload;
+      const Callbacks: TFunc<TPromiseSkillVersionList> = nil): TPromise<TSkillVersionList>; overload;
 
     /// <summary>
     /// Asynchronously retrieves a skill by its identifier using promise-based semantics.
@@ -797,31 +972,36 @@ type
     function AsyncAwaitRetrieve(
       const SkillId: string;
       const Version: string;
-      const Callbacks: TFunc<TPromiseSkill> = nil): TPromise<TSkill>; overload;
+      const Callbacks: TFunc<TPromiseSkillVersion> = nil): TPromise<TSkillVersion>; overload;
   end;
 
 implementation
 
+uses
+  System.IOUtils;
+
 { TSkillsRoute }
 
 function TSkillsRoute.AsyncAwaitCreate(
+  const ParamProc: TProc<TSkillFormDataParams>;
   const Callbacks: TFunc<TPromiseSkill>): TPromise<TSkill>;
 begin
   Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkill>(
     procedure(const CallbackParams: TFunc<TAsynSkill>)
     begin
-      Self.AsynCreate(CallbackParams);
+      Self.AsynCreate(ParamProc, CallbackParams);
     end,
     Callbacks);
 end;
 
 function TSkillsRoute.AsyncAwaitCreate(const SkillId: string;
-  const Callbacks: TFunc<TPromiseSkill>): TPromise<TSkill>;
+  const ParamProc: TProc<TSkillFormDataParams>;
+  const Callbacks: TFunc<TPromiseSkillVersion>): TPromise<TSkillVersion>;
 begin
-  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkill>(
-    procedure(const CallbackParams: TFunc<TAsynSkill>)
+  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillVersion>(
+    procedure(const CallbackParams: TFunc<TAsynSkillVersion>)
     begin
-      Self.AsynCreate(SkillId, CallbackParams);
+      Self.AsynCreate(SkillId, ParamProc, CallbackParams);
     end,
     Callbacks);
 end;
@@ -860,10 +1040,10 @@ begin
 end;
 
 function TSkillsRoute.AsyncAwaitList(const SkillId: string;
-  const Callbacks: TFunc<TPromiseSkillList>): TPromise<TSkillList>;
+  const Callbacks: TFunc<TPromiseSkillVersionList>): TPromise<TSkillVersionList>;
 begin
-  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillList>(
-    procedure(const CallbackParams: TFunc<TAsynSkillList>)
+  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillVersionList>(
+    procedure(const CallbackParams: TFunc<TAsynSkillVersionList>)
     begin
       Self.AsynList(SkillId, CallbackParams);
     end,
@@ -883,10 +1063,10 @@ end;
 
 function TSkillsRoute.AsyncAwaitList(const SkillId: string;
   const ParamProc: TProc<TSkillListParams>;
-  const Callbacks: TFunc<TPromiseSkillList>): TPromise<TSkillList>;
+  const Callbacks: TFunc<TPromiseSkillVersionList>): TPromise<TSkillVersionList>;
 begin
-  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillList>(
-    procedure(const CallbackParams: TFunc<TAsynSkillList>)
+  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillVersionList>(
+    procedure(const CallbackParams: TFunc<TAsynSkillVersionList>)
     begin
       Self.AsynList(SkillId, ParamProc, CallbackParams);
     end,
@@ -905,24 +1085,25 @@ begin
 end;
 
 function TSkillsRoute.AsyncAwaitRetrieve(const SkillId, Version: string;
-  const Callbacks: TFunc<TPromiseSkill>): TPromise<TSkill>;
+  const Callbacks: TFunc<TPromiseSkillVersion>): TPromise<TSkillVersion>;
 begin
-  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkill>(
-    procedure(const CallbackParams: TFunc<TAsynSkill>)
+  Result := TAsyncAwaitHelper.WrapAsyncAwait<TSkillVersion>(
+    procedure(const CallbackParams: TFunc<TAsynSkillVersion>)
     begin
       Self.AsynRetrieve(SkillId, Version, CallbackParams);
     end,
     Callbacks);
 end;
 
-function TSkillsRoute.Create: TSkill;
+function TSkillsRoute.Create(const ParamProc: TProc<TSkillFormDataParams>): TSkill;
 begin
-  Result := API.Post<TSkill>('skills');
+  Result := API.PostForm<TSkill, TSkillFormDataParams>('skills', ParamProc);
 end;
 
-function TSkillsRoute.Create(const SkillId: string): TSkill;
+function TSkillsRoute.Create(const SkillId: string;
+  const ParamProc: TProc<TSkillFormDataParams>): TSkillVersion;
 begin
-  Result := API.Post<TSkill>('skills/' + SkillId);
+  Result := API.PostForm<TSkillVersion, TSkillFormDataParams>('skills/' + SkillId + '/versions', ParamProc);
 end;
 
 function TSkillsRoute.Delete(const SkillId: string): TSkillDeleted;
@@ -940,9 +1121,9 @@ begin
   Result := API.Get<TSkillList>('skills');
 end;
 
-function TSkillsRoute.List(const SkillId: string): TSkillList;
+function TSkillsRoute.List(const SkillId: string): TSkillVersionList;
 begin
-  Result := API.Get<TSkillList>('skills/' + SkillId + '/versions');
+  Result := API.Get<TSkillVersionList>('skills/' + SkillId + '/versions');
 end;
 
 function TSkillsRoute.List(
@@ -952,14 +1133,14 @@ begin
 end;
 
 function TSkillsRoute.List(const SkillId: string;
-  const ParamProc: TProc<TSkillListParams>): TSkillList;
+  const ParamProc: TProc<TSkillListParams>): TSkillVersionList;
 begin
-  Result := API.Get<TSkillList, TSkillListParams>('skills/' + SkillId + '/versions', ParamProc);
+  Result := API.Get<TSkillVersionList, TSkillListParams>('skills/' + SkillId + '/versions', ParamProc);
 end;
 
-function TSkillsRoute.Retrieve(const SkillId, Version: string): TSkill;
+function TSkillsRoute.Retrieve(const SkillId, Version: string): TSkillVersion;
 begin
-  Result := API.Get<TSkill>('skills/' + SkillId + '/versions/' + Version);
+  Result := API.Get<TSkillVersion>('skills/' + SkillId + '/versions/' + Version);
 end;
 
 function TSkillsRoute.Retrieve(const SkillId: string): TSkill;
@@ -995,25 +1176,8 @@ end;
 
 { TAsynchronousSupport }
 
-procedure TAsynchronousSupport.AsynCreate(const CallBacks: TFunc<TAsynSkill>);
-begin
-  with TAsynCallBackExec<TAsynSkill, TSkill>.Create(CallBacks) do
-  try
-    Sender := Use.Param.Sender;
-    OnStart := Use.Param.OnStart;
-    OnSuccess := Use.Param.OnSuccess;
-    OnError := Use.Param.OnError;
-    Run(
-      function: TSkill
-      begin
-        Result := Self.Create;
-      end);
-  finally
-    Free;
-  end;
-end;
-
-procedure TAsynchronousSupport.AsynCreate(const SkillId: string;
+procedure TAsynchronousSupport.AsynCreate(
+  const ParamProc: TProc<TSkillFormDataParams>;
   const CallBacks: TFunc<TAsynSkill>);
 begin
   with TAsynCallBackExec<TAsynSkill, TSkill>.Create(CallBacks) do
@@ -1025,7 +1189,27 @@ begin
     Run(
       function: TSkill
       begin
-        Result := Self.Create(SkillId);
+        Result := Self.Create(ParamProc);
+      end);
+  finally
+    Free;
+  end;
+end;
+
+procedure TAsynchronousSupport.AsynCreate(const SkillId: string;
+  const ParamProc: TProc<TSkillFormDataParams>;
+  const CallBacks: TFunc<TAsynSkillVersion>);
+begin
+  with TAsynCallBackExec<TAsynSkillVersion, TSkillVersion>.Create(CallBacks) do
+  try
+    Sender := Use.Param.Sender;
+    OnStart := Use.Param.OnStart;
+    OnSuccess := Use.Param.OnSuccess;
+    OnError := Use.Param.OnError;
+    Run(
+      function: TSkillVersion
+      begin
+        Result := Self.Create(SkillId, ParamProc);
       end);
   finally
     Free;
@@ -1089,16 +1273,16 @@ begin
 end;
 
 procedure TAsynchronousSupport.AsynList(const SkillId: string;
-  const CallBacks: TFunc<TAsynSkillList>);
+  const CallBacks: TFunc<TAsynSkillVersionList>);
 begin
-  with TAsynCallBackExec<TAsynSkillList, TSkillList>.Create(CallBacks) do
+  with TAsynCallBackExec<TAsynSkillVersionList, TSkillVersionList>.Create(CallBacks) do
   try
     Sender := Use.Param.Sender;
     OnStart := Use.Param.OnStart;
     OnSuccess := Use.Param.OnSuccess;
     OnError := Use.Param.OnError;
     Run(
-      function: TSkillList
+      function: TSkillVersionList
       begin
         Result := Self.List(SkillId);
       end);
@@ -1129,16 +1313,16 @@ end;
 
 procedure TAsynchronousSupport.AsynList(const SkillId: string;
   const ParamProc: TProc<TSkillListParams>;
-  const CallBacks: TFunc<TAsynSkillList>);
+  const CallBacks: TFunc<TAsynSkillVersionList>);
 begin
-  with TAsynCallBackExec<TAsynSkillList, TSkillList>.Create(CallBacks) do
+  with TAsynCallBackExec<TAsynSkillVersionList, TSkillVersionList>.Create(CallBacks) do
   try
     Sender := Use.Param.Sender;
     OnStart := Use.Param.OnStart;
     OnSuccess := Use.Param.OnSuccess;
     OnError := Use.Param.OnError;
     Run(
-      function: TSkillList
+      function: TSkillVersionList
       begin
         Result := Self.List(SkillId, ParamProc);
       end);
@@ -1148,16 +1332,16 @@ begin
 end;
 
 procedure TAsynchronousSupport.AsynRetrieve(const SkillId, Version: string;
-  const CallBacks: TFunc<TAsynSkill>);
+  const CallBacks: TFunc<TAsynSkillVersion>);
 begin
-  with TAsynCallBackExec<TAsynSkill, TSkill>.Create(CallBacks) do
+  with TAsynCallBackExec<TAsynSkillVersion, TSkillVersion>.Create(CallBacks) do
   try
     Sender := Use.Param.Sender;
     OnStart := Use.Param.OnStart;
     OnSuccess := Use.Param.OnSuccess;
     OnError := Use.Param.OnError;
     Run(
-      function: TSkill
+      function: TSkillVersion
       begin
         Result := Self.Retrieve(SkillId, Version);
       end);
@@ -1183,6 +1367,42 @@ begin
   finally
     Free;
   end;
+end;
+
+{ TSkillFormDataParams }
+
+function TSkillFormDataParams.DisplayTitle(const Value: string): TSkillFormDataParams;
+begin
+  AddField('display_title', Value);
+  Result := Self;
+end;
+
+function TSkillFormDataParams.Files(const RootDir: string;
+  const Value: TArray<string>): TSkillFormDataParams;
+begin
+  TFileHelper.NormalizeRootAndFiles(RootDir, Value,
+    procedure (const AbsRoot: string; const AbsFiles: TArray<string>)
+    begin
+      AddFiles('files[]', AbsRoot, AbsFiles);
+    end);
+
+  Result := Self;
+end;
+
+function TSkillFormDataParams.Files(const Folder: string): TSkillFormDataParams;
+begin
+  var FileList := TFileHelper.FilesFromDir(Folder);
+  AddFiles('files[]', FileList, True);
+  Result := Self;
+end;
+
+{ TSkillVersionList }
+
+destructor TSkillVersionList.Destroy;
+begin
+  for var Item in FData do
+    Item.Free;
+  inherited;
 end;
 
 end.

@@ -260,57 +260,138 @@ type
     class property MetadataManager: ICustomFieldsPrepare read FMetadataManager write FMetadataManager;
 
     /// <summary>
-    /// Parses a JSON payload and maps it to a strongly typed Delphi object.
+    /// Parses a JSON payload and maps it to a strongly typed Delphi object, with optional
+    /// metadata preprocessing and JSON fingerprint propagation.
     /// </summary>
     /// <typeparam name="T">
     /// The target type to deserialize into. Must be a class type with a parameterless constructor.
     /// </typeparam>
     /// <param name="Value">
-    /// The JSON payload to parse.
+    /// The JSON payload to parse and deserialize.
+    /// </param>
+    /// <param name="Payload">
+    /// The original JSON payload associated with the request (for example, the request body).
+    /// This value is propagated to <c>JSONPayload</c> when <typeparamref name="T"/> inherits
+    /// from <c>TJSONFingerprint</c>.
     /// </param>
     /// <param name="DisabledShield">
-    /// When <c>True</c>, performs a direct JSON-to-object conversion without applying the metadata
-    /// preprocessing pipeline. When <c>False</c> (default), parsing follows the global metadata
-    /// configuration (<see cref="MetadataAsObject"/> / <see cref="MetadataManager"/>).
+    /// When <c>True</c>, bypasses the metadata preprocessing pipeline and performs a direct
+    /// JSON-to-object conversion using <c>TJson.JsonToObject&lt;T&gt;</c>.
+    /// When <c>False</c> (default), parsing behavior depends on the global metadata configuration
+    /// (<see cref="MetadataAsObject"/> / <see cref="MetadataManager"/>).
     /// </param>
     /// <returns>
     /// An instance of <typeparamref name="T"/> populated from <paramref name="Value"/>.
     /// <para>
-    /// • If <typeparamref name="T"/> inherits from <c>TJSONFingerprint</c>, the original JSON payload
-    /// is normalized (formatted) and stored in <c>JSONResponse</c>, then propagated to nested
+    /// • If <typeparamref name="T"/> inherits from <c>TJSONFingerprint</c>, the JSON payload is
+    /// normalized (formatted) and stored in <c>JSONResponse</c>, then propagated to all nested
     /// <c>TJSONFingerprint</c> instances in the object graph.
+    /// </para>
+    /// <para>
+    /// • The provided <paramref name="Payload"/> is assigned to <c>JSONPayload</c> on the root
+    /// fingerprint instance.
     /// </para>
     /// </returns>
     /// <remarks>
-    /// Parsing behavior depends on the global deserialization configuration:
     /// <para>
-    /// • If <paramref name="NullConversion"/> is <c>True</c>, this method calls <c>TJson.JsonToObject&lt;T&gt;</c>
-    /// directly on <paramref name="Value"/> (no metadata conversion).
+    /// Parsing behavior follows these rules:
     /// </para>
     /// <para>
-    /// • Otherwise, when <see cref="MetadataAsObject"/> is <c>True</c>, metadata fields are expected to
-    /// be proper JSON objects and parsing is direct.
+    /// • If <paramref name="DisabledShield"/> is <c>True</c>, metadata handling is skipped and
+    /// the JSON payload is deserialized directly.
     /// </para>
     /// <para>
-    /// • When <see cref="MetadataAsObject"/> is <c>False</c>, <see cref="MetadataManager"/> is used to
-    /// preprocess/normalize metadata fields before mapping to <typeparamref name="T"/>. If
-    /// <see cref="MetadataManager"/> is <c>nil</c> in this mode, parsing raises an invalid-response
-    /// exception.
+    /// • If <paramref name="DisabledShield"/> is <c>False</c> and <see cref="MetadataAsObject"/> is
+    /// <c>True</c>, metadata fields are expected to be valid JSON objects and are mapped directly
+    /// to Delphi types.
     /// </para>
     /// <para>
-    /// This method is a pure deserialization utility: it does not interpret HTTP status codes.
-    /// Error payload handling is performed by higher-level routines (for example
-    /// <c>Deserialize{T}</c>/<c>DeserializeErrorData</c>).
+    /// • If <paramref name="DisabledShield"/> is <c>False</c> and <see cref="MetadataAsObject"/> is
+    /// <c>False</c>, <see cref="MetadataManager"/> is used to preprocess and normalize metadata
+    /// fields before deserialization. If <see cref="MetadataManager"/> is <c>nil</c> in this mode,
+    /// deserialization fails.
+    /// </para>
+    /// <para>
+    /// JSON fingerprint propagation is RTTI-based, cycle-safe, and applies only to fields
+    /// (properties are not evaluated).
+    /// </para>
+    /// <para>
+    /// This method is a pure deserialization utility. It does not interpret HTTP status codes
+    /// and does not perform API error handling.
     /// </para>
     /// </remarks>
-    /// <exception cref="EInvalidResponse">
-    /// Raised when <see cref="MetadataAsObject"/> is <c>False</c> and <see cref="MetadataManager"/> is <c>nil</c>,
+    /// <exception cref="EAnthropicInvalidResponse">
+    /// Raised when metadata preprocessing is required but <see cref="MetadataManager"/> is <c>nil</c>,
     /// or when the JSON payload cannot be mapped to <typeparamref name="T"/> under the active mode.
+    /// </exception>
+    /// <exception cref="System.Exception">
+    /// Raised when JSON parsing, metadata conversion, or fingerprint post-processing fails.
+    /// Any partially created instance is freed before the exception is re-raised.
     /// </exception>
     class function Parse<T: class, constructor>(const Value: string;
       const Payload: string;
       DisabledShield: Boolean = False): T; overload;
 
+    /// <summary>
+    /// Parses a JSON payload and maps it to a strongly typed Delphi object, with optional
+    /// metadata preprocessing and JSON fingerprint propagation.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The target type to deserialize into. Must be a class type with a parameterless constructor.
+    /// </typeparam>
+    /// <param name="Value">
+    /// The JSON payload to parse and deserialize.
+    /// </param>
+    /// <param name="DisabledShield">
+    /// When <c>True</c>, bypasses the metadata preprocessing pipeline and performs a direct
+    /// JSON-to-object conversion using <c>TJson.JsonToObject&lt;T&gt;</c>.
+    /// When <c>False</c> (default), parsing behavior depends on the global metadata configuration
+    /// (<see cref="MetadataAsObject"/> / <see cref="MetadataManager"/>).
+    /// </param>
+    /// <returns>
+    /// An instance of <typeparamref name="T"/> populated from <paramref name="Value"/>.
+    /// <para>
+    /// • If <typeparamref name="T"/> inherits from <c>TJSONFingerprint</c>, the JSON payload is
+    /// normalized (formatted) and stored in <c>JSONResponse</c>, then propagated to all nested
+    /// <c>TJSONFingerprint</c> instances in the object graph.
+    /// </para>
+    /// <para>
+    /// • The request payload string associated with the operation is not available in this overload,
+    /// so <c>JSONPayload</c> (if present) is left empty.
+    /// </para>
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This overload is a convenience wrapper for <c>Parse&lt;T&gt;(Value, '', DisabledShield)</c>.
+    /// </para>
+    /// <para>
+    /// • If <paramref name="DisabledShield"/> is <c>True</c>, metadata handling is skipped and
+    /// the JSON payload is deserialized directly.
+    /// </para>
+    /// <para>
+    /// • If <paramref name="DisabledShield"/> is <c>False</c> and <see cref="MetadataAsObject"/> is
+    /// <c>True</c>, metadata fields are expected to be valid JSON objects and are mapped directly
+    /// to Delphi types.
+    /// </para>
+    /// <para>
+    /// • If <paramref name="DisabledShield"/> is <c>False</c> and <see cref="MetadataAsObject"/> is
+    /// <c>False</c>, <see cref="MetadataManager"/> is used to preprocess and normalize metadata
+    /// fields before deserialization. If <see cref="MetadataManager"/> is <c>nil</c> in this mode,
+    /// deserialization fails.
+    /// </para>
+    /// <para>
+    /// This method is a pure deserialization utility. It does not interpret HTTP status codes
+    /// and does not perform API error handling.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="EAnthropicInvalidResponse">
+    /// Raised when metadata preprocessing is required but <see cref="MetadataManager"/> is <c>nil</c>,
+    /// or when the JSON payload cannot be mapped to <typeparamref name="T"/> under the active mode.
+    /// </exception>
+    /// <exception cref="System.Exception">
+    /// Raised when JSON parsing, metadata conversion, or fingerprint post-processing fails.
+    /// Any partially created instance is freed before the exception is re-raised.
+    /// </exception>
     class function Parse<T: class, constructor>(const Value: string;
       DisabledShield: Boolean = False): T; overload;
   end;

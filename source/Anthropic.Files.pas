@@ -10,13 +10,13 @@ unit Anthropic.Files;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, System.Net.Mime,
+  System.SysUtils, System.Classes, System.JSON,
   REST.JsonReflect, REST.Json.Types,
-  Anthropic.API.Params, Anthropic.API, Anthropic.Types,
+  Anthropic.API.Params, Anthropic.API.MultiFormData, Anthropic.API, Anthropic.Types,
   Anthropic.Async.Support, Anthropic.Async.Promise;
 
 type
-  TUploadParams = class(TMultipartFormData)
+  TUploadParams = class(TMultiFormDataParams)
     /// <summary>
     /// Adds a file to be uploaded from a filename.
     /// </summary>
@@ -26,8 +26,6 @@ type
     /// Adds a file to be uploaded from a stream.
     /// </summary>
     function &File(const Stream: TStream; const FileName: string): TUploadParams; overload;
-
-    constructor Create; reintroduce;
   end;
 
   TUploadParamProc = TProc<TUploadParams>;
@@ -776,11 +774,6 @@ begin
   AddStream('file', Stream, FileName);
   {$ENDIF}
   Result := Self;
-end;
-
-constructor TUploadParams.Create;
-begin
-  inherited Create(True);
 end;
 
 { TFilesRoute }

@@ -92,6 +92,11 @@ type
   procedure Display(Sender: TObject; Value: TFileList); overload;
   procedure Display(Sender: TObject; Value: TFileDeleted); overload;
   procedure Display(Sender: TObject; Value: TTurnItem); overload;
+  procedure Display(Sender: TObject; Value: TSkill); overload;
+  procedure Display(Sender: TObject; Value: TSkillList); overload;
+  procedure Display(Sender: TObject; Value: TSkillDeleted); overload;
+  procedure Display(Sender: TObject; Value: TSkillVersion); overload;
+  procedure Display(Sender: TObject; Value: TSkillVersionList); overload;
 
   procedure DisplayStream(Sender: TObject; Value: string); overload;
   procedure DisplayStream(Sender: TObject; Value: TChatStream); overload;
@@ -388,6 +393,57 @@ begin
       Display(Sender, F('  • input', Item.Input));
     end;
   Display(Sender);
+end;
+
+procedure Display(Sender: TObject; Value: TSkill);
+begin
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id);
+  Display(Sender, F('  • created_at', Value.CreatedAt));
+  Display(Sender, F('  • display_title', Value.DisplayTitle));
+  Display(Sender, F('  • LatestVersion', Value.LatestVersion));
+  Display(Sender, F('  • source', Value.Source));
+  Display(Sender, F('  • type', Value.&Type));
+//  Display(Sender, F('  • updated_at', Value.UpdatedAt));
+
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSkillList);
+begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+end;
+
+procedure Display(Sender: TObject; Value: TSkillDeleted);
+begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(TutorialHub, Value.Id + ' skill deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TSkillVersion); overload;
+begin
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id);
+  Display(Sender, F('  • created_at', Value.CreatedAt));
+  Display(Sender, F('  • description', Value.Description.Trim));
+  Display(Sender, F('  • directory', Value.Directory));
+  Display(Sender, F('  • name', Value.Name));
+  Display(Sender, F('  • skill_id', Value.SkillId));
+  Display(Sender, F('  • type', Value.&Type));
+  Display(Sender, F('  • version', Value.Version));
+
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSkillVersionList);
+begin
+  TutorialHub.JSONResponse := Value.JSONResponse;
+  for var Item in Value.Data do
+    Display(Sender, Item);
 end;
 
 procedure DisplayStream(Sender: TObject; Value: string);

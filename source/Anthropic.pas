@@ -11,12 +11,14 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Net.URLClient,
-  Anthropic.API, Anthropic.API.Params, Anthropic.HttpClientInterface, Anthropic.Chat,
+  Anthropic.API, Anthropic.API.Params, Anthropic.API.MultiFormData,
+  Anthropic.HttpClientInterface, Anthropic.Chat,
   Anthropic.Batches, Anthropic.Models, Anthropic.Batches.Support, Anthropic.Functions.Core,
   Anthropic.Schema, Anthropic.Chat.Responses, Anthropic.Chat.Request, Anthropic.Chat.StreamEvents,
   Anthropic.Monitoring, Anthropic.Net.MediaCodec, Anthropic.Chat.StreamEngine,
   Anthropic.Chat.StreamCallbacks, Anthropic.Chat.Beta, Anthropic.API.JsonSafeReader,
-  Anthropic.Files, Anthropic.Skills, Anthropic.JSONL, Anthropic.Context.Helper;
+  Anthropic.Files, Anthropic.Skills, Anthropic.JSONL, Anthropic.Context.Helper,
+  Anthropic.Files.Helper;
 
 const
   VERSION = '1.2.0';
@@ -493,6 +495,17 @@ type
   TOptionalContent = Anthropic.API.Params.TOptionalContent;
   TJSONParam = Anthropic.API.Params.TJSONParam;
 
+{$ENDREGION}
+
+{$REGION 'Anthropic.Files.Helper'}
+
+  TFileHelper = Anthropic.Files.Helper.TFileHelper;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.API.MultiFormData'}
+
+  TMultiFormDataParams = Anthropic.API.MultiFormData.TMultiFormDataParams;
 
 {$ENDREGION}
 
@@ -787,7 +800,12 @@ type
 
 {$REGION 'Anthropic.Skills'}
 
+  TSkillFormDataParams = Anthropic.Skills.TSkillFormDataParams;
+  TSkillFormDataParamProc = Anthropic.Skills.TSkillFormDataParamProc;
+
   TSkillListParams = Anthropic.Skills.TSkillListParams;
+  TSkillListParamProc = Anthropic.Skills.TSkillListParamProc;
+
   TSkill = Anthropic.Skills.TSkill;
   TSkillList = Anthropic.Skills.TSkillList;
   TSkillDeleted = Anthropic.Skills.TSkillDeleted;
@@ -798,6 +816,14 @@ type
   TPromiseSkillList = Anthropic.Skills.TPromiseSkillList;
   TAsynSkillDeleted = Anthropic.Skills.TAsynSkillDeleted;
   TPromiseSkillDeleted = Anthropic.Skills.TPromiseSkillDeleted;
+
+  TSkillVersion = Anthropic.Skills.TSkillVersion;
+  TAsynSkillVersion = Anthropic.Skills.TAsynSkillVersion;
+  TPromiseSkillVersion = Anthropic.Skills.TPromiseSkillVersion;
+
+  TSkillVersionList = Anthropic.Skills.TSkillVersionList;
+  TAsynSkillVersionList = Anthropic.Skills.TAsynSkillVersionList;
+  TPromiseSkillVersionList = Anthropic.Skills.TPromiseSkillVersionList;
 
 {$ENDREGION}
 

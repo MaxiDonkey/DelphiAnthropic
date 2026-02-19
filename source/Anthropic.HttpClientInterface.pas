@@ -39,7 +39,7 @@ type
   end;
 
   /// <summary>
-  /// Abstraction of the HTTP client used by Gemini.API
+  /// Abstraction of the HTTP client used by Anthropic.API
   /// </summary>
   IHttpClientAPI = interface(IHttpClientParam)
     ['{7AA66FD7-FB96-4E63-946F-383666C00F38}']

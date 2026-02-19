@@ -78,6 +78,7 @@ type
   procedure Display(Sender: TObject); overload;
   procedure Display(Sender: TObject; Value: string); overload;
   procedure Display(Sender: TObject; Value: TArray<string>); overload;
+
   procedure Display(Sender: TObject; Value: TChat); overload;
   procedure Display(Sender: TObject; Value: TModel); overload;
   procedure Display(Sender: TObject; Value: TModels); overload;
@@ -97,6 +98,9 @@ type
   procedure Display(Sender: TObject; Value: TSkillDeleted); overload;
   procedure Display(Sender: TObject; Value: TSkillVersion); overload;
   procedure Display(Sender: TObject; Value: TSkillVersionList); overload;
+
+  function DisplayChat(Sender: TObject; Value: TChat): string; overload;
+  function DisplayChat(Sender: TObject; Value: string): string; overload;
 
   procedure DisplayStream(Sender: TObject; Value: string); overload;
   procedure DisplayStream(Sender: TObject; Value: TChatStream); overload;
@@ -350,7 +354,7 @@ end;
 procedure Display(Sender: TObject; Value: TTokenCount);
 begin
   TutorialHub.JSONResponse := Value.JSONResponse;
-  Display(Sender, F('Input_tokens', Value.InputTokens.ToString));
+  Display(Sender, F('• Input_tokens', Value.InputTokens.ToString));
 end;
 
 procedure Display(Sender: TObject; Value: TFile);
@@ -444,6 +448,16 @@ begin
   TutorialHub.JSONResponse := Value.JSONResponse;
   for var Item in Value.Data do
     Display(Sender, Item);
+end;
+
+function DisplayChat(Sender: TObject; Value: TChat): string;
+begin
+  Display(Sender, Value);
+end;
+
+function DisplayChat(Sender: TObject; Value: string): string;
+begin
+  Display(Sender, Value);
 end;
 
 procedure DisplayStream(Sender: TObject; Value: string);
@@ -611,7 +625,7 @@ begin
   Memo4 := AMemo4;
   Button := AButton;
 
-  ToolCall := WeatherReporter;
+//  ToolCall := WeatherReporter;
 end;
 
 procedure TFMXTutorialHub.HideCancel;

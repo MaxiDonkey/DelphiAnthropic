@@ -140,7 +140,7 @@ type
     /// <param name="ResponseText">
     /// The response body containing error details.
     /// </param>
-    /// <exception cref="GeminiExceptionAPI">
+    /// <exception cref="EAnthropicExceptionAPI">
     /// Raised if the error response cannot be parsed or contains invalid data.
     /// </exception>
     procedure DeserializeErrorData(const Code: Int64; const ResponseText: string); virtual;
@@ -189,7 +189,7 @@ type
     /// </para>
     /// <para>
     /// • Error path: for any non-2xx code, this method delegates to <c>DeserializeErrorData</c>,
-    /// which attempts to parse the API error payload and raises an appropriate <c>GeminiException</c>
+    /// which attempts to parse the API error payload and raises an appropriate <c>EAnthropicException</c>
     /// subtype. This method does not return normally in that case.
     /// </para>
     /// <para>
@@ -197,10 +197,10 @@ type
     /// interprets the HTTP status code and JSON payload already obtained by the caller.
     /// </para>
     /// </remarks>
-    /// <exception cref="GeminiException">
+    /// <exception cref="EAnthropicException">
     /// Raised when the server returns a structured error payload that can be parsed and mapped to a known error type.
     /// </exception>
-    /// <exception cref="EGeminiExceptionAPI">
+    /// <exception cref="EAnthropicExceptionAPI">
     /// Raised when the server returns an error payload that is not parseable as a structured error object.
     /// </exception>
     /// <exception cref="EInvalidResponse">

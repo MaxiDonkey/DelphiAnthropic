@@ -1,5 +1,12 @@
 unit Anthropic.Context.Helper;
 
+{-------------------------------------------------------------------------------
+
+      Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
+      Visit the Github repository for the documentation and use examples
+
+ ------------------------------------------------------------------------------}
+
 interface
 
 uses

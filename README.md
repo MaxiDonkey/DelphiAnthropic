@@ -167,7 +167,7 @@ These distinctions are applied consistently at the API level and in the document
 >- each code block corresponds directly to a section of the guides
 >- the priority is **documentation → code correspondence**, not reuse or abstraction
 > <br>
->This trade-off favors `readability and traceability` over architectural refinement.
+>This trade-off favors "readability and traceability" over architectural refinement.
 
 <br>
 

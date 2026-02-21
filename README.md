@@ -216,6 +216,7 @@ Advanced or cross-cutting topics are documented separately to keep the core read
 - [Citations](guides/citations.md#citations)
 - [Models API](guides/models.md#models)
 - [Files API](guides/files-api.md#files-api) (CRUD)
+- [Tips and Tricks](guides/tips-and-tricks.md#tips-and-tricks)
 
 Each topic has its own Markdown document, directly linked from the guides.
 

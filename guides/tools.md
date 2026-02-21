@@ -256,8 +256,6 @@ Search execution and source attribution are handled natively, ensuring traceabil
   var MaxTokens := 1024;
   var Prompt := 'What is the weather in NYC?';
 
-  StartRun(Prompt);
-
   //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
@@ -274,7 +272,6 @@ Search execution and source attribution are handled natively, ensuring traceabil
                   .MaxUses(5)
               )
           );
-      TutorialHub.JSONRequest := Params.ToFormat();
     end;
 
   // Asynchronous creation (promise-based)

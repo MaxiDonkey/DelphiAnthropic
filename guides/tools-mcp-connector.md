@@ -69,8 +69,6 @@ Request flow:
   var McpName := 'weather_service';
   var McpToken := '';
 
-  StartRun(Prompt);
-
   //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
@@ -96,8 +94,6 @@ Request flow:
                   .McpServerName( McpName )
               )
           );
-
-      TutorialHub.JSONRequest := Params.ToFormat();
     end;
 
   // Asynchronous example

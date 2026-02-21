@@ -154,8 +154,6 @@ The result is traceable responses with minimal token overhead, even in iterative
 
     var DataTextPlain := 'This is a very long document with thousands of words...';
 
-    StarPayload(Prompt);
-
     //JSON payload creation
     var Payload: TChatParamProc :=
       procedure (Params: TChatParams)

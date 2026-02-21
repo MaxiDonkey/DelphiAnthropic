@@ -84,8 +84,6 @@ This option is enabled by explicitly setting `ttl` within `cache_control`.
   var SystemPrompt2 := '<the entire contents of Pride and Prejudice>';
   var Prompt := 'Analyze the major themes in Pride and Prejudice.';
 
-  StarPayload(Prompt);
-
   //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)

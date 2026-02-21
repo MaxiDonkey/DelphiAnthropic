@@ -85,8 +85,6 @@ If screenshots are resized for vision constraints, you must map coordinates from
   var MaxTokens := 1024;
   var Prompt := 'Save a picture of a cat to my desktop.';
 
-  StartRun(Prompt);
-
   //JSON payload creation
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
@@ -108,8 +106,6 @@ If screenshots are resized for vision constraints, you must map coordinates from
           .Messages( MessageParts
               .User( Prompt)
           );
-
-      TutorialHub.JSONRequest := Params.ToFormat();
     end;
 
   // Asynchronous example

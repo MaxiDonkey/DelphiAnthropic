@@ -161,7 +161,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
 - Set parameters
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'What is the weather and time in New York?';
 
@@ -238,7 +238,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 - JSON Payload generated
   ```json
   {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "max_tokens": 1024,
         "tools": [
             {
@@ -306,7 +306,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
     var Base64 := TMediaCodec.EncodeBase64(Document);
     var MimeType := TMediaCodec.GetMimeType(Document);
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'What is in the above image?';
   ```
@@ -340,7 +340,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
   ```json
       {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "messages": [
             {
                 "role": "user",
@@ -378,7 +378,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
     var Document := '..\media\File_Search_file.pdf'; // The document size must be at least 4096 to be cached.
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'How can the work documented in the PDF be relevant?';
   ```
@@ -413,7 +413,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
   ```json
   {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "messages": [
             {
                 "role": "user",
@@ -447,7 +447,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 
 - Set parameters
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var SystemPrompt := '...long system prompt';
   ```
@@ -493,7 +493,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 - JSON Payload generated
   ```json
   {
-          "model": "claude-opus-4-6",
+          "model": "claude-opus-4-7",
           "max_tokens": 1024,
           "system": [
               {
@@ -541,7 +541,7 @@ See [official documentation](https://platform.claude.com/docs/en/build-with-clau
 - Set parameters
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
       var MaxTokens := 1024;
       var Prompt := 'What is the weather and time in New York?';
 
@@ -665,7 +665,7 @@ This pattern is particularly well suited for RAG applications with large documen
 
   ```json
     {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "max_tokens": 1024,
         "tools": [
             {

@@ -94,7 +94,7 @@ It represents a **shift in mental model**:
 - Expected JSON payload
   ```json
   {
-        "model": "claude-opus-4-6",
+        "model": "claude-opus-4-7",
         "max_tokens": 2048,
         "messages": [
             {
@@ -146,7 +146,7 @@ It represents a **shift in mental model**:
 - Delphi approach
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 2048;
     var Prompt := 'What is the weather in San Francisco?';
 
@@ -187,7 +187,6 @@ It represents a **shift in mental model**:
       begin
         with Generation do
           Params
-            .Beta(['advanced-tool-use-2025-11-20'])
             .Model(ModelName)
             .MaxTokens(MaxTokens)
             .Messages( MessageParts

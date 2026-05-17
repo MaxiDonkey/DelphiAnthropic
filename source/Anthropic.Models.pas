@@ -27,11 +27,8 @@ type
     /// The current instance of <c>TListModelsParams</c> with the specified limit.
     /// </returns>
     /// <exception cref="Exception">
-    /// Thrown if the value is less than 1 or greater than 100.
+    /// Thrown if the value is less than 1 or greater than 1000.
     /// </exception>
-    /// <remarks>
-    /// The default value of limit set to 20.
-    /// </remarks>
     function Limit(const Value: Integer): TListModelsParams;
 
     /// <summary>
@@ -59,14 +56,227 @@ type
 
   TListModelsParamProc = TProc<TListModelsParams>;
 
+  /// <summary>
+  /// Represents a simple capability support flag returned by the Models API.
+  /// </summary>
+  TModelCapabilitySupport = class(TJSONFingerprint)
+  private
+    FSupported: Boolean;
+  public
+    /// <summary>
+    /// Indicates whether this capability is supported by the model.
+    /// </summary>
+    property Supported: Boolean read FSupported write FSupported;
+  end;
+
+  /// <summary>
+  /// Represents supported thinking type configurations for a model.
+  /// </summary>
+  TModelThinkingTypes = class(TJSONFingerprint)
+  private
+    FAdaptive: TModelCapabilitySupport;
+    FEnabled: TModelCapabilitySupport;
+  public
+    /// <summary>
+    /// Indicates whether thinking with type <c>adaptive</c> is supported.
+    /// </summary>
+    property Adaptive: TModelCapabilitySupport read FAdaptive write FAdaptive;
+
+    /// <summary>
+    /// Indicates whether thinking with type <c>enabled</c> is supported.
+    /// </summary>
+    property Enabled: TModelCapabilitySupport read FEnabled write FEnabled;
+
+    destructor Destroy; override;
+  end;
+
+  /// <summary>
+  /// Represents thinking capability support and its available type configurations.
+  /// </summary>
+  TModelThinkingCapability = class(TJSONFingerprint)
+  private
+    FSupported: Boolean;
+    FTypes: TModelThinkingTypes;
+  public
+    /// <summary>
+    /// Indicates whether thinking is supported by the model.
+    /// </summary>
+    property Supported: Boolean read FSupported write FSupported;
+
+    /// <summary>
+    /// Supported thinking type configurations.
+    /// </summary>
+    property Types: TModelThinkingTypes read FTypes write FTypes;
+
+    destructor Destroy; override;
+  end;
+
+  /// <summary>
+  /// Represents reasoning effort support and the available effort levels.
+  /// </summary>
+  TModelEffortCapability = class(TJSONFingerprint)
+  private
+    FSupported: Boolean;
+    FLow: TModelCapabilitySupport;
+    FMedium: TModelCapabilitySupport;
+    FHigh: TModelCapabilitySupport;
+    FMax: TModelCapabilitySupport;
+    [JsonNameAttribute('xhigh')]
+    FXHigh: TModelCapabilitySupport;
+  public
+    /// <summary>
+    /// Indicates whether reasoning effort is supported by the model.
+    /// </summary>
+    property Supported: Boolean read FSupported write FSupported;
+
+    /// <summary>
+    /// Indicates whether the low effort level is supported.
+    /// </summary>
+    property Low: TModelCapabilitySupport read FLow write FLow;
+
+    /// <summary>
+    /// Indicates whether the medium effort level is supported.
+    /// </summary>
+    property Medium: TModelCapabilitySupport read FMedium write FMedium;
+
+    /// <summary>
+    /// Indicates whether the high effort level is supported.
+    /// </summary>
+    property High: TModelCapabilitySupport read FHigh write FHigh;
+
+    /// <summary>
+    /// Indicates whether the max effort level is supported.
+    /// </summary>
+    property Max: TModelCapabilitySupport read FMax write FMax;
+
+    /// <summary>
+    /// Indicates whether the xhigh effort level is supported.
+    /// </summary>
+    property XHigh: TModelCapabilitySupport read FXHigh write FXHigh;
+
+    destructor Destroy; override;
+  end;
+
+  /// <summary>
+  /// Represents context management support and the available context management strategies.
+  /// </summary>
+  TModelContextManagementCapability = class(TJSONFingerprint)
+  private
+    FSupported: Boolean;
+    [JsonNameAttribute('clear_thinking_20251015')]
+    FClearThinking20251015: TModelCapabilitySupport;
+    [JsonNameAttribute('clear_tool_uses_20250919')]
+    FClearToolUses20250919: TModelCapabilitySupport;
+    [JsonNameAttribute('compact_20260112')]
+    FCompact20260112: TModelCapabilitySupport;
+  public
+    /// <summary>
+    /// Indicates whether context management is supported by the model.
+    /// </summary>
+    property Supported: Boolean read FSupported write FSupported;
+
+    /// <summary>
+    /// Indicates whether the <c>clear_thinking_20251015</c> strategy is supported.
+    /// </summary>
+    property ClearThinking20251015: TModelCapabilitySupport read FClearThinking20251015 write FClearThinking20251015;
+
+    /// <summary>
+    /// Indicates whether the <c>clear_tool_uses_20250919</c> strategy is supported.
+    /// </summary>
+    property ClearToolUses20250919: TModelCapabilitySupport read FClearToolUses20250919 write FClearToolUses20250919;
+
+    /// <summary>
+    /// Indicates whether the <c>compact_20260112</c> strategy is supported.
+    /// </summary>
+    property Compact20260112: TModelCapabilitySupport read FCompact20260112 write FCompact20260112;
+
+    destructor Destroy; override;
+  end;
+
+  /// <summary>
+  /// Represents the complete model capability information returned by the Models API.
+  /// </summary>
+  TModelCapabilities = class(TJSONFingerprint)
+  private
+    FBatch: TModelCapabilitySupport;
+    FCitations: TModelCapabilitySupport;
+    [JsonNameAttribute('code_execution')]
+    FCodeExecution: TModelCapabilitySupport;
+    [JsonNameAttribute('context_management')]
+    FContextManagement: TModelContextManagementCapability;
+    FEffort: TModelEffortCapability;
+    [JsonNameAttribute('image_input')]
+    FImageInput: TModelCapabilitySupport;
+    [JsonNameAttribute('pdf_input')]
+    FPdfInput: TModelCapabilitySupport;
+    [JsonNameAttribute('structured_outputs')]
+    FStructuredOutputs: TModelCapabilitySupport;
+    FThinking: TModelThinkingCapability;
+  public
+    /// <summary>
+    /// Whether the model supports the Batch API.
+    /// </summary>
+    property Batch: TModelCapabilitySupport read FBatch write FBatch;
+
+    /// <summary>
+    /// Whether the model supports citation generation.
+    /// </summary>
+    property Citations: TModelCapabilitySupport read FCitations write FCitations;
+
+    /// <summary>
+    /// Whether the model supports code execution tools.
+    /// </summary>
+    property CodeExecution: TModelCapabilitySupport read FCodeExecution write FCodeExecution;
+
+    /// <summary>
+    /// Context management support and available strategies.
+    /// </summary>
+    property ContextManagement: TModelContextManagementCapability read FContextManagement write FContextManagement;
+
+    /// <summary>
+    /// Effort support and available reasoning effort levels.
+    /// </summary>
+    property Effort: TModelEffortCapability read FEffort write FEffort;
+
+    /// <summary>
+    /// Whether the model accepts image content blocks.
+    /// </summary>
+    property ImageInput: TModelCapabilitySupport read FImageInput write FImageInput;
+
+    /// <summary>
+    /// Whether the model accepts PDF content blocks.
+    /// </summary>
+    property PdfInput: TModelCapabilitySupport read FPdfInput write FPdfInput;
+
+    /// <summary>
+    /// Whether the model supports structured output, JSON mode, or strict tool schemas.
+    /// </summary>
+    property StructuredOutputs: TModelCapabilitySupport read FStructuredOutputs write FStructuredOutputs;
+
+    /// <summary>
+    /// Thinking capability and supported type configurations.
+    /// </summary>
+    property Thinking: TModelThinkingCapability read FThinking write FThinking;
+
+    destructor Destroy; override;
+  end;
+
+  /// <summary>
+  /// Represents a model descriptor returned by the Models API.
+  /// </summary>
   TModel = class(TJSONFingerprint)
   private
     FType: string;
     FId: string;
-    [JsonNameAttribute('display_name')]
-    FDisplayName: string;
+    FCapabilities: TModelCapabilities;
     [JsonNameAttribute('created_at')]
     FCreatedAt: string;
+    [JsonNameAttribute('display_name')]
+    FDisplayName: string;
+    [JsonNameAttribute('max_input_tokens')]
+    FMaxInputTokens: Int64;
+    [JsonNameAttribute('max_tokens')]
+    FMaxTokens: Int64;
   public
     /// <summary>
     /// For Models, this is always "model".
@@ -79,15 +289,32 @@ type
     property Id: string read FId write FId;
 
     /// <summary>
-    /// A human-readable name for the model.
+    /// Model capability information.
     /// </summary>
-    property DisplayName: string read FDisplayName write FDisplayName;
+    property Capabilities: TModelCapabilities read FCapabilities write FCapabilities;
 
     /// <summary>
     /// RFC 3339 datetime string representing the time at which the model was released.
     /// May be set to an epoch value if the release date is unknown.
     /// </summary>
     property CreatedAt: string read FCreatedAt write FCreatedAt;
+
+    /// <summary>
+    /// A human-readable name for the model.
+    /// </summary>
+    property DisplayName: string read FDisplayName write FDisplayName;
+
+    /// <summary>
+    /// Maximum input context window size in tokens for this model.
+    /// </summary>
+    property MaxInputTokens: Int64 read FMaxInputTokens write FMaxInputTokens;
+
+    /// <summary>
+    /// Maximum value for the <c>max_tokens</c> parameter when using this model.
+    /// </summary>
+    property MaxTokens: Int64 read FMaxTokens write FMaxTokens;
+
+    destructor Destroy; override;
   end;
 
   /// <summary>
@@ -146,19 +373,19 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TAsynModel</c> is a type alias for <c>TAsynCallBack&lt;TModel&gt;</c>, specialized for handling
+  /// <c>TAsynModel</c> is a type alias for <c>TAsynCallBack&lt;TModel&gt;</c>, specialized for handling
   /// model metadata returned by the Models endpoints.
   /// </para>
   /// <para>
-  /// • It binds the generic asynchronous callback infrastructure to the Models domain by fixing the
+  /// It binds the generic asynchronous callback infrastructure to the Models domain by fixing the
   /// callback payload type to <c>TModel</c>.
   /// </para>
   /// <para>
-  /// • This alias improves readability and intent expression in public APIs while preserving the
+  /// This alias improves readability and intent expression in public APIs while preserving the
   /// complete behavior and lifecycle semantics of <c>TAsynCallBack&lt;TModel&gt;</c>.
   /// </para>
   /// <para>
-  /// • Use <c>TAsynModel</c> when registering callbacks that retrieve a specific model by ID or alias
+  /// Use <c>TAsynModel</c> when registering callbacks that retrieve a specific model by ID or alias
   /// without blocking the calling thread.
   /// </para>
   /// </remarks>
@@ -169,19 +396,19 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TPromiseModel</c> is a type alias for <c>TPromiseCallback&lt;TModel&gt;</c>, specialized for
+  /// <c>TPromiseModel</c> is a type alias for <c>TPromiseCallback&lt;TModel&gt;</c>, specialized for
   /// consuming model metadata returned by the Models endpoints.
   /// </para>
   /// <para>
-  /// • It binds the generic promise-based callback infrastructure to the Models domain by fixing the
+  /// It binds the generic promise-based callback infrastructure to the Models domain by fixing the
   /// callback payload type to <c>TModel</c>.
   /// </para>
   /// <para>
-  /// • This alias improves API clarity by explicitly expressing promise-oriented consumption semantics
+  /// This alias improves API clarity by explicitly expressing promise-oriented consumption semantics
   /// while preserving the complete behavior of <c>TPromiseCallback&lt;TModel&gt;</c>.
   /// </para>
   /// <para>
-  /// • Use <c>TPromiseModel</c> when retrieving a specific model through promise-based abstractions
+  /// Use <c>TPromiseModel</c> when retrieving a specific model through promise-based abstractions
   /// instead of direct callbacks.
   /// </para>
   /// </remarks>
@@ -192,19 +419,19 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TAsynModels</c> is a type alias for <c>TAsynCallBack&lt;TModels&gt;</c>, specialized for handling
+  /// <c>TAsynModels</c> is a type alias for <c>TAsynCallBack&lt;TModels&gt;</c>, specialized for handling
   /// paginated collections of models returned by the Models listing endpoint.
   /// </para>
   /// <para>
-  /// • It binds the generic asynchronous callback infrastructure to the Models domain by fixing the
+  /// It binds the generic asynchronous callback infrastructure to the Models domain by fixing the
   /// callback payload type to <c>TModels</c>.
   /// </para>
   /// <para>
-  /// • This alias improves readability and intent expression in public APIs while preserving the
+  /// This alias improves readability and intent expression in public APIs while preserving the
   /// complete behavior and lifecycle semantics of <c>TAsynCallBack&lt;TModels&gt;</c>.
   /// </para>
   /// <para>
-  /// • Use <c>TAsynModels</c> when registering callbacks that list available models without blocking
+  /// Use <c>TAsynModels</c> when registering callbacks that list available models without blocking
   /// the calling thread.
   /// </para>
   /// </remarks>
@@ -215,19 +442,19 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TPromiseModels</c> is a type alias for <c>TPromiseCallback&lt;TModels&gt;</c>, specialized for
+  /// <c>TPromiseModels</c> is a type alias for <c>TPromiseCallback&lt;TModels&gt;</c>, specialized for
   /// consuming paginated collections of models returned by the Models listing endpoint.
   /// </para>
   /// <para>
-  /// • It binds the generic promise-based callback infrastructure to the Models domain by fixing the
+  /// It binds the generic promise-based callback infrastructure to the Models domain by fixing the
   /// callback payload type to <c>TModels</c>.
   /// </para>
   /// <para>
-  /// • This alias improves API clarity by explicitly expressing promise-oriented consumption semantics
+  /// This alias improves API clarity by explicitly expressing promise-oriented consumption semantics
   /// while preserving the complete behavior of <c>TPromiseCallback&lt;TModels&gt;</c>.
   /// </para>
   /// <para>
-  /// • Use <c>TPromiseModels</c> when listing available models through promise-based abstractions
+  /// Use <c>TPromiseModels</c> when listing available models through promise-based abstractions
   /// instead of direct callbacks.
   /// </para>
   /// </remarks>
@@ -237,7 +464,7 @@ type
   protected
     function List: TModels; overload; virtual; abstract;
 
-    function List(const ParamProc: TProc<TListModelsParams>): TModels; overload; virtual; abstract;
+    function List(const ParamProc: TListModelsParamProc): TModels; overload; virtual; abstract;
 
     function Retrieve(const ModelId: string): TModel; virtual; abstract;
   end;
@@ -246,7 +473,7 @@ type
   protected
     procedure AsynList(CallBacks: TFunc<TAsynModels>); overload;
 
-    procedure AsynList(ParamProc: TProc<TListModelsParams>; CallBacks: TFunc<TAsynModels>); overload;
+    procedure AsynList(ParamProc: TListModelsParamProc; CallBacks: TFunc<TAsynModels>); overload;
 
     procedure AsynRetrieve(const ModelId: string; CallBacks: TFunc<TAsynModel>);
   end;
@@ -257,19 +484,19 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method performs a blocking request to the Models listing endpoint and returns a
+    /// This method performs a blocking request to the Models listing endpoint and returns a
     /// <c>TModels</c> collection containing the available models.
     /// </para>
     /// <para>
-    /// • Models are returned in reverse chronological order, with the most recently released models
+    /// Models are returned in reverse chronological order, with the most recently released models
     /// listed first.
     /// </para>
     /// <para>
-    /// • The returned object includes both the model data and pagination metadata, such as
+    /// The returned object includes both the model data and pagination metadata, such as
     /// <c>HasMore</c>, <c>FirstId</c>, and <c>LastId</c>.
     /// </para>
     /// <para>
-    /// • For paginated access or non-blocking usage, prefer the overloaded <c>List</c> method with
+    /// For paginated access or non-blocking usage, prefer the overloaded <c>List</c> method with
     /// parameters, <c>AsynList</c>, or <c>AsyncAwaitList</c>.
     /// </para>
     /// </remarks>
@@ -280,41 +507,41 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method performs a blocking request to the Models listing endpoint and returns a
+    /// This method performs a blocking request to the Models listing endpoint and returns a
     /// <c>TModels</c> collection filtered and paginated according to the provided parameters.
     /// </para>
     /// <para>
-    /// • The <c>ParamProc</c> callback is used to configure pagination options such as <c>limit</c>,
+    /// The <c>ParamProc</c> callback is used to configure pagination options such as <c>limit</c>,
     /// <c>after_id</c>, and <c>before_id</c>.
     /// </para>
     /// <para>
-    /// • The returned object includes both the model data and pagination metadata, enabling cursor-
+    /// The returned object includes both the model data and pagination metadata, enabling cursor-
     /// based navigation through result pages.
     /// </para>
     /// <para>
-    /// • For non-blocking usage, prefer <c>AsynList</c> or <c>AsyncAwaitList</c>.
+    /// For non-blocking usage, prefer <c>AsynList</c> or <c>AsyncAwaitList</c>.
     /// </para>
     /// </remarks>
-    function List(const ParamProc: TProc<TListModelsParams>): TModels; overload; override;
+    function List(const ParamProc: TListModelsParamProc): TModels; overload; override;
 
     /// <summary>
     /// Retrieves metadata for a specific model.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method performs a blocking request to the Models retrieval endpoint and returns a
+    /// This method performs a blocking request to the Models retrieval endpoint and returns a
     /// <c>TModel</c> instance describing the specified model.
     /// </para>
     /// <para>
-    /// • The <c>ModelId</c> parameter may be a concrete model identifier or a model alias, which will
+    /// The <c>ModelId</c> parameter may be a concrete model identifier or a model alias, which will
     /// be resolved to the corresponding model ID by the API.
     /// </para>
     /// <para>
-    /// • On success, the returned object contains the model identifier, display name, release time,
-    /// and type metadata as provided by the API.
+    /// On success, the returned object contains the model identifier, display name, release time,
+    /// token limits, capabilities, and type metadata as provided by the API.
     /// </para>
     /// <para>
-    /// • For non-blocking usage, prefer <c>AsynRetrieve</c> or <c>AsyncAwaitRetrieve</c>.
+    /// For non-blocking usage, prefer <c>AsynRetrieve</c> or <c>AsyncAwaitRetrieve</c>.
     /// </para>
     /// </remarks>
     function Retrieve(const ModelId: string): TModel; override;
@@ -324,15 +551,15 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method wraps the asynchronous model listing workflow into a
+    /// This method wraps the asynchronous model listing workflow into a
     /// <c>TPromise&lt;TModels&gt;</c>, enabling async/await-style consumption.
     /// </para>
     /// <para>
-    /// • The optional <c>Callbacks</c> factory allows observation of lifecycle events such as start,
+    /// The optional <c>Callbacks</c> factory allows observation of lifecycle events such as start,
     /// success, error, and cancellation while still returning a promise.
     /// </para>
     /// <para>
-    /// • The returned promise resolves with a <c>TModels</c> collection containing the available
+    /// The returned promise resolves with a <c>TModels</c> collection containing the available
     /// models and pagination metadata.
     /// </para>
     /// </remarks>
@@ -344,24 +571,24 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method wraps the asynchronous model listing workflow into a
+    /// This method wraps the asynchronous model listing workflow into a
     /// <c>TPromise&lt;TModels&gt;</c>, enabling async/await-style consumption with pagination support.
     /// </para>
     /// <para>
-    /// • The <c>ParamProc</c> callback is used to configure pagination options such as <c>limit</c>,
+    /// The <c>ParamProc</c> callback is used to configure pagination options such as <c>limit</c>,
     /// <c>after_id</c>, and <c>before_id</c>.
     /// </para>
     /// <para>
-    /// • The optional <c>Callbacks</c> factory allows observation of lifecycle events while the
+    /// The optional <c>Callbacks</c> factory allows observation of lifecycle events while the
     /// paginated model collection is returned through the promise result.
     /// </para>
     /// <para>
-    /// • The returned promise resolves with a <c>TModels</c> collection filtered according to the
+    /// The returned promise resolves with a <c>TModels</c> collection filtered according to the
     /// provided parameters or is rejected if an error or cancellation occurs.
     /// </para>
     /// </remarks>
     function AsyncAwaitList(
-      const ParamProc: TProc<TListModelsParams>;
+      const ParamProc: TListModelsParamProc;
       const Callbacks: TFunc<TPromiseModels> = nil): TPromise<TModels>; overload;
 
     /// <summary>
@@ -369,19 +596,19 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This method wraps the asynchronous model retrieval workflow into a
+    /// This method wraps the asynchronous model retrieval workflow into a
     /// <c>TPromise&lt;TModel&gt;</c>, enabling async/await-style consumption.
     /// </para>
     /// <para>
-    /// • The <c>ModelId</c> parameter may be a concrete model identifier or a model alias, which will
+    /// The <c>ModelId</c> parameter may be a concrete model identifier or a model alias, which will
     /// be resolved to the corresponding model ID by the API.
     /// </para>
     /// <para>
-    /// • The optional <c>Callbacks</c> factory allows observation of lifecycle events such as start,
+    /// The optional <c>Callbacks</c> factory allows observation of lifecycle events such as start,
     /// success, error, and cancellation while still returning a promise.
     /// </para>
     /// <para>
-    /// • The returned promise resolves with a <c>TModel</c> instance describing the requested model
+    /// The returned promise resolves with a <c>TModel</c> instance describing the requested model
     /// or is rejected if an error or cancellation occurs.
     /// </para>
     /// </remarks>
@@ -391,6 +618,69 @@ type
   end;
 
 implementation
+
+{ TModelThinkingTypes }
+
+destructor TModelThinkingTypes.Destroy;
+begin
+  FAdaptive.Free;
+  FEnabled.Free;
+  inherited;
+end;
+
+{ TModelThinkingCapability }
+
+destructor TModelThinkingCapability.Destroy;
+begin
+  FTypes.Free;
+  inherited;
+end;
+
+{ TModelEffortCapability }
+
+destructor TModelEffortCapability.Destroy;
+begin
+  FLow.Free;
+  FMedium.Free;
+  FHigh.Free;
+  FMax.Free;
+  FXHigh.Free;
+  inherited;
+end;
+
+{ TModelContextManagementCapability }
+
+destructor TModelContextManagementCapability.Destroy;
+begin
+  FClearThinking20251015.Free;
+  FClearToolUses20250919.Free;
+  FCompact20260112.Free;
+  inherited;
+end;
+
+{ TModelCapabilities }
+
+destructor TModelCapabilities.Destroy;
+begin
+  FBatch.Free;
+  FCitations.Free;
+  FCodeExecution.Free;
+  FContextManagement.Free;
+  FEffort.Free;
+  FImageInput.Free;
+  FPdfInput.Free;
+  FStructuredOutputs.Free;
+  FThinking.Free;
+  inherited;
+end;
+
+{ TModel }
+
+destructor TModel.Destroy;
+begin
+  FCapabilities.Free;
+  inherited;
+end;
 
 { TModels }
 
@@ -415,6 +705,9 @@ end;
 
 function TListModelsParams.Limit(const Value: Integer): TListModelsParams;
 begin
+  if (Value < 1) or (Value > 1000) then
+    raise Exception.Create('The models list limit must be between 1 and 1000.');
+
   Result := TListModelsParams(Add('limit', Value));
 end;
 
@@ -436,7 +729,7 @@ begin
     Callbacks);
 end;
 
-function TModelsRoute.AsyncAwaitList(const ParamProc: TProc<TListModelsParams>;
+function TModelsRoute.AsyncAwaitList(const ParamProc: TListModelsParamProc;
   const Callbacks: TFunc<TPromiseModels>): TPromise<TModels>;
 begin
   Result := TAsyncAwaitHelper.WrapAsyncAwait<TModels>(
@@ -458,7 +751,7 @@ begin
     Callbacks);
 end;
 
-function TModelsRoute.List(const ParamProc: TProc<TListModelsParams>): TModels;
+function TModelsRoute.List(const ParamProc: TListModelsParamProc): TModels;
 begin
   Result := API.Get<TModels, TListModelsParams>('models', ParamProc);
 end;
@@ -488,7 +781,7 @@ begin
   end;
 end;
 
-procedure TAsynchronousSupport.AsynList(ParamProc: TProc<TListModelsParams>;
+procedure TAsynchronousSupport.AsynList(ParamProc: TListModelsParamProc;
   CallBacks: TFunc<TAsynModels>);
 begin
   with TAsynCallBackExec<TAsynModels, TModels>.Create(CallBacks) do

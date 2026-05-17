@@ -103,7 +103,7 @@ The example below illustrates the minimal orchestration pattern:
 ### Delphi code
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 4096;
   var Prompt := 'Create an Excel file with a simple budget spreadsheet.';
 
@@ -174,7 +174,7 @@ No additional orchestration logic is required on the client side.
 
 ```json
 {
-    "model": "claude-opus-4-6",
+    "model": "claude-opus-4-7",
     "id": "msg_01546VF7Lh1tfwAKDXzkWnNd",
     "type": "message",
     "role": "assistant",

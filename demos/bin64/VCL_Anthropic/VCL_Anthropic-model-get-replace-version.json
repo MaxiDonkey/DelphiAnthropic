@@ -1,0 +1,87 @@
+﻿{
+    "categoryConfigMode": "replace",
+    "categories": [
+        {
+            "id": "allModels",
+            "label": "Model list",
+            "badge": "",
+            "sourceCategoryId": "none",
+            "featureLabels": [
+                "All"
+            ],
+            "model": "",
+            "visible": true
+        },
+        {
+            "id": "textGeneration",
+            "label": "Text Generation",
+            "badge": "",
+            "sourceCategoryId": "text",
+            "featureLabels": [
+                "Thinking",
+                "Attach files",
+                "Web research",
+                "Vision"
+            ],
+            "model": "claude-opus-4-6",
+            "visible": true
+        },
+        {
+            "id": "imageCreation",
+            "label": "Image Creation",
+            "badge": "",
+            "sourceCategoryId": "image",
+            "featureLabels": [
+                "Create Image",
+                "Vision"
+            ],
+            "model": "",
+            "visible": false
+        },
+        {
+            "id": "videoCreation",
+            "label": "Video Creation",
+            "badge": "",
+            "sourceCategoryId": "image",
+            "featureLabels": [
+                "Create Video"
+            ],
+            "model": "",
+            "visible": false
+        },
+        {
+            "id": "audioCreation",
+            "label": "Audio creation",
+            "badge": "",
+            "sourceCategoryId": "audio",
+            "featureLabels": [
+                "Create Audio"
+            ],
+            "model": "",
+            "visible": false
+        },
+        {
+            "id": "textToSpeech",
+            "label": "Text to speech",
+            "badge": "",
+            "sourceCategoryId": "audio",
+            "featureLabels": [
+                "Text to speech"
+            ],
+            "model": "",
+            "visible": false
+        },
+        {
+            "id": "deepResearch",
+            "label": "Deep Research",
+            "badge": "",
+            "sourceCategoryId": "deepResearch",
+            "featureLabels": [
+                "Deep Research"
+            ],
+            "model": "",
+            "visible": false
+        }
+    ],
+    "type": "model-selector-set-runtime-config"
+}

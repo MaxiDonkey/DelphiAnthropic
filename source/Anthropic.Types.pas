@@ -52,7 +52,9 @@ type
     stop_sequence,
     tool_use,
     pause_turn,
-    refusal
+    refusal,
+    compaction,
+    model_context_window_exceeded
   );
 
   TStopReasonHelper = record helper for TStopReason
@@ -263,7 +265,18 @@ type
     tool_use,
     tool_result,
     server_tool_use,
-    web_search_tool_result
+    web_search_tool_result,
+    //[beta]
+    web_fetch_tool_result,
+    advisor_tool_result,
+    code_execution_tool_result,
+    bash_code_execution_tool_result,
+    text_editor_code_execution_tool_result,
+    tool_search_tool_result,
+    mcp_tool_use,
+    mcp_tool_result,
+    container_upload,
+    compaction
   );
 
   TContentTypeHelper = record Helper for TContentType
@@ -298,6 +311,7 @@ type
     prompt_caching_2024_07_31,
     computer_use_2024_10_22,
     computer_use_2025_01_24,
+    computer_use_2025_11_24,
     pdfs_2024_09_25,
     token_counting_2024_11_01,
     token_efficient_tools_2025_02_19,
@@ -307,7 +321,9 @@ type
     mcp_client_2025_11_20,
     dev_full_thinking_2025_05_14,
     interleaved_thinking_2025_05_14,
+    fine_grained_tool_streaming_2025_05_14,
     code_execution_2025_05_22,
+    code_execution_2025_08_25,
     extended_cache_ttl_2025_04_11,
     context_1m_2025_08_07,
     context_management_2025_06_27,
@@ -315,7 +331,12 @@ type
     skills_2025_10_02,
     fast_mode_2026_02_01,
     structured_outputs_2025_11_13,  // deprecated since january 29, 2026
-    compact_2026_01_12
+    compact_2026_01_12,
+    task_budgets_2026_03_13,        // added May 2026
+    output_300k_2026_03_24,         // added May 2026
+    user_profiles_2026_03_24,       // added May 2026
+    advisor_tool_2026_03_01,        // added May 2026
+    managed_agents_2026_04_01       // added May 2026
   );
 
   TBetaHelper = record Helper for TBeta
@@ -325,6 +346,7 @@ type
       'prompt-caching-2024-07-31',
       'computer-use-2024-10-22',
       'computer-use-2025-01-24',
+      'computer-use-2025-11-24',
       'pdfs-2024-09-25',
       'token-counting-2024-11-01',
       'token-efficient-tools-2025-02-19',
@@ -334,15 +356,22 @@ type
       'mcp-client-2025-11-20',
       'dev-full-thinking-2025-05-14',
       'interleaved-thinking-2025-05-14',
+      'fine-grained-tool-streaming-2025-05-14',
       'code-execution-2025-05-22',
+      'code-execution-2025-08-25',
       'extended-cache-ttl-2025-04-11',
       'context-1m-2025-08-07',
       'context-management-2025-06-27',
       'model-context-window-exceeded-2025-08-26',
       'skills-2025-10-02',
       'fast-mode-2026-02-01',
-      'structured-outputs-2025-11-13',  // deprecated since january 29, 2026
-      'compact-2026-01-12'
+      'structured-outputs-2025-11-13', // deprecated since january 29, 2026
+      'compact-2026-01-12',
+      'task-budgets-2026-03-13',       // added May 2026
+      'output-300k-2026-03-24',        // added May 2026
+      'user-profiles-2026-03-24',      // added May 2026
+      'advisor-tool-2026-03-01',       // added May 2026
+      'managed-agents-2026-04-01'      // added May 2026
     );
   public
     function ToString: string;
@@ -351,6 +380,7 @@ type
 
   {$SCOPEDENUMS OFF}
   TServerToolUseName = (
+    advisor,
     web_search,
     web_fetch,
     code_execution,
@@ -390,6 +420,17 @@ type
   end;
 
   {$SCOPEDENUMS ON}
+  TThinkingDisplayType = (
+    summarized,
+    omitted
+  );
+
+  TThinkingDisplayTypeHelper = record Helper for TThinkingDisplayType
+    function ToString: string;
+    class function Parse(const S: string): TThinkingDisplayType; static;
+  end;
+
+  {$SCOPEDENUMS ON}
   TSpeedType = (
     standard,
     fast
@@ -414,13 +455,15 @@ type
     web_search_tool_result,
     //[beta]
     web_fetch_tool_result,
+    advisor_tool_result,
     code_execution_tool_result,
     bash_code_execution_tool_result,
     text_editor_code_execution_tool_result,
     tool_search_tool_result,
     mcp_tool_use,
     mcp_tool_result,
-    container_upload
+    container_upload,
+    compaction
   );
 
   TContentBlockTypeHelper = record Helper for TContentBlockType
@@ -497,6 +540,7 @@ type
     low,
     medium,
     high,
+    xhigh,
     max
   );
 
@@ -508,12 +552,90 @@ type
   {$SCOPEDENUMS ON}
   TAllowedCallersType = (
     direct,
-    code_execution_20250825
+    code_execution_20250825,
+    code_execution_20260120
   );
 
   TAllowedCallersTypeHelper = record Helper for TAllowedCallersType
     function ToString: string;
     class function Parse(const S: string): TAllowedCallersType; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Webhooks'}
+
+  {$SCOPEDENUMS ON}
+  TWebhookResourceKind = (
+    unknown,
+    session,
+    session_thread,
+    vault,
+    vault_credential
+  );
+
+  TWebhookResourceKindHelper = record Helper for TWebhookResourceKind
+    function ToString: string;
+    class function Parse(const S: string): TWebhookResourceKind; static;
+  end;
+
+  {$SCOPEDENUMS ON}
+  TWebhookEventType = (
+    session_archived,
+    session_created,
+    session_deleted,
+    session_idled,
+    session_outcome_evaluation_ended,
+    session_pending,
+    session_requires_action,
+    session_running,
+    session_status_idled,
+    session_status_rescheduled,
+    session_status_run_started,
+    session_status_terminated,
+    session_thread_created,
+    session_thread_idled,
+    session_thread_terminated,
+    vault_archived,
+    vault_created,
+    vault_deleted,
+    vault_credential_archived,
+    vault_credential_created,
+    vault_credential_deleted,
+    vault_credential_refresh_failed
+  );
+
+  TWebhookEventTypeHelper = record Helper for TWebhookEventType
+  const
+    EventTypes: array[TWebhookEventType] of string = (
+      'session.archived',
+      'session.created',
+      'session.deleted',
+      'session.idled',
+      'session.outcome_evaluation_ended',
+      'session.pending',
+      'session.requires_action',
+      'session.running',
+      'session.status_idled',
+      'session.status_rescheduled',
+      'session.status_run_started',
+      'session.status_terminated',
+      'session.thread_created',
+      'session.thread_idled',
+      'session.thread_terminated',
+      'vault.archived',
+      'vault.created',
+      'vault.deleted',
+      'vault_credential.archived',
+      'vault_credential.created',
+      'vault_credential.deleted',
+      'vault_credential.refresh_failed'
+    );
+  public
+    function ToString: string;
+    function ResourceKind: TWebhookResourceKind;
+    class function Parse(const S: string): TWebhookEventType; static;
+    class function TryParse(const S: string; out Value: TWebhookEventType): Boolean; static;
   end;
 
 {$ENDREGION}
@@ -630,7 +752,7 @@ end;
 
 class function TSchemaTypeHelper.Parse(const S: string): TSchemaType;
 begin
- Result := TEnumWire.Parse<TSchemaType>(S);
+  Result := TEnumWire.Parse<TSchemaType>(S);
 end;
 
 function TSchemaTypeHelper.ToString: string;
@@ -930,4 +1052,72 @@ begin
   Result := TEnumWire.ToString<TSpeedType>(Self);
 end;
 
+{ TThinkingDisplayTypeHelper }
+
+class function TThinkingDisplayTypeHelper.Parse(
+  const S: string): TThinkingDisplayType;
+begin
+  Result := TEnumWire.Parse<TThinkingDisplayType>(S);
+end;
+
+function TThinkingDisplayTypeHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TThinkingDisplayType>(Self);
+end;
+
+
+{ TWebhookResourceKindHelper }
+
+class function TWebhookResourceKindHelper.Parse(
+  const S: string): TWebhookResourceKind;
+begin
+  Result := TEnumWire.Parse<TWebhookResourceKind>(S);
+end;
+
+function TWebhookResourceKindHelper.ToString: string;
+begin
+  Result := TEnumWire.ToString<TWebhookResourceKind>(Self);
+end;
+
+{ TWebhookEventTypeHelper }
+
+class function TWebhookEventTypeHelper.Parse(
+  const S: string): TWebhookEventType;
+begin
+  Result := TEnumWire.Parse<TWebhookEventType>(S, EventTypes);
+end;
+
+function TWebhookEventTypeHelper.ResourceKind: TWebhookResourceKind;
+begin
+  case Self of
+    TWebhookEventType.session_thread_created,
+    TWebhookEventType.session_thread_idled,
+    TWebhookEventType.session_thread_terminated:
+      Result := TWebhookResourceKind.session_thread;
+
+    TWebhookEventType.vault_archived,
+    TWebhookEventType.vault_created,
+    TWebhookEventType.vault_deleted:
+      Result := TWebhookResourceKind.vault;
+
+    TWebhookEventType.vault_credential_archived,
+    TWebhookEventType.vault_credential_created,
+    TWebhookEventType.vault_credential_deleted,
+    TWebhookEventType.vault_credential_refresh_failed:
+      Result := TWebhookResourceKind.vault_credential;
+  else
+    Result := TWebhookResourceKind.session;
+  end;
+end;
+
+function TWebhookEventTypeHelper.ToString: string;
+begin
+  Result := EventTypes[Self];
+end;
+
+class function TWebhookEventTypeHelper.TryParse(const S: string;
+  out Value: TWebhookEventType): Boolean;
+begin
+  Result := TEnumWire.TryParse<TWebhookEventType>(S, EventTypes, Value);
+end;
 end.

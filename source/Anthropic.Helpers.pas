@@ -12,7 +12,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.JSON,
   Anthropic.API.Params, Anthropic.Types, Anthropic.API.ArrayBuilder,
-  Anthropic.Chat.Request;
+  Anthropic.Chat.Request, Anthropic.Agents, Anthropic.Environment,
+  Anthropic.Sessions, Anthropic.Vaults, Anthropic.MemoryStore;
 
 type
   TWebSearchTools = TArrayBuilder<TWebSearchToolResultBlockItem>;
@@ -49,6 +50,13 @@ type
     function AddBlockContent(const Value: TDocumentBlockParam): TContents; overload;
 
     function AddFileDocument(const FileId: string): TContents; overload;
+
+    function AddContainerUpload(const FileId: string): TContents; overload;
+    function AddContainerUpload(const Value: TContainerUploadBlockParam): TContents; overload;
+
+    function AddCompaction(const Content: string): TContents; overload;
+    function AddCompaction(const Content, EncryptedContent: string): TContents; overload;
+    function AddCompaction(const Value: TCompactionBlockParam): TContents; overload;
   end;
 
 {$ENDREGION}
@@ -104,6 +112,7 @@ type
     class function CreateMCPToolUse: TMCPToolUseBlockParam; static;
     class function CreateMCPToolResult: TMCPToolResultBlockParam; static;
     class function CreateContainerUpload: TContainerUploadBlockParam; static;
+    class function CreateCompaction: TCompactionBlockParam; static;
     class function CreateContainer: TContainerParams; static;
     class function CreateSkill(const Value: TSkillType): TSkillParams; overload; static;
     class function CreateSkill(const Value: string): TSkillParams; overload; static;
@@ -152,6 +161,7 @@ type
   private
     class function Empty: TToolBetaManager; static; inline;
   public
+    class function CreateCodeExecutionTool20260120: TCodeExecutionTool20260120; static;
     class function CreateCodeExecutionTool20250825: TCodeExecutionTool20250825; static;
 
     /// <summary>
@@ -176,6 +186,12 @@ type
     class function CreateToolTextEditor20241022: TToolTextEditor20241022; static;
 
     class function CreateWebFetchTool20250910: TWebFetchTool20250910; static;
+    class function CreateWebFetchTool20260209: TWebFetchTool20260209; static;
+    class function CreateWebFetchTool20260309: TWebFetchTool20260309; static;
+
+    class function CreateWebSearchTool20260209: TWebSearchTool20260209; static;
+
+    class function CreateAdvisorTool20260301: TAdvisorTool20260301; static;
   end;
 
   TToolManager = record
@@ -189,6 +205,8 @@ type
     class function CreateToolTextEditor20250429: TToolTextEditor20250429; static;
     class function CreateToolTextEditor20250124: TToolTextEditor20250124; static;
     class function CreateWebSearchTool20250305: TWebSearchTool20250305; static;
+    class function CreateUserLocation: TUserLocation; static;
+
     class property Beta: TToolBetaManager read FToolBeta;
   end;
 
@@ -208,6 +226,237 @@ type
 
 {$ENDREGION}
 
+{$REGION 'Agents'}
+
+  TAgentMCPServers = TArrayBuilder<TAgentMCPServerParams>;
+  TAgentRosterEntries = TArrayBuilder<TAgentRosterEntryParams>;
+  TAgentSkills = TArrayBuilder<TAgentSkillParams>;
+  TAgentToolConfigs = TArrayBuilder<TAgentToolConfigParams>;
+  TAgentTools = TArrayBuilder<TAgentToolParams>;
+
+  TAgentMCPServersHelper = record Helper for TAgentMCPServers
+    function AddServer(const Name, Url: string): TAgentMCPServers; overload;
+    function AddServer(const Value: TAgentMCPServerParams): TAgentMCPServers; overload;
+  end;
+
+  TAgentRosterEntriesHelper = record Helper for TAgentRosterEntries
+    function AddAgent(const Id: string; const Version: Integer = 0): TAgentRosterEntries;
+    function AddSelf: TAgentRosterEntries;
+    function AddEntry(const Value: TAgentRosterEntryParams): TAgentRosterEntries;
+  end;
+
+  TAgentSkillsHelper = record Helper for TAgentSkills
+    function AddAnthropic(const SkillId: string; const Version: string = ''): TAgentSkills;
+    function AddCustom(const SkillId: string; const Version: string = ''): TAgentSkills;
+    function AddSkill(const Value: TAgentSkillParams): TAgentSkills;
+  end;
+
+  TAgentToolConfigsHelper = record Helper for TAgentToolConfigs
+    function AddConfig(const Name: string; const Enabled: Boolean = True): TAgentToolConfigs; overload;
+    function AddConfig(const Name: string; const Enabled: Boolean;
+      const Policy: TAgentPermissionPolicyParams): TAgentToolConfigs; overload;
+    function AddConfig(const Value: TAgentToolConfigParams): TAgentToolConfigs; overload;
+  end;
+
+  TAgentToolsHelper = record Helper for TAgentTools
+    function AddBuiltInToolset: TAgentTools; overload;
+    function AddBuiltInToolset(const Value: TAgentBuiltInToolsetParams): TAgentTools; overload;
+    function AddMCPToolset(const MCPServerName: string): TAgentTools; overload;
+    function AddMCPToolset(const Value: TAgentMCPToolsetParams): TAgentTools; overload;
+    function AddCustomTool(const Name: string; const Description: string = '';
+      const InputSchema: string = ''): TAgentTools; overload;
+    function AddCustomTool(const Value: TAgentCustomToolParams): TAgentTools; overload;
+  end;
+
+  TAgentManager = record
+  private
+    class function Empty: TAgentManager; static; inline;
+  public
+    class function CreateParams: TAgentCreateParams; static;
+    class function UpdateParams: TAgentUpdateParams; static;
+    class function ListParams: TAgentListParams; static;
+    class function RetrieveParams: TAgentRetrieveParams; static;
+
+    class function CreateModelConfig: TAgentModelConfigParams; static;
+    class function CreateMCPServer: TAgentMCPServerParams; static;
+    class function CreateAgentReference: TAgentReferenceParams; static;
+    class function CreateSelfReference: TAgentSelfReferenceParams; static;
+    class function CreateMultiagent: TAgentMultiagentParams; static;
+    class function CreateAnthropicSkill: TAgentAnthropicSkillParams; static;
+    class function CreateCustomSkill: TAgentCustomSkillParams; static;
+    class function AlwaysAllow: TAgentAlwaysAllowPolicyParams; static;
+    class function AlwaysAsk: TAgentAlwaysAskPolicyParams; static;
+    class function CreateToolConfig: TAgentToolConfigParams; static;
+    class function CreateToolsetDefaultConfig: TAgentToolsetDefaultConfigParams; static;
+    class function CreateBuiltInToolset: TAgentBuiltInToolsetParams; static;
+    class function CreateMCPToolset: TAgentMCPToolsetParams; static;
+    class function CreateCustomTool: TAgentCustomToolParams; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Environments'}
+
+  TEnvironmentManager = record
+  private
+    class function Empty: TEnvironmentManager; static; inline;
+  public
+    class function CreateParams: TEnvironmentCreateParams; static;
+    class function UpdateParams: TEnvironmentUpdateParams; static;
+    class function ListParams: TEnvironmentListParams; static;
+
+    class function CreateUnrestrictedNetwork: TEnvironmentUnrestrictedNetworkParams; static;
+    class function CreateLimitedNetwork: TEnvironmentLimitedNetworkParams; static;
+    class function CreatePackages: TEnvironmentPackagesParams; static;
+    class function CreateCloudConfig: TEnvironmentCloudConfigParams; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Sessions'}
+
+  TSessionResources = TArrayBuilder<TSessionResourceParams>;
+  TSessionContents = TArrayBuilder<TSessionContentBlockParams>;
+  TSessionEvents = TArrayBuilder<TSessionEventParams>;
+
+  TSessionResourcesHelper = record Helper for TSessionResources
+    function AddGitHubRepository(const Url: string): TSessionResources; overload;
+    function AddGitHubRepository(const Url, AuthorizationToken: string): TSessionResources; overload;
+    function AddGitHubRepository(const Url, AuthorizationToken, MountPath: string): TSessionResources; overload;
+    function AddFile(const FileId: string; const MountPath: string = ''): TSessionResources;
+    function AddMemoryStore(const MemoryStoreId: string; const Access: string = 'read_write';
+      const Instructions: string = ''): TSessionResources;
+    function AddResource(const Value: TSessionResourceParams): TSessionResources;
+  end;
+
+  TSessionContentsHelper = record Helper for TSessionContents
+    function AddText(const Text: string): TSessionContents; overload;
+    function AddText(const Value: TSessionTextBlockParams): TSessionContents; overload;
+    function AddImage(const Data, MediaType: string): TSessionContents;
+    function AddUrlImage(const Url: string): TSessionContents;
+    function AddFileImage(const FileId: string): TSessionContents;
+    function AddDocument(const Data, MediaType: string): TSessionContents;
+    function AddTextDocument(const Text: string): TSessionContents;
+    function AddFileDocument(const FileId: string): TSessionContents;
+    function AddBlock(const Value: TSessionContentBlockParams): TSessionContents;
+  end;
+
+  TSessionEventsHelper = record Helper for TSessionEvents
+    function AddUserMessage(const Text: string): TSessionEvents; overload;
+    function AddUserMessage(const Content: TArray<TSessionContentBlockParams>): TSessionEvents; overload;
+    function AddInterrupt(const SessionThreadId: string = ''): TSessionEvents;
+    function AddToolConfirmation(const ToolUseId, Value: string;
+      const DenyMessage: string = ''; const SessionThreadId: string = ''): TSessionEvents;
+    function AddCustomToolResult(const CustomToolUseId: string;
+      const Content: TArray<TSessionContentBlockParams>; const IsError: Boolean = False;
+      const SessionThreadId: string = ''): TSessionEvents;
+    function AddOutcome(const Description: string; const Rubric: TSessionRubricParams;
+      const MaxIterations: Integer = 0): TSessionEvents;
+    function AddEvent(const Value: TSessionEventParams): TSessionEvents;
+  end;
+
+  TSessionManager = record
+  private
+    class function Empty: TSessionManager; static; inline;
+  public
+    class function CreateParams: TSessionCreateParams; static;
+    class function UpdateParams: TSessionUpdateParams; static;
+    class function ListParams: TSessionListParams; static;
+    class function EventListParams: TSessionEventListParams; static;
+    class function SimpleListParams: TSessionSimpleListParams; static;
+    class function SendEventsParams: TSessionSendEventsParams; static;
+    class function ResourceUpdateParams: TSessionResourceUpdateParams; static;
+
+    class function CreateAgent(const Id: string; const Version: Integer = 0): TSessionAgentParams; static;
+    class function CreateBranchCheckout(const Name: string): TSessionBranchCheckoutParams; static;
+    class function CreateCommitCheckout(const Sha: string): TSessionCommitCheckoutParams; static;
+    class function CreateGitHubRepositoryResource(const Url: string): TSessionGitHubRepositoryResourceParams; overload; static;
+    class function CreateGitHubRepositoryResource(const Url, AuthorizationToken: string): TSessionGitHubRepositoryResourceParams; overload; static;
+    class function CreateFileResource(const FileId: string; const MountPath: string = ''): TSessionFileResourceParams; static;
+    class function CreateMemoryStoreResource(const MemoryStoreId: string; const Access: string = 'read_write';
+      const Instructions: string = ''): TSessionMemoryStoreResourceParams; static;
+
+    class function CreateTextBlock(const Text: string): TSessionTextBlockParams; static;
+    class function CreateImageBlock(const Source: TSessionSourceParams): TSessionImageBlockParams; static;
+    class function CreateDocumentBlock(const Source: TSessionSourceParams): TSessionDocumentBlockParams; static;
+    class function CreateBase64ImageSource(const Data, MediaType: string): TSessionBase64ImageSourceParams; static;
+    class function CreateUrlSource(const Url: string): TSessionUrlSourceParams; static;
+    class function CreateFileSource(const FileId: string): TSessionFileSourceParams; static;
+    class function CreateBase64DocumentSource(const Data, MediaType: string): TSessionBase64DocumentSourceParams; static;
+    class function CreateTextDocumentSource(const Text: string): TSessionPlainTextDocumentSourceParams; static;
+
+    class function CreateUserMessageEvent(const Text: string): TSessionUserMessageEventParams; overload; static;
+    class function CreateUserMessageEvent(const Content: TArray<TSessionContentBlockParams>): TSessionUserMessageEventParams; overload; static;
+    class function CreateInterruptEvent(const SessionThreadId: string = ''): TSessionUserInterruptEventParams; static;
+    class function CreateToolConfirmationEvent(const ToolUseId, Value: string): TSessionUserToolConfirmationEventParams; static;
+    class function CreateCustomToolResultEvent(const CustomToolUseId: string;
+      const Content: TArray<TSessionContentBlockParams>; const IsError: Boolean = False): TSessionUserCustomToolResultEventParams; static;
+    class function CreateTextRubric(const Content: string): TSessionTextRubricParams; static;
+    class function CreateFileRubric(const FileId: string): TSessionFileRubricParams; static;
+    class function CreateDefineOutcomeEvent(const Description: string; const Rubric: TSessionRubricParams;
+      const MaxIterations: Integer = 0): TSessionUserDefineOutcomeEventParams; static;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Vaults'}
+
+  TVaultCredentialManager = record
+  private
+    class function Empty: TVaultCredentialManager; static; inline;
+  public
+    class function CreateParams: TVaultCredentialCreateParams; static;
+    class function UpdateParams: TVaultCredentialUpdateParams; static;
+    class function ListParams: TVaultCredentialListParams; static;
+
+    class function CreateMCPOAuth(const AccessToken, MCPServerUrl: string): TVaultCredentialMCPOAuthCreateParams; static;
+    class function CreateStaticBearer(const Token, MCPServerUrl: string): TVaultCredentialStaticBearerCreateParams; static;
+    class function CreateRefresh: TVaultCredentialMCPOAuthRefreshParams; static;
+    class function CreateNoTokenEndpointAuth: TVaultCredentialTokenEndpointAuthNoneParams; static;
+    class function CreateBasicTokenEndpointAuth(const ClientSecret: string): TVaultCredentialTokenEndpointAuthBasicParams; static;
+    class function CreatePostTokenEndpointAuth(const ClientSecret: string): TVaultCredentialTokenEndpointAuthPostParams; static;
+    class function UpdateMCPOAuth: TVaultCredentialMCPOAuthUpdateParams; static;
+    class function UpdateStaticBearer: TVaultCredentialStaticBearerUpdateParams; static;
+    class function UpdateRefresh: TVaultCredentialMCPOAuthRefreshUpdateParams; static;
+    class function UpdateBasicTokenEndpointAuth(const ClientSecret: string): TVaultCredentialTokenEndpointAuthBasicUpdateParams; static;
+    class function UpdatePostTokenEndpointAuth(const ClientSecret: string): TVaultCredentialTokenEndpointAuthPostUpdateParams; static;
+  end;
+
+  TVaultManager = record
+  private
+    class var FCredential: TVaultCredentialManager;
+    class function Empty: TVaultManager; static; inline;
+  public
+    class function CreateParams: TVaultCreateParams; static;
+    class function UpdateParams: TVaultUpdateParams; static;
+    class function ListParams: TVaultListParams; static;
+    class property Credential: TVaultCredentialManager read FCredential;
+  end;
+
+{$ENDREGION}
+
+{$REGION 'Memory stores'}
+
+  TMemoryStoreManager = record
+  private
+    class function Empty: TMemoryStoreManager; static; inline;
+  public
+    class function CreateStoreParams: TMemoryStoreCreateParams; static;
+    class function UpdateStoreParams: TMemoryStoreUpdateParams; static;
+    class function ListStoreParams: TMemoryStoreListParams; static;
+    class function ViewBasic: TMemoryViewParams; static;
+    class function ViewFull: TMemoryViewParams; static;
+
+    class function CreateMemoryParams: TMemoryCreateParams; static;
+    class function UpdateMemoryParams: TMemoryUpdateParams; static;
+    class function ListMemoryParams: TMemoryListParams; static;
+    class function DeleteMemoryParams: TMemoryDeleteParams; static;
+    class function CreatePrecondition(const ContentSHA256: string): TMemoryPreconditionParams; static;
+    class function ListVersionParams: TMemoryVersionListParams; static;
+  end;
+
+{$ENDREGION}
+
 {$REGION 'Edit'}
 
   TContextEdits = TArrayBuilder<TEditsParams>;
@@ -218,6 +467,7 @@ type
   public
     class function CreateClearToolUses20250919Edit: TClearToolUses20250919Edit; static;
     class function CreateClearThinking20251015Edit: TClearThinking20251015Edit; static;
+    class function CreateCompact20260112Edit: TCompact20260112Edit; static;
 
     /// <summary>
     /// Minimum number of tokens that must be cleared when triggered. Context will only be modified
@@ -288,23 +538,36 @@ type
 
   TGenerationManager = record
   private
+    class var FAgentManager: TAgentManager;
     class var FCacheControlManager: TCacheControlManager;
     class var FContentManager: TContentManager;
     class var FContextManager: TContextManager;
     class var FDocument: TDocument;
     class var FEditManager: TEditManager;
+    class var FEnvironmentManager: TEnvironmentManager;
     class var FMCPServerManager: TMCPServerManager;
+    class var FMemoryStoreManager: TMemoryStoreManager;
+    class var FSessionManager: TSessionManager;
     class var FToolChoiceManager: TToolChoiceManager;
     class var FSkillManager: TSkillManager;
     class var FToolManager: TToolManager;
+    class var FVaultManager: TVaultManager;
 
     class function Empty: TGenerationManager; static; inline;
   public
+    class function AgentMCPServerParts: TAgentMCPServers; static;
+    class function AgentRosterParts: TAgentRosterEntries; static;
+    class function AgentSkillParts: TAgentSkills; static;
+    class function AgentToolConfigParts: TAgentToolConfigs; static;
+    class function AgentToolParts: TAgentTools; static;
     class function CitationParts: TCitations; static;
     class function ContentParts: TContents; static;
     class function EditParts: TContextEdits; static;
     class function MessageParts: TMessages; static;
     class function MCPServerParts: TMCPServerURLDefinitions; static;
+    class function SessionContentParts: TSessionContents; static;
+    class function SessionEventParts: TSessionEvents; static;
+    class function SessionResourceParts: TSessionResources; static;
     class function SkillParts: TSkills; static;
     class function TextBlockParts: TTextBlocks; static;
     class function ToolParts: TTools; static;
@@ -317,20 +580,25 @@ type
     class function CreateFormat: TOutputConfigFormat; static;
     class function CreateImageBlock: TImageBlockParam; static;
     class function CreateOutputConfig: TOutputConfig; static;
+    class function CreateTaskBudget: TOutputConfigTaskBudget; static;
     class function CreateTextBlock: TTextBlockParam; static;
     class function CreateThinkingConfig(const State: TThinkingType): TThinkingConfigParam; overload; static;
     class function CreateThinkingConfig(const Value: string): TThinkingConfigParam; overload; static;
 
-
+    class property Agent: TAgentManager read FAgentManager;
     class property BlockContent: TContentManager read FContentManager;
     class property Cache: TCacheControlManager read FCacheControlManager;
     class property Context: TContextManager read FContextManager;
     class property Document: TDocument read FDocument;
     class property Edit: TEditManager read FEditManager;
+    class property Environment: TEnvironmentManager read FEnvironmentManager;
     class property MCPServer: TMCPServerManager read FMCPServerManager;
+    class property MemoryStore: TMemoryStoreManager read FMemoryStoreManager;
+    class property Session: TSessionManager read FSessionManager;
     class property Skill: TSkillManager read FSkillManager;
     class property Tool: TToolManager read FToolManager;
     class property ToolChoice: TToolChoiceManager read FToolChoiceManager;
+    class property Vault: TVaultManager read FVaultManager;
   end;
 
 function Generation: TGenerationManager;
@@ -340,6 +608,811 @@ implementation
 function Generation: TGenerationManager;
 begin
   Result := TGenerationManager.Empty;
+end;
+
+{ TAgentMCPServersHelper }
+
+function TAgentMCPServersHelper.AddServer(
+  const Value: TAgentMCPServerParams): TAgentMCPServers;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TAgentMCPServersHelper.AddServer(const Name,
+  Url: string): TAgentMCPServers;
+begin
+  Result := Self.Add(TAgentMCPServerParams.New.Name(Name).Url(Url));
+end;
+
+{ TAgentRosterEntriesHelper }
+
+function TAgentRosterEntriesHelper.AddAgent(const Id: string;
+  const Version: Integer): TAgentRosterEntries;
+begin
+  var Item := TAgentReferenceParams.New.Id(Id);
+  if Version > 0 then
+    Item.Version(Version);
+  Result := Self.Add(Item);
+end;
+
+function TAgentRosterEntriesHelper.AddEntry(
+  const Value: TAgentRosterEntryParams): TAgentRosterEntries;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TAgentRosterEntriesHelper.AddSelf: TAgentRosterEntries;
+begin
+  Result := Self.Add(TAgentSelfReferenceParams.New);
+end;
+
+{ TAgentSkillsHelper }
+
+function TAgentSkillsHelper.AddAnthropic(const SkillId,
+  Version: string): TAgentSkills;
+begin
+  var Skill := TAgentAnthropicSkillParams.New.SkillId(SkillId);
+  if not Version.IsEmpty then
+    Skill.Version(Version);
+  Result := Self.Add(Skill);
+end;
+
+function TAgentSkillsHelper.AddCustom(const SkillId,
+  Version: string): TAgentSkills;
+begin
+  var Skill := TAgentCustomSkillParams.New.SkillId(SkillId);
+  if not Version.IsEmpty then
+    Skill.Version(Version);
+  Result := Self.Add(Skill);
+end;
+
+function TAgentSkillsHelper.AddSkill(
+  const Value: TAgentSkillParams): TAgentSkills;
+begin
+  Result := Self.Add(Value);
+end;
+
+{ TAgentToolConfigsHelper }
+
+function TAgentToolConfigsHelper.AddConfig(
+  const Value: TAgentToolConfigParams): TAgentToolConfigs;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TAgentToolConfigsHelper.AddConfig(const Name: string;
+  const Enabled: Boolean): TAgentToolConfigs;
+begin
+  Result := Self.Add(TAgentToolConfigParams.New.Name(Name).Enabled(Enabled));
+end;
+
+function TAgentToolConfigsHelper.AddConfig(const Name: string;
+  const Enabled: Boolean;
+  const Policy: TAgentPermissionPolicyParams): TAgentToolConfigs;
+begin
+  Result := Self.Add(
+    TAgentToolConfigParams.New
+      .Name(Name)
+      .Enabled(Enabled)
+      .PermissionPolicy(Policy));
+end;
+
+{ TAgentToolsHelper }
+
+function TAgentToolsHelper.AddBuiltInToolset: TAgentTools;
+begin
+  Result := Self.Add(TAgentBuiltInToolsetParams.New);
+end;
+
+function TAgentToolsHelper.AddBuiltInToolset(
+  const Value: TAgentBuiltInToolsetParams): TAgentTools;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TAgentToolsHelper.AddCustomTool(const Name, Description,
+  InputSchema: string): TAgentTools;
+begin
+  var Tool := TAgentCustomToolParams.New.Name(Name);
+  if not Description.IsEmpty then
+    Tool.Description(Description);
+  if not InputSchema.IsEmpty then
+    Tool.InputSchema(InputSchema);
+  Result := Self.Add(Tool);
+end;
+
+function TAgentToolsHelper.AddCustomTool(
+  const Value: TAgentCustomToolParams): TAgentTools;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TAgentToolsHelper.AddMCPToolset(
+  const MCPServerName: string): TAgentTools;
+begin
+  Result := Self.Add(TAgentMCPToolsetParams.New.MCPServerName(MCPServerName));
+end;
+
+function TAgentToolsHelper.AddMCPToolset(
+  const Value: TAgentMCPToolsetParams): TAgentTools;
+begin
+  Result := Self.Add(Value);
+end;
+
+{ TSessionResourcesHelper }
+
+function TSessionResourcesHelper.AddFile(const FileId,
+  MountPath: string): TSessionResources;
+begin
+  Result := Self.Add(TSessionManager.CreateFileResource(FileId, MountPath));
+end;
+
+function TSessionResourcesHelper.AddGitHubRepository(
+  const Url: string): TSessionResources;
+begin
+  Result := Self.Add(TSessionManager.CreateGitHubRepositoryResource(Url));
+end;
+
+function TSessionResourcesHelper.AddGitHubRepository(const Url,
+  AuthorizationToken: string): TSessionResources;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateGitHubRepositoryResource(Url, AuthorizationToken));
+end;
+
+function TSessionResourcesHelper.AddGitHubRepository(const Url,
+  AuthorizationToken, MountPath: string): TSessionResources;
+begin
+  var Resource := TSessionManager.CreateGitHubRepositoryResource(Url, AuthorizationToken);
+  if not MountPath.IsEmpty then
+    Resource.MountPath(MountPath);
+  Result := Self.Add(Resource);
+end;
+
+function TSessionResourcesHelper.AddMemoryStore(const MemoryStoreId, Access,
+  Instructions: string): TSessionResources;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateMemoryStoreResource(MemoryStoreId, Access, Instructions));
+end;
+
+function TSessionResourcesHelper.AddResource(
+  const Value: TSessionResourceParams): TSessionResources;
+begin
+  Result := Self.Add(Value);
+end;
+
+{ TSessionContentsHelper }
+
+function TSessionContentsHelper.AddBlock(
+  const Value: TSessionContentBlockParams): TSessionContents;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TSessionContentsHelper.AddDocument(const Data,
+  MediaType: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateDocumentBlock(
+      TSessionManager.CreateBase64DocumentSource(Data, MediaType)));
+end;
+
+function TSessionContentsHelper.AddFileDocument(
+  const FileId: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateDocumentBlock(TSessionManager.CreateFileSource(FileId)));
+end;
+
+function TSessionContentsHelper.AddFileImage(
+  const FileId: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateImageBlock(TSessionManager.CreateFileSource(FileId)));
+end;
+
+function TSessionContentsHelper.AddImage(const Data,
+  MediaType: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateImageBlock(
+      TSessionManager.CreateBase64ImageSource(Data, MediaType)));
+end;
+
+function TSessionContentsHelper.AddText(const Text: string): TSessionContents;
+begin
+  Result := Self.Add(TSessionManager.CreateTextBlock(Text));
+end;
+
+function TSessionContentsHelper.AddText(
+  const Value: TSessionTextBlockParams): TSessionContents;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TSessionContentsHelper.AddTextDocument(
+  const Text: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateDocumentBlock(
+      TSessionManager.CreateTextDocumentSource(Text)));
+end;
+
+function TSessionContentsHelper.AddUrlImage(
+  const Url: string): TSessionContents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateImageBlock(TSessionManager.CreateUrlSource(Url)));
+end;
+
+{ TSessionEventsHelper }
+
+function TSessionEventsHelper.AddCustomToolResult(const CustomToolUseId: string;
+  const Content: TArray<TSessionContentBlockParams>; const IsError: Boolean;
+  const SessionThreadId: string): TSessionEvents;
+begin
+  var Item := TSessionManager.CreateCustomToolResultEvent(
+    CustomToolUseId, Content, IsError);
+  if not SessionThreadId.IsEmpty then
+    Item.SessionThreadId(SessionThreadId);
+  Result := Self.Add(Item);
+end;
+
+function TSessionEventsHelper.AddEvent(
+  const Value: TSessionEventParams): TSessionEvents;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TSessionEventsHelper.AddInterrupt(
+  const SessionThreadId: string): TSessionEvents;
+begin
+  Result := Self.Add(TSessionManager.CreateInterruptEvent(SessionThreadId));
+end;
+
+function TSessionEventsHelper.AddOutcome(const Description: string;
+  const Rubric: TSessionRubricParams; const MaxIterations: Integer): TSessionEvents;
+begin
+  Result := Self.Add(
+    TSessionManager.CreateDefineOutcomeEvent(Description, Rubric, MaxIterations));
+end;
+
+function TSessionEventsHelper.AddToolConfirmation(const ToolUseId, Value,
+  DenyMessage, SessionThreadId: string): TSessionEvents;
+begin
+  var Item := TSessionManager.CreateToolConfirmationEvent(ToolUseId, Value);
+  if not DenyMessage.IsEmpty then
+    Item.DenyMessage(DenyMessage);
+  if not SessionThreadId.IsEmpty then
+    Item.SessionThreadId(SessionThreadId);
+  Result := Self.Add(Item);
+end;
+
+function TSessionEventsHelper.AddUserMessage(
+  const Content: TArray<TSessionContentBlockParams>): TSessionEvents;
+begin
+  Result := Self.Add(TSessionManager.CreateUserMessageEvent(Content));
+end;
+
+function TSessionEventsHelper.AddUserMessage(
+  const Text: string): TSessionEvents;
+begin
+  Result := Self.Add(TSessionManager.CreateUserMessageEvent(Text));
+end;
+
+{ TAgentManager }
+
+class function TAgentManager.AlwaysAllow: TAgentAlwaysAllowPolicyParams;
+begin
+  Result := TAgentAlwaysAllowPolicyParams.New;
+end;
+
+class function TAgentManager.AlwaysAsk: TAgentAlwaysAskPolicyParams;
+begin
+  Result := TAgentAlwaysAskPolicyParams.New;
+end;
+
+class function TAgentManager.CreateAgentReference: TAgentReferenceParams;
+begin
+  Result := TAgentReferenceParams.New;
+end;
+
+class function TAgentManager.CreateAnthropicSkill: TAgentAnthropicSkillParams;
+begin
+  Result := TAgentAnthropicSkillParams.New;
+end;
+
+class function TAgentManager.CreateBuiltInToolset: TAgentBuiltInToolsetParams;
+begin
+  Result := TAgentBuiltInToolsetParams.New;
+end;
+
+class function TAgentManager.CreateCustomSkill: TAgentCustomSkillParams;
+begin
+  Result := TAgentCustomSkillParams.New;
+end;
+
+class function TAgentManager.CreateCustomTool: TAgentCustomToolParams;
+begin
+  Result := TAgentCustomToolParams.New;
+end;
+
+class function TAgentManager.CreateMCPServer: TAgentMCPServerParams;
+begin
+  Result := TAgentMCPServerParams.New;
+end;
+
+class function TAgentManager.CreateMCPToolset: TAgentMCPToolsetParams;
+begin
+  Result := TAgentMCPToolsetParams.New;
+end;
+
+class function TAgentManager.CreateModelConfig: TAgentModelConfigParams;
+begin
+  Result := TAgentModelConfigParams.New;
+end;
+
+class function TAgentManager.CreateMultiagent: TAgentMultiagentParams;
+begin
+  Result := TAgentMultiagentParams.New;
+end;
+
+class function TAgentManager.CreateParams: TAgentCreateParams;
+begin
+  Result := TAgentCreateParams.New;
+end;
+
+class function TAgentManager.CreateSelfReference: TAgentSelfReferenceParams;
+begin
+  Result := TAgentSelfReferenceParams.New;
+end;
+
+class function TAgentManager.CreateToolConfig: TAgentToolConfigParams;
+begin
+  Result := TAgentToolConfigParams.New;
+end;
+
+class function TAgentManager.CreateToolsetDefaultConfig: TAgentToolsetDefaultConfigParams;
+begin
+  Result := TAgentToolsetDefaultConfigParams.New;
+end;
+
+class function TAgentManager.Empty: TAgentManager;
+begin
+  Result := Default(TAgentManager);
+end;
+
+class function TAgentManager.ListParams: TAgentListParams;
+begin
+  Result := TAgentListParams.New;
+end;
+
+class function TAgentManager.RetrieveParams: TAgentRetrieveParams;
+begin
+  Result := TAgentRetrieveParams.New;
+end;
+
+class function TAgentManager.UpdateParams: TAgentUpdateParams;
+begin
+  Result := TAgentUpdateParams.New;
+end;
+
+{ TEnvironmentManager }
+
+class function TEnvironmentManager.CreateCloudConfig: TEnvironmentCloudConfigParams;
+begin
+  Result := TEnvironmentCloudConfigParams.New;
+end;
+
+class function TEnvironmentManager.CreateLimitedNetwork: TEnvironmentLimitedNetworkParams;
+begin
+  Result := TEnvironmentLimitedNetworkParams.New;
+end;
+
+class function TEnvironmentManager.CreatePackages: TEnvironmentPackagesParams;
+begin
+  Result := TEnvironmentPackagesParams.New;
+end;
+
+class function TEnvironmentManager.CreateParams: TEnvironmentCreateParams;
+begin
+  Result := TEnvironmentCreateParams.New;
+end;
+
+class function TEnvironmentManager.CreateUnrestrictedNetwork: TEnvironmentUnrestrictedNetworkParams;
+begin
+  Result := TEnvironmentUnrestrictedNetworkParams.New;
+end;
+
+class function TEnvironmentManager.Empty: TEnvironmentManager;
+begin
+  Result := Default(TEnvironmentManager);
+end;
+
+class function TEnvironmentManager.ListParams: TEnvironmentListParams;
+begin
+  Result := TEnvironmentListParams.New;
+end;
+
+class function TEnvironmentManager.UpdateParams: TEnvironmentUpdateParams;
+begin
+  Result := TEnvironmentUpdateParams.New;
+end;
+
+{ TSessionManager }
+
+class function TSessionManager.CreateAgent(const Id: string;
+  const Version: Integer): TSessionAgentParams;
+begin
+  Result := TSessionAgentParams.New.Id(Id);
+  if Version > 0 then
+    Result.Version(Version);
+end;
+
+class function TSessionManager.CreateBase64DocumentSource(const Data,
+  MediaType: string): TSessionBase64DocumentSourceParams;
+begin
+  Result := TSessionBase64DocumentSourceParams.New.Data(Data).MediaType(MediaType);
+end;
+
+class function TSessionManager.CreateBase64ImageSource(const Data,
+  MediaType: string): TSessionBase64ImageSourceParams;
+begin
+  Result := TSessionBase64ImageSourceParams.New.Data(Data).MediaType(MediaType);
+end;
+
+class function TSessionManager.CreateBranchCheckout(
+  const Name: string): TSessionBranchCheckoutParams;
+begin
+  Result := TSessionBranchCheckoutParams.New.Name(Name);
+end;
+
+class function TSessionManager.CreateCommitCheckout(
+  const Sha: string): TSessionCommitCheckoutParams;
+begin
+  Result := TSessionCommitCheckoutParams.New.Sha(Sha);
+end;
+
+class function TSessionManager.CreateCustomToolResultEvent(
+  const CustomToolUseId: string; const Content: TArray<TSessionContentBlockParams>;
+  const IsError: Boolean): TSessionUserCustomToolResultEventParams;
+begin
+  Result := TSessionUserCustomToolResultEventParams.New
+    .CustomToolUseId(CustomToolUseId)
+    .Content(Content)
+    .IsError(IsError);
+end;
+
+class function TSessionManager.CreateDefineOutcomeEvent(const Description: string;
+  const Rubric: TSessionRubricParams;
+  const MaxIterations: Integer): TSessionUserDefineOutcomeEventParams;
+begin
+  Result := TSessionUserDefineOutcomeEventParams.New
+    .Description(Description)
+    .Rubric(Rubric);
+  if MaxIterations > 0 then
+    Result.MaxIterations(MaxIterations);
+end;
+
+class function TSessionManager.CreateDocumentBlock(
+  const Source: TSessionSourceParams): TSessionDocumentBlockParams;
+begin
+  Result := TSessionDocumentBlockParams.New.Source(Source);
+end;
+
+class function TSessionManager.CreateFileResource(const FileId,
+  MountPath: string): TSessionFileResourceParams;
+begin
+  Result := TSessionFileResourceParams.New.FileId(FileId);
+  if not MountPath.IsEmpty then
+    Result.MountPath(MountPath);
+end;
+
+class function TSessionManager.CreateFileRubric(
+  const FileId: string): TSessionFileRubricParams;
+begin
+  Result := TSessionFileRubricParams.New.FileId(FileId);
+end;
+
+class function TSessionManager.CreateFileSource(
+  const FileId: string): TSessionFileSourceParams;
+begin
+  Result := TSessionFileSourceParams.New.FileId(FileId);
+end;
+
+class function TSessionManager.CreateGitHubRepositoryResource(
+  const Url: string): TSessionGitHubRepositoryResourceParams;
+begin
+  Result := TSessionGitHubRepositoryResourceParams.New.Url(Url);
+end;
+
+class function TSessionManager.CreateGitHubRepositoryResource(const Url,
+  AuthorizationToken: string): TSessionGitHubRepositoryResourceParams;
+begin
+  Result := TSessionGitHubRepositoryResourceParams.New
+    .Url(Url)
+    .AuthorizationToken(AuthorizationToken);
+end;
+
+class function TSessionManager.CreateImageBlock(
+  const Source: TSessionSourceParams): TSessionImageBlockParams;
+begin
+  Result := TSessionImageBlockParams.New.Source(Source);
+end;
+
+class function TSessionManager.CreateInterruptEvent(
+  const SessionThreadId: string): TSessionUserInterruptEventParams;
+begin
+  Result := TSessionUserInterruptEventParams.New;
+  if not SessionThreadId.IsEmpty then
+    Result.SessionThreadId(SessionThreadId);
+end;
+
+class function TSessionManager.CreateMemoryStoreResource(const MemoryStoreId,
+  Access, Instructions: string): TSessionMemoryStoreResourceParams;
+begin
+  Result := TSessionMemoryStoreResourceParams.New
+    .MemoryStoreId(MemoryStoreId)
+    .Access(Access);
+  if not Instructions.IsEmpty then
+    Result.Instructions(Instructions);
+end;
+
+class function TSessionManager.CreateParams: TSessionCreateParams;
+begin
+  Result := TSessionCreateParams.New;
+end;
+
+class function TSessionManager.CreateTextBlock(
+  const Text: string): TSessionTextBlockParams;
+begin
+  Result := TSessionTextBlockParams.New.Text(Text);
+end;
+
+class function TSessionManager.CreateTextDocumentSource(
+  const Text: string): TSessionPlainTextDocumentSourceParams;
+begin
+  Result := TSessionPlainTextDocumentSourceParams.New.Data(Text).MediaType();
+end;
+
+class function TSessionManager.CreateTextRubric(
+  const Content: string): TSessionTextRubricParams;
+begin
+  Result := TSessionTextRubricParams.New.Content(Content);
+end;
+
+class function TSessionManager.CreateToolConfirmationEvent(const ToolUseId,
+  Value: string): TSessionUserToolConfirmationEventParams;
+begin
+  Result := TSessionUserToolConfirmationEventParams.New.ToolUseId(ToolUseId);
+  Result.Result(Value);
+end;
+
+class function TSessionManager.CreateUrlSource(
+  const Url: string): TSessionUrlSourceParams;
+begin
+  Result := TSessionUrlSourceParams.New.Url(Url);
+end;
+
+class function TSessionManager.CreateUserMessageEvent(
+  const Content: TArray<TSessionContentBlockParams>): TSessionUserMessageEventParams;
+begin
+  Result := TSessionUserMessageEventParams.New.Content(Content);
+end;
+
+class function TSessionManager.CreateUserMessageEvent(
+  const Text: string): TSessionUserMessageEventParams;
+begin
+  Result := TSessionUserMessageEventParams.New.Text(Text);
+end;
+
+class function TSessionManager.Empty: TSessionManager;
+begin
+  Result := Default(TSessionManager);
+end;
+
+class function TSessionManager.EventListParams: TSessionEventListParams;
+begin
+  Result := TSessionEventListParams.New;
+end;
+
+class function TSessionManager.ListParams: TSessionListParams;
+begin
+  Result := TSessionListParams.New;
+end;
+
+class function TSessionManager.ResourceUpdateParams: TSessionResourceUpdateParams;
+begin
+  Result := TSessionResourceUpdateParams.New;
+end;
+
+class function TSessionManager.SendEventsParams: TSessionSendEventsParams;
+begin
+  Result := TSessionSendEventsParams.New;
+end;
+
+class function TSessionManager.SimpleListParams: TSessionSimpleListParams;
+begin
+  Result := TSessionSimpleListParams.New;
+end;
+
+class function TSessionManager.UpdateParams: TSessionUpdateParams;
+begin
+  Result := TSessionUpdateParams.New;
+end;
+
+{ TVaultCredentialManager }
+
+class function TVaultCredentialManager.CreateBasicTokenEndpointAuth(
+  const ClientSecret: string): TVaultCredentialTokenEndpointAuthBasicParams;
+begin
+  Result := TVaultCredentialTokenEndpointAuthBasicParams.New.ClientSecret(ClientSecret);
+end;
+
+class function TVaultCredentialManager.CreateMCPOAuth(const AccessToken,
+  MCPServerUrl: string): TVaultCredentialMCPOAuthCreateParams;
+begin
+  Result := TVaultCredentialMCPOAuthCreateParams.New
+    .AccessToken(AccessToken)
+    .MCPServerUrl(MCPServerUrl);
+end;
+
+class function TVaultCredentialManager.CreateNoTokenEndpointAuth: TVaultCredentialTokenEndpointAuthNoneParams;
+begin
+  Result := TVaultCredentialTokenEndpointAuthNoneParams.New;
+end;
+
+class function TVaultCredentialManager.CreateParams: TVaultCredentialCreateParams;
+begin
+  Result := TVaultCredentialCreateParams.New;
+end;
+
+class function TVaultCredentialManager.CreatePostTokenEndpointAuth(
+  const ClientSecret: string): TVaultCredentialTokenEndpointAuthPostParams;
+begin
+  Result := TVaultCredentialTokenEndpointAuthPostParams.New.ClientSecret(ClientSecret);
+end;
+
+class function TVaultCredentialManager.CreateRefresh: TVaultCredentialMCPOAuthRefreshParams;
+begin
+  Result := TVaultCredentialMCPOAuthRefreshParams.New;
+end;
+
+class function TVaultCredentialManager.CreateStaticBearer(const Token,
+  MCPServerUrl: string): TVaultCredentialStaticBearerCreateParams;
+begin
+  Result := TVaultCredentialStaticBearerCreateParams.New
+    .Token(Token)
+    .MCPServerUrl(MCPServerUrl);
+end;
+
+class function TVaultCredentialManager.Empty: TVaultCredentialManager;
+begin
+  Result := Default(TVaultCredentialManager);
+end;
+
+class function TVaultCredentialManager.ListParams: TVaultCredentialListParams;
+begin
+  Result := TVaultCredentialListParams.New;
+end;
+
+class function TVaultCredentialManager.UpdateBasicTokenEndpointAuth(
+  const ClientSecret: string): TVaultCredentialTokenEndpointAuthBasicUpdateParams;
+begin
+  Result := TVaultCredentialTokenEndpointAuthBasicUpdateParams.New.ClientSecret(ClientSecret);
+end;
+
+class function TVaultCredentialManager.UpdateMCPOAuth: TVaultCredentialMCPOAuthUpdateParams;
+begin
+  Result := TVaultCredentialMCPOAuthUpdateParams.New;
+end;
+
+class function TVaultCredentialManager.UpdateParams: TVaultCredentialUpdateParams;
+begin
+  Result := TVaultCredentialUpdateParams.New;
+end;
+
+class function TVaultCredentialManager.UpdatePostTokenEndpointAuth(
+  const ClientSecret: string): TVaultCredentialTokenEndpointAuthPostUpdateParams;
+begin
+  Result := TVaultCredentialTokenEndpointAuthPostUpdateParams.New.ClientSecret(ClientSecret);
+end;
+
+class function TVaultCredentialManager.UpdateRefresh: TVaultCredentialMCPOAuthRefreshUpdateParams;
+begin
+  Result := TVaultCredentialMCPOAuthRefreshUpdateParams.New;
+end;
+
+class function TVaultCredentialManager.UpdateStaticBearer: TVaultCredentialStaticBearerUpdateParams;
+begin
+  Result := TVaultCredentialStaticBearerUpdateParams.New;
+end;
+
+{ TVaultManager }
+
+class function TVaultManager.CreateParams: TVaultCreateParams;
+begin
+  Result := TVaultCreateParams.New;
+end;
+
+class function TVaultManager.Empty: TVaultManager;
+begin
+  Result := Default(TVaultManager);
+  FCredential := TVaultCredentialManager.Empty;
+end;
+
+class function TVaultManager.ListParams: TVaultListParams;
+begin
+  Result := TVaultListParams.New;
+end;
+
+class function TVaultManager.UpdateParams: TVaultUpdateParams;
+begin
+  Result := TVaultUpdateParams.New;
+end;
+
+{ TMemoryStoreManager }
+
+class function TMemoryStoreManager.CreateMemoryParams: TMemoryCreateParams;
+begin
+  Result := TMemoryCreateParams.New;
+end;
+
+class function TMemoryStoreManager.CreatePrecondition(
+  const ContentSHA256: string): TMemoryPreconditionParams;
+begin
+  Result := TMemoryPreconditionParams.New.ContentSHA256(ContentSHA256);
+end;
+
+class function TMemoryStoreManager.CreateStoreParams: TMemoryStoreCreateParams;
+begin
+  Result := TMemoryStoreCreateParams.New;
+end;
+
+class function TMemoryStoreManager.DeleteMemoryParams: TMemoryDeleteParams;
+begin
+  Result := TMemoryDeleteParams.New;
+end;
+
+class function TMemoryStoreManager.Empty: TMemoryStoreManager;
+begin
+  Result := Default(TMemoryStoreManager);
+end;
+
+class function TMemoryStoreManager.ListMemoryParams: TMemoryListParams;
+begin
+  Result := TMemoryListParams.New;
+end;
+
+class function TMemoryStoreManager.ListStoreParams: TMemoryStoreListParams;
+begin
+  Result := TMemoryStoreListParams.New;
+end;
+
+class function TMemoryStoreManager.ListVersionParams: TMemoryVersionListParams;
+begin
+  Result := TMemoryVersionListParams.New;
+end;
+
+class function TMemoryStoreManager.UpdateMemoryParams: TMemoryUpdateParams;
+begin
+  Result := TMemoryUpdateParams.New;
+end;
+
+class function TMemoryStoreManager.UpdateStoreParams: TMemoryStoreUpdateParams;
+begin
+  Result := TMemoryStoreUpdateParams.New;
+end;
+
+class function TMemoryStoreManager.ViewBasic: TMemoryViewParams;
+begin
+  Result := TMemoryViewParams.New.Basic;
+end;
+
+class function TMemoryStoreManager.ViewFull: TMemoryViewParams;
+begin
+  Result := TMemoryViewParams.New.Full;
 end;
 
 { TMessagesHelper }
@@ -382,6 +1455,38 @@ end;
 function TContentsHelper.AddFileDocument(const FileId: string): TContents;
 begin
   Result := Self.Add( TContentManager.AddFileDocument(FileId) );
+end;
+
+function TContentsHelper.AddContainerUpload(const FileId: string): TContents;
+begin
+  Result := Self.Add( TContextBetaManager.CreateContainerUpload.FileId(FileId) );
+end;
+
+function TContentsHelper.AddContainerUpload(
+  const Value: TContainerUploadBlockParam): TContents;
+begin
+  Result := Self.Add(Value);
+end;
+
+function TContentsHelper.AddCompaction(const Content: string): TContents;
+begin
+  Result := Self.Add( TContextBetaManager.CreateCompaction.Content(Content) );
+end;
+
+function TContentsHelper.AddCompaction(
+  const Content, EncryptedContent: string): TContents;
+begin
+  Result := Self.Add(
+    TContextBetaManager.CreateCompaction
+      .Content(Content)
+      .EncryptedContent(EncryptedContent)
+  );
+end;
+
+function TContentsHelper.AddCompaction(
+  const Value: TCompactionBlockParam): TContents;
+begin
+  Result := Self.Add(Value);
 end;
 
 function TContentsHelper.AddImage(const Value: TImageBlockParam): TContents;
@@ -427,6 +1532,31 @@ end;
 
 { TGenerationManager }
 
+class function TGenerationManager.AgentMCPServerParts: TAgentMCPServers;
+begin
+  Result := TAgentMCPServers.Create();
+end;
+
+class function TGenerationManager.AgentRosterParts: TAgentRosterEntries;
+begin
+  Result := TAgentRosterEntries.Create();
+end;
+
+class function TGenerationManager.AgentSkillParts: TAgentSkills;
+begin
+  Result := TAgentSkills.Create();
+end;
+
+class function TGenerationManager.AgentToolConfigParts: TAgentToolConfigs;
+begin
+  Result := TAgentToolConfigs.Create();
+end;
+
+class function TGenerationManager.AgentToolParts: TAgentTools;
+begin
+  Result := TAgentTools.Create();
+end;
+
 class function TGenerationManager.CitationParts: TCitations;
 begin
   Result := TCitations.Create();
@@ -467,6 +1597,11 @@ begin
   Result := TOutputConfig.New;
 end;
 
+class function TGenerationManager.CreateTaskBudget: TOutputConfigTaskBudget;
+begin
+  Result := TOutputConfigTaskBudget.New;
+end;
+
 class function TGenerationManager.CreateFormat: TOutputConfigFormat;
 begin
   Result := TOutputConfigFormat.New;
@@ -503,14 +1638,19 @@ end;
 class function TGenerationManager.Empty: TGenerationManager;
 begin
   Result := Default(TGenerationManager);
+  FAgentManager := TAgentManager.Empty;
   FContentManager := Default(TContentManager);
   FCacheControlManager := Default(TCacheControlManager);
   FContextManager := TContextManager.Empty;
+  FEnvironmentManager := TEnvironmentManager.Empty;
   FToolManager := TToolManager.Empty;
   FMCPServerManager := TMCPServerManager.Empty;
+  FMemoryStoreManager := TMemoryStoreManager.Empty;
+  FSessionManager := TSessionManager.Empty;
   FEditManager := TEditManager.Empty;
   FSkillManager := TSkillManager.Empty;
   FToolChoiceManager := TToolChoiceManager.Empty;
+  FVaultManager := TVaultManager.Empty;
   FDocument := Default(TDocument);
 end;
 
@@ -522,6 +1662,21 @@ end;
 class function TGenerationManager.ContentParts: TContents;
 begin
   Result := TContents.Create();
+end;
+
+class function TGenerationManager.SessionContentParts: TSessionContents;
+begin
+  Result := TSessionContents.Create();
+end;
+
+class function TGenerationManager.SessionEventParts: TSessionEvents;
+begin
+  Result := TSessionEvents.Create();
+end;
+
+class function TGenerationManager.SessionResourceParts: TSessionResources;
+begin
+  Result := TSessionResources.Create();
 end;
 
 class function TGenerationManager.TextBlockParts: TTextBlocks;
@@ -627,6 +1782,11 @@ begin
   Result := TContainerUploadBlockParam.New;
 end;
 
+class function TContextBetaManager.CreateCompaction: TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam.New;
+end;
+
 class function TContextBetaManager.CreateMCPToolResult: TMCPToolResultBlockParam;
 begin
   Result := TMCPToolResultBlockParam.New;
@@ -704,6 +1864,11 @@ begin
   Result := TWebSearchTool20250305.New;
 end;
 
+class function TToolManager.CreateUserLocation: TUserLocation;
+begin
+  Result := TUserLocation.New;
+end;
+
 class function TToolManager.Empty: TToolManager;
 begin
   Result := Default(TToolManager);
@@ -711,6 +1876,11 @@ begin
 end;
 
 { TToolBetaManager }
+
+class function TToolBetaManager.CreateAdvisorTool20260301: TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301.New;
+end;
 
 class function TToolBetaManager.CreateCodeExecutionTool20250522: TCodeExecutionTool20250522;
 begin
@@ -720,6 +1890,11 @@ end;
 class function TToolBetaManager.CreateCodeExecutionTool20250825: TCodeExecutionTool20250825;
 begin
   Result := TCodeExecutionTool20250825.New;
+end;
+
+class function TToolBetaManager.CreateCodeExecutionTool20260120: TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120.New;
 end;
 
 class function TToolBetaManager.CreateMCPToolset: TMCPToolset;
@@ -772,6 +1947,21 @@ begin
   Result := TWebFetchTool20250910.New;
 end;
 
+class function TToolBetaManager.CreateWebFetchTool20260209: TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209.New;
+end;
+
+class function TToolBetaManager.CreateWebFetchTool20260309: TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309.New;
+end;
+
+class function TToolBetaManager.CreateWebSearchTool20260209: TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209.New;
+end;
+
 class function TToolBetaManager.Empty: TToolBetaManager;
 begin
   Result := Default(TToolBetaManager);
@@ -809,6 +1999,11 @@ end;
 class function TEditManager.CreateClearToolUses20250919Edit: TClearToolUses20250919Edit;
 begin
   Result := TClearToolUses20250919Edit.New;
+end;
+
+class function TEditManager.CreateCompact20260112Edit: TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit.New;
 end;
 
 class function TEditManager.Empty: TEditManager;

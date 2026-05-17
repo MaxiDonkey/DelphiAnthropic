@@ -35,7 +35,7 @@ Fix a for loop that is missing a :.
 A request is sent to the model with access to the text editor tool.
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 512;
   var Prompt := 'Fix the syntax error in primes.py.';
 
@@ -112,7 +112,7 @@ The application reads the file locally and returns its contents:
   ```pascal
     var Primes :=  System.IOUtils.TFile.ReadAllText('..\media\Primes.py');   
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := Primes;
     var FirstPrompt := 'Fix the syntax error in primes.py.';
@@ -155,7 +155,7 @@ The application reads the file locally and returns its contents:
 - The Delphi code responsible for creating the payload produces the following JSON.
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 1024,
       "tools": [
           {
@@ -237,7 +237,7 @@ To avoid repeatedly reconstructing message context from the history of exchanges
 
 This interface enables recording and managing the history of multi-turn interactions. The `BuildContextFromHistory` method also supports reconstructing tool-related interactions from this history.
 
-In the provided ***Sample.dpr*** project, an implementation of the `ITurn` interface is available in the `TutorialHub` class. This implementation offers a deliberately simple mechanism to demonstrate how tools can be integrated and used in multi-turn interaction scenarios.
+The tutorial support units expose a `TutorialHub` class with an implementation of the `ITurn` interface. This deliberately simple mechanism demonstrates how tools can be integrated and used in multi-turn interaction scenarios.
 
 ### Usage Example
 
@@ -245,7 +245,7 @@ In the provided ***Sample.dpr*** project, an implementation of the `ITurn` inter
   ```pascal
     TutorialHub.ToolTurns := TTurns.CreateInstance;  // <--- Instanciate ToolTurns: ITurns
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 512;
     var Prompt := 'Fix the syntax error in primes.py.';
 
@@ -292,7 +292,7 @@ In the provided ***Sample.dpr*** project, an implementation of the `ITurn` inter
   ```pascal
     var Primes :=  System.IOUtils.TFile.ReadAllText('..\media\Primes.py');
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := Primes;
 

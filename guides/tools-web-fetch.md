@@ -1,4 +1,4 @@
-# Web Fetch Tool [beta]
+# Web Fetch Tool
 
 The **Web Fetch API** is a controlled mechanism that allows a model to ingest the **full content of explicitly provided web sources** in order to analyze them accurately within a secure framework.
 
@@ -27,9 +27,9 @@ It is not designed to discover sources or browse the web, but to **load identifi
 ## Quick Start
 
 Getting started requires three minimal steps:
-1. **Enable the beta flag** `web-fetch-2025-09-10`
+1. **Declare the** `web_fetch_20260209` **tool** in the API request
 2. **Explicitly include the URL** in the user message
-3. **Declare the** `web_fetch` **tool** in the API request
+3. **Configure limits and domain rules** when needed
 
 Minimal execution flow:
 - the user requests analysis of a known URL,
@@ -45,7 +45,7 @@ Recommended best practices from the start:
 ### Usage code
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'Please analyze the content at https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool#url-validation';
 
@@ -55,14 +55,13 @@ Recommended best practices from the start:
     begin
       with Generation do
         Params
-          .Beta(['web-fetch-2025-09-10'])
           .Model(ModelName)
           .MaxTokens(MaxTokens)
           .Messages( MessageParts
               .User( Prompt )
           )
           .Tools( ToolParts
-              .Add( Tool.Beta.CreateWebFetchTool20250910
+              .Add( Tool.Beta.CreateWebFetchTool20260209
                   .MaxUses(5)
               )
           );

@@ -1,0 +1,25 @@
+graph LR
+    Demo_Anthropic_AsyncUtils["Demo.Anthropic.AsyncUtils"]:::internal
+    Demo_Anthropic_Context["Demo.Anthropic.Context"]:::internal
+    Demo_Anthropic_FileIds["Demo.Anthropic.FileIds"]:::internal
+    Demo_Anthropic_Helpers["Demo.Anthropic.Helpers"]:::internal
+    Demo_Anthropic_JsonResponse_Helper["Demo.Anthropic.JsonResponse.Helper"]:::internal
+    Demo_Anthropic_Services["Demo.Anthropic.Services"]:::internal
+    Main["Main"]:::internal
+    Main_in["Main in"]:::external
+    VCL_WVPythia_Services["VCL.WVPythia.Services"]:::internal
+    VCL_Anthropic["VCL_Anthropic"]:::internal
+    Demo_Anthropic_Services --> Demo_Anthropic_AsyncUtils
+    Demo_Anthropic_Services --> Demo_Anthropic_Context
+    Demo_Anthropic_Services --> Demo_Anthropic_FileIds
+    Demo_Anthropic_Services --> Demo_Anthropic_Helpers
+    Demo_Anthropic_Services --> Demo_Anthropic_JsonResponse_Helper
+    Main --> Demo_Anthropic_AsyncUtils
+    Main --> Demo_Anthropic_Context
+    Main --> Demo_Anthropic_Services
+    Main --> VCL_WVPythia_Services
+    VCL_WVPythia_Services --> Demo_Anthropic_Services
+    VCL_WVPythia_Services --> Main
+    VCL_Anthropic --> Main_in
+    classDef internal fill:#e3f2fd,stroke:#1565c0,color:#0d47a1;
+    classDef external fill:#f5f5f5,stroke:#9e9e9e,color:#616161;

@@ -73,7 +73,7 @@ Only the tokens actually read by the model are billed.
 - JSON Payload creation - extended reasoning 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'Please summarize this document for me.';
 

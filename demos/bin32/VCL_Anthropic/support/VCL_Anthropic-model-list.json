@@ -1,0 +1,61 @@
+{
+  "type": "model-selector-set-data",
+  "models": [
+    {
+      "id": "claude-opus-4-7",
+      "label": "claude-opus-4-7",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-opus-4-6",
+      "label": "claude-opus-4-6",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-sonnet-4-6",
+      "label": "claude-sonnet-4-6",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-haiku-4-5",
+      "label": "claude-haiku-4-5",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-sonnet-4-5",
+      "label": "claude-sonnet-4-5",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-opus-4-5",
+      "label": "claude-opus-4-5",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-opus-4-1",
+      "label": "claude-opus-4-1",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-sonnet-4-0",
+      "label": "claude-sonnet-4-0",
+      "capabilityLabels": [ "Thinking", "Web research", "Attach files", "Vision" ],
+      "categoryId": "textGeneration"
+    },
+    {
+      "id": "claude-opus-4-0",
+      "label": "claude-opus-4-0",
+      "capabilityLabels": [ "Thinking", "Web research", "Deep Research" ],
+      "categoryId": "deepResearch"
+    }
+  ],
+  "activeCategoryId": "allModels",
+  "selectedModelId": ""
+}

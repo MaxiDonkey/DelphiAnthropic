@@ -1,0 +1,267 @@
+- [Introduction](#introduction)
+- [1. Before production: developer side](#1-before-production-developer-side)
+  - [1.1 Declare the available models](#11-declare-the-available-models)
+  - [1.2 Configure visible categories and their default model](#12-configure-visible-categories-and-their-default-model)
+  - [1.3 Decide which categories should be visible](#13-decide-which-categories-should-be-visible)
+  - [1.4 Pre-production checklist](#14-pre-production-checklist)
+- [2. In production: user side](#2-in-production-user-side)
+  - [Procedure](#procedure)
+  - [Example](#example)
+  - [User-side limitation](#user-side-limitation)
+- [3. Attached documents](#3-attached-documents)
+
+___
+
+<br>
+
+## Introduction
+
+The following warnings indicate that no default model is currently assigned for the requested operation type:
+
+```
+No default model: text generation cannot be processed
+No default model configured: Image creation aborted
+No default model configured: Video creation aborted
+No default model configured: Audio creation aborted
+No default model configured: TTS operation aborted
+No default model configured: Deep Research operation aborted
+```
+
+In this context, default model means: the model currently selected to handle a given operation category.
+
+For example, the default model for Text Generation is the model used to process text prompts. The default model for Image Creation is the model used to generate images.
+
+
+## 1. Before production: developer side
+
+Before shipping the application, the developer must make sure that the model configuration is consistent with the features exposed to the user.
+
+There are two configuration levels to distinguish.
+
+### 1.1 Declare the available models
+
+The first level is the list of available models, usually defined in:
+
+```
+<exeName>-model-list.json
+```
+
+This file contains the models provided by the application, with their identifier, display label, capability labels, and category. The documentation explains that this file is used to populate the model selector and organize models by usage type, such as `textGeneration`, `imageCreation`, `videoCreation`, `audioCreation`, `textToSpeech`, `speechToText`, or `deepResearch`.
+
+A model can only be selected as the default model if it is first declared in this model list.
+
+### 1.2 Configure visible categories and their default model
+
+The second level is the runtime configuration of the model selector categories. This is done in:
+
+```
+<exeName>-model-get-replace-version.json
+```
+
+This file defines, among other things:
+
+```
+- which categories are visible;
+- which source category each category is linked to;
+- which model is currently selected by default for each category.
+```
+
+Example:
+
+```json
+{
+  "categoryConfigMode": "replace",
+  "categories": [
+    {
+      "id": "allModels",
+      "label": "Model list",
+      "badge": "",
+      "sourceCategoryId": "none",
+      "featureLabels": ["All"],
+      "model": "",
+      "visible": true
+    },
+    {
+      "id": "textGeneration",
+      "label": "Text Generation",
+      "badge": "",
+      "sourceCategoryId": "text",
+      "featureLabels": [
+        "Thinking",
+        "Attach files",
+        "Web research",
+        "Vision"
+      ],
+      "model": "Default_uses_model_ID",
+      "visible": true
+    },
+    {
+      "id": "imageCreation",
+      "label": "Image Creation",
+      "badge": "",
+      "sourceCategoryId": "image",
+      "featureLabels": [
+        "Create Image",
+        "Vision"
+      ],
+      "model": "",
+      "visible": true
+    }
+  ],
+  "type": "model-selector-set-runtime-config"
+}
+```
+
+The important field here is:
+
+```json
+"model": "Default_uses_model_ID"
+```
+
+It defines the default model for the category. The value must match the identifier of a model declared in the model list.
+
+On the other hand, a visible category with an empty model field means that the category is exposed in the UI, but no model has been selected for it yet:
+
+
+```json
+{
+  "id": "imageCreation",
+  "label": "Image Creation",
+  "model": "",
+  "visible": true
+}
+```
+
+In that case, if the user tries to use this feature, they may receive a warning such as:
+
+```
+No default model configured: Image creation aborted
+```
+This behavior can be intentional. The developer may decide not to impose a default model and instead let the user make the first selection from the model configuration panel. That selection will then be persisted.
+
+### 1.3 Decide which categories should be visible
+
+The developer must also configure the `visible` field for each category.
+
+If a category is not supported by the application, or if no matching model is provided, it should not be exposed:
+
+```json
+{
+  "id": "videoCreation",
+  "label": "Video Creation",
+  "model": "",
+  "visible": false
+}
+```
+
+If a category is visible, the developer must choose between two strategies:
+
+```
+Strategy 1 — Provide a default model
+The category is visible and the "model" field contains a valid model identifier.
+The user can use the feature immediately.
+
+Strategy 2 — Let the user choose
+The category is visible but the "model" field is empty.
+The user will have to select the first default model manually.
+```
+
+This distinction is important: if `visible` is set to `true` and `model` is empty, the `No default model configured` warning is expected until a model has been selected for that category.
+
+### 1.4 Pre-production checklist
+
+Before shipping, check that:
+
+```
+1. Available models are declared in <exeName>-model-list.json.
+2. Operation categories are configured in <exeName>-model-get-replace-version.json.
+3. Unsupported categories have "visible": false.
+4. Visible categories either have:
+   - a "model" field set to a valid model identifier;
+   - or an intentionally empty "model" field so the user can choose.
+5. The identifiers used in "model" match existing model IDs.
+```
+
+The documentation also notes that configuration files can be pre-populated in the `support` folder before deployment, so the application uses the provided configuration at first launch instead of relying only on generated defaults.
+
+<br>
+
+## 2. In production: user side
+
+In production, the user may see this warning when they start an operation for a visible category that does not yet have a default model selected.
+
+For example:
+
+```
+No default model configured: Image creation aborted
+```
+
+means that image creation is available in the interface, but no image model is currently selected for that category.
+
+The user does not need to edit any JSON file. They should use the model configuration panel.
+
+#### Procedure
+
+- Open the model configuration panel.
+- Look for categories marked as not assigned, usually shown with a red dot.
+- Select the relevant category, for example:
+   - Text Generation
+   - Image Creation
+   - Video Creation
+   - Audio Creation
+   - Text to Speech
+   - Deep Research
+- When a category is selected, the model list is filtered to show the models compatible with that category.
+- Select one of the models from the filtered list.
+- That model becomes the default model, meaning the model currently used for that operation type.
+
+Once the model has been selected, the configuration is persisted. The user does not need to repeat this choice on every launch, unless they later want to change the model for that category.
+
+#### Example
+
+If the user receives:
+
+```
+No default model configured: Video creation aborted
+```
+they should open the model configuration panel, select the Video Creation category, then choose a video model from the filtered list. That model then becomes the default model used for video creation operations.
+
+#### User-side limitation
+
+The user can choose or change the default model for an already visible category, but they do not control which categories are visible in the application.
+
+Category visibility is part of the developer-side configuration before production. In other words:
+
+```
+The developer decides which categories exist and are visible.
+The user chooses the current model for visible categories.
+```
+
+So, if a category appears with a red dot, the user can fix the situation by assigning a model to it.
+
+However, if a category should not appear at all, the correction must be made by the developer in the category configuration.
+
+
+## 3. Attached documents
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

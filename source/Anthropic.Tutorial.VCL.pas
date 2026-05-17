@@ -16,7 +16,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
   System.UITypes, System.Threading, System.JSON,
-  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Helpers, Anthropic.Context.Helper;
+  Anthropic, Anthropic.Types, Anthropic.API.Params, Anthropic.Helpers, Anthropic.Context.Helper,
+  Anthropic.Webhooks;
 
 type
   TToolProc = procedure (const Value: string) of object;
@@ -33,8 +34,6 @@ type
     FToolCall: TToolProc;
     FCancel: Boolean;
     FToolTurns: ITurns;
-    FFileName: string;
-    FBatchId: string;
     procedure OnButtonClick(Sender: TObject);
     procedure SetButton(const Value: TButton);
     procedure SetMemo1(const Value: TMemo);
@@ -43,6 +42,10 @@ type
     procedure SetMemo4(const Value: TMemo);
     procedure SetJSONRequest(const Value: string);
     procedure SetJSONResponse(const Value: string);
+  protected
+    FFileName: string;
+    FBatchId: string;
+    function WeatherRetrieve(const Value: string): string;
   public
     property Client: IAnthropic read FClient write FClient;
     property Memo1: TMemo read FMemo1 write SetMemo1;
@@ -63,7 +66,7 @@ type
     procedure ShowCancel;
     procedure HideCancel;
 
-    function WeatherRetrieve(const Value: string): string;
+
     procedure WeatherReporter(const Value: string);
 
     constructor Create(const AClient: IAnthropic;
@@ -102,6 +105,40 @@ type
   procedure Display(Sender: TObject; Value: TSkillDeleted); overload;
   procedure Display(Sender: TObject; Value: TSkillVersion); overload;
   procedure Display(Sender: TObject; Value: TSkillVersionList); overload;
+  procedure Display(Sender: TObject; Value: TAgent); overload;
+  procedure Display(Sender: TObject; Value: TAgentList); overload;
+  procedure Display(Sender: TObject; Value: TEnvironment); overload;
+  procedure Display(Sender: TObject; Value: TEnvironmentList); overload;
+  procedure Display(Sender: TObject; Value: TEnvironmentDeleteResponse); overload;
+  procedure Display(Sender: TObject; Value: TSession); overload;
+  procedure Display(Sender: TObject; Value: TSessionList); overload;
+  procedure Display(Sender: TObject; Value: TSessionDeleted); overload;
+  procedure Display(Sender: TObject; Value: TSessionEvent); overload;
+  procedure Display(Sender: TObject; Value: TSessionEventList); overload;
+  procedure Display(Sender: TObject; Value: TSessionSendEventsResponse); overload;
+  procedure Display(Sender: TObject; Value: TSessionResource); overload;
+  procedure Display(Sender: TObject; Value: TSessionResourceList); overload;
+  procedure Display(Sender: TObject; Value: TSessionResourceDeleted); overload;
+  procedure Display(Sender: TObject; Value: TSessionThread); overload;
+  procedure Display(Sender: TObject; Value: TSessionThreadList); overload;
+  procedure Display(Sender: TObject; Value: TVault); overload;
+  procedure Display(Sender: TObject; Value: TVaultList); overload;
+  procedure Display(Sender: TObject; Value: TVaultDeleted); overload;
+  procedure Display(Sender: TObject; Value: TVaultCredential); overload;
+  procedure Display(Sender: TObject; Value: TVaultCredentialList); overload;
+  procedure Display(Sender: TObject; Value: TVaultCredentialDeleted); overload;
+  procedure Display(Sender: TObject; Value: TVaultCredentialValidation); overload;
+  procedure Display(Sender: TObject; Value: TMemoryStore); overload;
+  procedure Display(Sender: TObject; Value: TMemoryStoreList); overload;
+  procedure Display(Sender: TObject; Value: TMemoryStoreDeleted); overload;
+  procedure Display(Sender: TObject; Value: TMemoryListItem); overload;
+  procedure Display(Sender: TObject; Value: TMemory); overload;
+  procedure Display(Sender: TObject; Value: TMemoryList); overload;
+  procedure Display(Sender: TObject; Value: TMemoryDeleted); overload;
+  procedure Display(Sender: TObject; Value: TMemoryVersion); overload;
+  procedure Display(Sender: TObject; Value: TMemoryVersionList); overload;
+  procedure Display(Sender: TObject; Value: TWebhookEventData); overload;
+  procedure Display(Sender: TObject; Value: TWebhookEvent); overload;
 
   function DisplayChat(Sender: TObject; Value: TChat): string; overload;
   function DisplayChat(Sender: TObject; Value: string): string; overload;
@@ -267,9 +304,9 @@ begin
     TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, [
     Value.Id,
-    F('• Type', Value.&Type),
-    F('• DisplayName', Value.DisplayName),
-    F('• CreatedAt', Value.CreatedAt)
+    F('ï¿½ Type', Value.&Type),
+    F('ï¿½ DisplayName', Value.DisplayName),
+    F('ï¿½ CreatedAt', Value.CreatedAt)
   ]);
   Display(Sender, EmptyStr);
 end;
@@ -291,10 +328,10 @@ end;
 
 procedure Display(Sender: TObject; Value: TUsage);
 begin
-  Display(Sender, [F('• input_tokens', [Value.InputTokens.ToString,
-      F('• output_tokens', Value.OutputTokens.ToString),
-      F('• cache_creation_input_tokens', Value.CacheCreationInputTokens.ToString),
-      F('• cache_read_input_tokens', Value.CacheReadInputTokens.ToString)
+  Display(Sender, [F('ï¿½ input_tokens', [Value.InputTokens.ToString,
+      F('ï¿½ output_tokens', Value.OutputTokens.ToString),
+      F('ï¿½ cache_creation_input_tokens', Value.CacheCreationInputTokens.ToString),
+      F('ï¿½ cache_read_input_tokens', Value.CacheReadInputTokens.ToString)
    ])]);
   Display(Sender)
 end;
@@ -306,17 +343,17 @@ begin
 
   Display(Sender, [EmptyStr,
     Value.Id,
-    F('• Type', Value.&Type),
-    F('• Processing_status', Value.ProcessingStatus.ToString),
-    F('• CreatedAt', Value.CreatedAt),
-    F('• ExpiresAt', Value.ExpiresAt),
-    F('• CancelInitiatedAt', Value.CancelInitiatedAt),
-    F('• ResultsUrl', Value.ResultsUrl),
-    F('• Processing', Value.RequestCounts.Processing.ToString),
-    F('• Succeeded', Value.RequestCounts.Succeeded.ToString),
-    F('• Errored', Value.RequestCounts.Errored.ToString),
-    F('• Canceled', Value.RequestCounts.Canceled.ToString),
-    F('• Expired', Value.RequestCounts.Expired.ToString)
+    F('ï¿½ Type', Value.&Type),
+    F('ï¿½ Processing_status', Value.ProcessingStatus.ToString),
+    F('ï¿½ CreatedAt', Value.CreatedAt),
+    F('ï¿½ ExpiresAt', Value.ExpiresAt),
+    F('ï¿½ CancelInitiatedAt', Value.CancelInitiatedAt),
+    F('ï¿½ ResultsUrl', Value.ResultsUrl),
+    F('ï¿½ Processing', Value.RequestCounts.Processing.ToString),
+    F('ï¿½ Succeeded', Value.RequestCounts.Succeeded.ToString),
+    F('ï¿½ Errored', Value.RequestCounts.Errored.ToString),
+    F('ï¿½ Canceled', Value.RequestCounts.Canceled.ToString),
+    F('ï¿½ Expired', Value.RequestCounts.Expired.ToString)
   ]);
   Display(Sender, EmptyStr);
 end;
@@ -335,9 +372,9 @@ procedure Display(Sender: TObject; Value: TBatchList);
 begin
   TutorialHub.JSONResponse := Value.JSONResponse;
 
-  Display(Sender, F('• HasMore', BoolToStr(Value.HasMore, True)));
-  Display(Sender, F('• FirstId', Value.FirstId));
-  Display(Sender, F('• LastId', Value.LastId));
+  Display(Sender, F('ï¿½ HasMore', BoolToStr(Value.HasMore, True)));
+  Display(Sender, F('ï¿½ FirstId', Value.FirstId));
+  Display(Sender, F('ï¿½ LastId', Value.LastId));
   Display(Sender, EmptyStr);
 
   for var Item in Value.Data do
@@ -345,7 +382,7 @@ begin
       Display(Sender, [EmptyStr,
         F('Id', [
           Item.Id,
-          F('• processingStatus', Item.ProcessingStatus.ToString)
+          F('ï¿½ processingStatus', Item.ProcessingStatus.ToString)
         ])
       ]);
     end;
@@ -374,7 +411,7 @@ end;
 procedure Display(Sender: TObject; Value: TTokenCount);
 begin
   TutorialHub.JSONResponse := Value.JSONResponse;
-  Display(Sender, F('• Input_tokens', Value.InputTokens.ToString));
+  Display(Sender, F('ï¿½ Input_tokens', Value.InputTokens.ToString));
 end;
 
 procedure Display(Sender: TObject; Value: TFile);
@@ -382,10 +419,10 @@ begin
   TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, [
     Value.Id,
-    F('• filename', Value.Filename),
-    F('• mimeType', Value.MimeType),
-    F('• sizeBytes', Value.SizeBytes.ToString),
-    F('• downloadable', BoolToStr(Value.Downloadable, True))
+    F('ï¿½ filename', Value.Filename),
+    F('ï¿½ mimeType', Value.MimeType),
+    F('ï¿½ sizeBytes', Value.SizeBytes.ToString),
+    F('ï¿½ downloadable', BoolToStr(Value.Downloadable, True))
   ]);
   Display(Sender);
 end;
@@ -406,15 +443,15 @@ end;
 
 procedure Display(Sender: TObject; Value: TTurnItem);
 begin
-  Display(Sender, F('• count', Value.Turns.Count.ToString));
-  Display(Sender, F('• index', Value.Index.ToString));
+  Display(Sender, F('ï¿½ count', Value.Turns.Count.ToString));
+  Display(Sender, F('ï¿½ index', Value.Index.ToString));
   for var Item in Value.ToolResponse do
     begin
-      Display(Sender, F('  • type', Item.&Type.ToString));
-      Display(Sender, F('  • id', Item.Id));
-      Display(Sender, F('  • name', Item.Name));
-      Display(Sender, F('  • text', Item.Text.Trim));
-      Display(Sender, F('  • input', Item.Input));
+      Display(Sender, F('  ï¿½ type', Item.&Type.ToString));
+      Display(Sender, F('  ï¿½ id', Item.Id));
+      Display(Sender, F('  ï¿½ name', Item.Name));
+      Display(Sender, F('  ï¿½ text', Item.Text.Trim));
+      Display(Sender, F('  ï¿½ input', Item.Input));
     end;
   Display(Sender);
 end;
@@ -424,12 +461,12 @@ begin
   if not Value.JSONResponse.IsEmpty then
     TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, Value.Id);
-  Display(Sender, F('  • created_at', Value.CreatedAt));
-  Display(Sender, F('  • display_title', Value.DisplayTitle));
-  Display(Sender, F('  • LatestVersion', Value.LatestVersion));
-  Display(Sender, F('  • source', Value.Source));
-  Display(Sender, F('  • type', Value.&Type));
-//  Display(Sender, F('  • updated_at', Value.UpdatedAt));
+  Display(Sender, F('  ï¿½ created_at', Value.CreatedAt));
+  Display(Sender, F('  ï¿½ display_title', Value.DisplayTitle));
+  Display(Sender, F('  ï¿½ LatestVersion', Value.LatestVersion));
+  Display(Sender, F('  ï¿½ source', Value.Source));
+  Display(Sender, F('  ï¿½ type', Value.&Type));
+//  Display(Sender, F('  ï¿½ updated_at', Value.UpdatedAt));
 
   Display(Sender, '');
 end;
@@ -452,13 +489,13 @@ begin
   if not Value.JSONResponse.IsEmpty then
     TutorialHub.JSONResponse := Value.JSONResponse;
   Display(Sender, Value.Id);
-  Display(Sender, F('  • created_at', Value.CreatedAt));
-  Display(Sender, F('  • description', Value.Description.Trim));
-  Display(Sender, F('  • directory', Value.Directory));
-  Display(Sender, F('  • name', Value.Name));
-  Display(Sender, F('  • skill_id', Value.SkillId));
-  Display(Sender, F('  • type', Value.&Type));
-  Display(Sender, F('  • version', Value.Version));
+  Display(Sender, F('  ï¿½ created_at', Value.CreatedAt));
+  Display(Sender, F('  ï¿½ description', Value.Description.Trim));
+  Display(Sender, F('  ï¿½ directory', Value.Directory));
+  Display(Sender, F('  ï¿½ name', Value.Name));
+  Display(Sender, F('  ï¿½ skill_id', Value.SkillId));
+  Display(Sender, F('  ï¿½ type', Value.&Type));
+  Display(Sender, F('  ï¿½ version', Value.Version));
 
   Display(Sender, '');
 end;
@@ -468,6 +505,547 @@ begin
   TutorialHub.JSONResponse := Value.JSONResponse;
   for var Item in Value.Data do
     Display(Sender, Item);
+end;
+
+procedure Display(Sender: TObject; Value: TAgent);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var ModelId := '';
+  if Assigned(Value.Model) then
+    ModelId := Value.Model.Id;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ name', Value.Name),
+    F('  ï¿½ version', Value.Version.ToString),
+    F('  ï¿½ model', ModelId),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TAgentList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No agent found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TEnvironment);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ name', Value.Name),
+    F('  ï¿½ description', Value.Description.Trim),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TEnvironmentList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No environment found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TEnvironmentDeleteResponse);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, F('Id', [Value.Id, F('type', Value.&Type)]));
+  Display(Sender);
+end;
+
+procedure Display(Sender: TObject; Value: TSession);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var AgentId := '';
+  if Assigned(Value.Agent) then
+    AgentId := Value.Agent.Id;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ title', Value.Title),
+    F('  ï¿½ status', Value.Status),
+    F('  ï¿½ agent_id', AgentId),
+    F('  ï¿½ environment_id', Value.EnvironmentId),
+    F('  ï¿½ resources', Length(Value.Resources).ToString),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No session found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TSessionDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' session deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionEvent);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ processed_at', Value.ProcessedAt),
+    F('  ï¿½ name', Value.Name),
+    F('  ï¿½ result', Value.Result),
+    F('  ï¿½ tool_use_id', Value.ToolUseId),
+    F('  ï¿½ session_thread_id', Value.SessionThreadId)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionEventList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No session event found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TSessionSendEventsResponse);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+end;
+
+procedure Display(Sender: TObject; Value: TSessionResource);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ name', Value.Name),
+    F('  ï¿½ mount_path', Value.MountPath),
+    F('  ï¿½ file_id', Value.FileId),
+    F('  ï¿½ memory_store_id', Value.MemoryStoreId),
+    F('  ï¿½ url', Value.Url)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionResourceList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No session resource found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TSessionResourceDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' session resource deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionThread);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var AgentId := '';
+  if Assigned(Value.Agent) then
+    AgentId := Value.Agent.Id;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ status', Value.Status),
+    F('  ï¿½ session_id', Value.SessionId),
+    F('  ï¿½ parent_thread_id', Value.ParentThreadId),
+    F('  ï¿½ agent_id', AgentId),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TSessionThreadList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No session thread found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TVault);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ display_name', Value.DisplayName),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TVaultList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No vault found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TVaultDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' vault deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TVaultCredential);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var AuthType := '';
+  if Assigned(Value.Auth) then
+    AuthType := Value.Auth.&Type;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ display_name', Value.DisplayName),
+    F('  ï¿½ vault_id', Value.VaultId),
+    F('  ï¿½ auth_type', AuthType),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TVaultCredentialList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No vault credential found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TVaultCredentialDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' vault credential deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TVaultCredentialValidation);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    F('credential_id', Value.CredentialId),
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ vault_id', Value.VaultId),
+    F('  ï¿½ status', Value.Status),
+    F('  ï¿½ has_refresh_token', Value.HasRefreshToken),
+    F('  ï¿½ validated_at', Value.ValidatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryStore);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ name', Value.Name),
+    F('  ï¿½ description', Value.Description.Trim),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryStoreList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No memory store found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryStoreDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' memory store deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryListItem);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if Value is TMemory then
+    begin
+      Display(Sender, TMemory(Value));
+      Exit;
+    end;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Path,
+    F('  ï¿½ type', Value.&Type)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TMemory);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ path', Value.Path),
+    F('  ï¿½ store_id', Value.MemoryStoreId),
+    F('  ï¿½ version_id', Value.MemoryVersionId),
+    F('  ï¿½ size_bytes', Value.ContentSizeBytes.ToString),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ updated_at', Value.UpdatedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No memory found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryDeleted);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, Value.Id + ' memory deleted');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryVersion);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var SizeBytes := '';
+  if Value.HasContentSizeBytes then
+    SizeBytes := Value.ContentSizeBytes.ToString;
+  Display(Sender, [
+    Value.Id,
+    F('  ï¿½ type', Value.&Type),
+    F('  ï¿½ operation', Value.Operation),
+    F('  ï¿½ path', Value.Path),
+    F('  ï¿½ memory_id', Value.MemoryId),
+    F('  ï¿½ store_id', Value.MemoryStoreId),
+    F('  ï¿½ size_bytes', SizeBytes),
+    F('  ï¿½ created_at', Value.CreatedAt),
+    F('  ï¿½ redacted_at', Value.RedactedAt)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TMemoryVersionList);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  if Length(Value.Data) = 0 then
+    begin
+      Display(Sender, 'No memory version found');
+      Exit;
+    end;
+  for var Item in Value.Data do
+    Display(Sender, Item);
+  Display(Sender, F('next_page', Value.NextPage));
+end;
+
+procedure Display(Sender: TObject; Value: TWebhookEventData);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  var ResourceKindStr := '';
+  case Value.ResourceKind of
+    TWebhookResourceKind.session:          ResourceKindStr := 'session';
+    TWebhookResourceKind.session_thread:   ResourceKindStr := 'session_thread';
+    TWebhookResourceKind.vault:            ResourceKindStr := 'vault';
+    TWebhookResourceKind.vault_credential: ResourceKindStr := 'vault_credential';
+  else
+    ResourceKindStr := 'unknown';
+  end;
+  Display(Sender, [
+    Value.Id,
+    F('  - type', Value.&Type),
+    F('  - resource_kind', ResourceKindStr),
+    F('  - organization_id', Value.OrganizationId),
+    F('  - workspace_id', Value.WorkspaceId),
+    F('  - vault_id', Value.VaultId)
+  ]);
+  Display(Sender, '');
+end;
+
+procedure Display(Sender: TObject; Value: TWebhookEvent);
+begin
+  if not Assigned(Value) then
+    Exit;
+  if not Value.JSONResponse.IsEmpty then
+    TutorialHub.JSONResponse := Value.JSONResponse;
+  Display(Sender, [
+    Value.Id,
+    F('  - type', Value.&Type),
+    F('  - created_at', Value.CreatedAt)
+  ]);
+  if Assigned(Value.Data) then
+    Display(Sender, Value.Data);
 end;
 
 function DisplayChat(Sender: TObject; Value: TChat): string;
@@ -751,7 +1329,7 @@ end;
 
 procedure TVCLTutorialHub.WeatherReporter(const Value: string);
 begin
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'Announce the day''s weather forecast';
 
@@ -804,7 +1382,7 @@ begin
       try
       Result := Json
         .AddPair('Location', 'San Francisco, CA')
-        .AddPair('temperature', '16°C')
+        .AddPair('temperature', '16ï¿½C')
         .AddPair('forecast', 'rainy, low visibility but sunny in the late afternoon or early evening')
         .ToJSON;
       finally

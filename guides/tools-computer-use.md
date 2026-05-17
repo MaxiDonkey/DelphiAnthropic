@@ -81,7 +81,7 @@ If screenshots are resized for vision constraints, you must map coordinates from
 ### Usage code
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'Save a picture of a cat to my desktop.';
 

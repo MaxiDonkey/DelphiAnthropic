@@ -1,0 +1,233 @@
+# Loops in Delphi
+
+Delphi offers several types of loops. Here's a comprehensive guide with clear examples for each.
+
+---
+
+## 1. `for..to` Loop (Counting Up)
+
+The classic counting loop that increments automatically.
+
+```delphi
+program ForToExample;
+{$APPTYPE CONSOLE}
+
+var
+  i: Integer;
+begin
+  // Prints numbers 1 through 5
+  for i := 1 to 5 do
+    WriteLn('Iteration: ', i);
+
+  // With a begin..end block for multiple statements
+  for i := 1 to 3 do
+  begin
+    Write('Number: ', i);
+    WriteLn(' - Squared: ', i * i);
+  end;
+
+  ReadLn;
+end.
+```
+
+---
+
+## 2. `for..downto` Loop (Counting Down)
+
+Same as `for..to`, but decrements instead.
+
+```delphi
+program ForDownToExample;
+{$APPTYPE CONSOLE}
+
+var
+  i: Integer;
+begin
+  // Countdown from 5 to 1
+  for i := 5 downto 1 do
+    WriteLn('Countdown: ', i);
+
+  WriteLn('Liftoff!');
+  ReadLn;
+end.
+```
+
+---
+
+## 3. `while..do` Loop (Pre-condition)
+
+Checks the condition **before** each iteration. May execute **zero** times.
+
+```delphi
+program WhileDoExample;
+{$APPTYPE CONSOLE}
+
+var
+  Counter: Integer;
+begin
+  Counter := 1;
+
+  while Counter <= 5 do
+  begin
+    WriteLn('Counter is: ', Counter);
+    Inc(Counter);  // Don't forget to update, or you get an infinite loop!
+  end;
+
+  // Example: summing user input until 0 is entered
+  var
+    Number, Total: Integer;
+  begin
+    Total := 0;
+    Write('Enter a number (0 to stop): ');
+    ReadLn(Number);
+
+    while Number <> 0 do
+    begin
+      Total := Total + Number;
+      Write('Enter a number (0 to stop): ');
+      ReadLn(Number);
+    end;
+
+    WriteLn('Total sum: ', Total);
+  end;
+
+  ReadLn;
+end.
+```
+
+---
+
+## 4. `repeat..until` Loop (Post-condition)
+
+Checks the condition **after** each iteration. Always executes **at least once**.
+
+```delphi
+program RepeatUntilExample;
+{$APPTYPE CONSOLE}
+
+var
+  Counter: Integer;
+  Password: string;
+begin
+  // Basic counter
+  Counter := 1;
+  repeat
+    WriteLn('Counter is: ', Counter);
+    Inc(Counter);
+  until Counter > 5;
+
+  // Practical example: input validation
+  repeat
+    Write('Enter password: ');
+    ReadLn(Password);
+    if Password <> 'secret' then
+      WriteLn('Wrong password. Try again.');
+  until Password = 'secret';
+
+  WriteLn('Access granted!');
+  ReadLn;
+end.
+```
+
+> **Note:** Unlike `while`, `repeat..until` does **not** require `begin..end` for multiple statements — the `repeat` and `until` keywords serve as the block delimiters.
+
+---
+
+## 5. `for..in` Loop (Iterator / For-Each)
+
+Iterates over elements in a collection, array, string, or set.
+
+```delphi
+program ForInExample;
+{$APPTYPE CONSOLE}
+
+uses
+  System.Generics.Collections;
+
+var
+  Numbers: array of Integer;
+  Num: Integer;
+  Ch: Char;
+  Greeting: string;
+  Colors: TList<string>;
+  Color: string;
+begin
+  // --- Iterating over a dynamic array ---
+  Numbers := [10, 20, 30, 40, 50];
+  for Num in Numbers do
+    WriteLn('Array element: ', Num);
+
+  WriteLn;
+
+  // --- Iterating over characters in a string ---
+  Greeting := 'Hello';
+  for Ch in Greeting do
+    Write(Ch, ' ');
+  WriteLn;
+  WriteLn;
+
+  // --- Iterating over a generic list ---
+  Colors := TList<string>.Create;
+  try
+    Colors.Add('Red');
+    Colors.Add('Green');
+    Colors.Add('Blue');
+
+    for Color in Colors do
+      WriteLn('Color: ', Color);
+  finally
+    Colors.Free;
+  end;
+
+  ReadLn;
+end.
+```
+
+---
+
+## 6. Loop Control: `Break` and `Continue`
+
+These work in **all** loop types.
+
+```delphi
+program LoopControlExample;
+{$APPTYPE CONSOLE}
+
+var
+  i: Integer;
+begin
+  // --- Break: exit the loop early ---
+  WriteLn('Break example:');
+  for i := 1 to 10 do
+  begin
+    if i = 6 then
+      Break;           // Stop looping when i reaches 6
+    WriteLn('i = ', i);
+  end;
+
+  WriteLn;
+
+  // --- Continue: skip to the next iteration ---
+  WriteLn('Continue example:');
+  for i := 1 to 10 do
+  begin
+    if i mod 2 = 0 then
+      Continue;        // Skip even numbers
+    WriteLn('Odd: ', i);
+  end;
+
+  ReadLn;
+end.
+```
+
+---
+
+## Quick Reference Table
+
+| Loop Type | Condition Check | Guaranteed Execution | Best Used For |
+|---|---|---|---|
+| `for..to` | Automatic | Yes (if range valid) | Known count, counting up |
+| `for..downto` | Automatic | Yes (if range valid) | Known count, counting down |
+| `while..do` | **Before** iteration | No (0 or more times) | Unknown count, pre-check |
+| `repeat..until` | **After** iteration | Yes (at least once) | Unknown count, post-check |
+| `for..in` | Automatic | Depends on collection | Collections, arrays, strings |

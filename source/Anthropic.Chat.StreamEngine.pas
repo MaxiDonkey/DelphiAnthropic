@@ -2,7 +2,7 @@ unit Anthropic.Chat.StreamEngine;
 
 {-------------------------------------------------------------------------------
 
-      Github repository :  https://github.com/MaxiDonkey/DelphiGemini
+      Github repository :  https://github.com/MaxiDonkey/DelphiAnthropic
       Visit the Github repository for the documentation and use examples
 
  ------------------------------------------------------------------------------}
@@ -268,7 +268,7 @@ end;
 function TContentDelta.Handle(const Chunk: TChatStream;
   var Buffer: TEventData): Boolean;
 begin
-  var CanContinue := False;
+  var CanContinue := True;
 
   Buffer.Aggregate(Chunk, procedure
     begin

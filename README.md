@@ -7,7 +7,11 @@
 ___
 
 ### New
-- [changelog v1.2](Changelog.md)
+- [changelog v1.3](Changelog.md)
+- [Functional demo using **Pythia-WebView2**](demos)
+- [**Managed Agents API**](guides/managed-agents.md#managed-agents-beta)
+- [**Webhooks**](guides/webhooks.md#webhooks) — signature verification (HMAC, constant-time) and strongly typed event dispatch
+- Updated server tool types: `advisor_20260301`, `web_search_20260209`, `web_fetch_20260209`, `code_execution_20260120`
 - [adaptive thinking](guides/thinking.md#adaptive-reasoning)
 - [fast mode](guides/fast-mode.md#fast-mode-research-preview)
 
@@ -34,7 +38,7 @@ ___
     procedure (Params: TChatParams)
     begin
       Params
-        .Model('claude-sonnet-4-6')
+        .Model('claude-opus-4-7')
         .Messages( Generation.MessageParts
             .User('From which version of Delphi were multi-line strings introduced?')
         )
@@ -66,13 +70,14 @@ ___
   var Payload: TChatParamProc :=
     procedure (Params: TChatParams)
     begin
-      Params
-        .Model('claude-opus-4-6')
-        .Messages( Generation.MessageParts
-            .User('Explain the discrete topology')
-        )
-        .Thinking( CreateThinkingConfig('adaptive') )
-        .Stream;
+      with Generation do
+        Params
+          .Model('claude-opus-4-7')
+          .Messages( MessageParts
+              .User('Explain the discrete topology')
+          )
+          .Thinking( CreateThinkingConfig('adaptive') )
+          .Stream;
     end;
 
   // Streaming callback
@@ -96,6 +101,7 @@ Summary
 - [Philosophy and Scope](#philosophy-and-scope)
 - [Documentation – Overview](#documentation--overview)
 - [Going Further](#going-further)
+- [Functional Demo](#functional-demo)
 - [Functional Coverage](#functional-coverage)
 - [Project Status](#project-status)
 - [License](#license)
@@ -115,6 +121,8 @@ Summary
 - structured outputs (JSON schema)
 - multimodal inputs (image, PDF)
 - advanced reasoning modes (adaptive / extended thinking)
+- the **Managed Agents** surface (Agents, Environments, Sessions, Vaults, Memory Stores)
+- **Webhook** verification and consumption
 
 <br>
 
@@ -127,12 +135,15 @@ Summary
 
 ## Philosophy and Scope
 
-Anthropic exposes ***a single, unified Messages API***. <br>
-**Agent Skills** extend Claude through implicit, model-selected execution, whereas `Tools` are explicitly invoked and fully client-orchestrated.
+Anthropic now exposes two complementary surfaces:
+- ***the Messages API***, single and unified, where the client orchestrates each turn;
+- ***the Managed Agents API***, where Anthropic operates a long-lived runtime (Agent + Environment + Session) and the client drives it through events and resources.
+
+**Agent Skills** extend Claude through implicit, model-selected execution. `Tools` are explicitly invoked and fully client-orchestrated. **Managed Agents** sit one level above: they bind an agent definition, an environment and a session container together, with their own event stream and resource model.
 
 This wrapper therefore focuses on:
-- **faithful mapping** of the Messages API
-- **explicit modeling** of execution modes
+- **faithful mapping** of both the Messages API and the Managed Agents surface
+- **explicit modeling** of execution modes (client-orchestrated vs server-orchestrated)
 - **clear separation between always-on API features and features gated by explicit Anthropic beta headers**
 - **Delphi-first ergonomics**, not JSON-first usage
 
@@ -155,19 +166,14 @@ This wrapper therefore focuses on:
   - client-side orchestration
   - strict schema validation for agent safety
 
+- **Server-orchestrated agents (Managed Agents)**
+  - long-lived `Agent` / `Environment` / `Session` lifecycle
+  - resource attachments (GitHub repository, Files API entries, Memory Stores)
+  - typed event surface (session events, thread events) with raw SSE access
+  - credential management through `Vaults`
+  - asynchronous, webhook-driven completion notifications
+
 These distinctions are applied consistently at the API level and in the documentation.
-
-<br>
-
-### About the FMX Example project
-
->[!IMPORTANT]
->The **FMX Example** project provided in the folder [sample](https://github.com/MaxiDonkey/DelphiAnthropic/tree/main/sample) is **not intended to demonstrate elegant or idiomatic architecture**. <br>
->It is **deliberately non-factorized** to remain *isomorphic to the documentation*:
->- each code block corresponds directly to a section of the guides
->- the priority is **documentation → code correspondence**, not reuse or abstraction
-> <br>
->This trade-off favors "readability and traceability" over architectural refinement.
 
 <br>
 
@@ -198,6 +204,12 @@ The documentation is organized as **focused Markdown guides**, each covering one
   - [fast mode](guides/fast-mode.md#fast-mode-research-preview)
 - [Agent Skills](guides/agent-skills.md#skills-beta)
   - [Custom Skills – API & Versioning](guides/agent-skills-custom.md)
+- [Managed Agents](guides/managed-agents.md#managed-agents-beta)
+  - [Agents](guides/managed-agents-agents.md#agents-beta)
+  - [Environments](guides/managed-agents-environments.md#environments-beta)
+  - [Sessions (Events / Resources / Threads / Thread Events)](guides/managed-agents-sessions.md#sessions-beta)
+  - [Vaults & Credentials](guides/managed-agents-vaults.md#vaults--credentials-beta)
+  - [Memory Stores](guides/managed-agents-memory-stores.md#memory-stores-beta)
 
 Each section includes Delphi-first examples, not raw JSON.
 
@@ -214,13 +226,26 @@ Advanced or cross-cutting topics are documented separately to keep the core read
 - [Prompt caching](guides/prompt-caching.md#prompt-caching) (5 min / 1 hour)
 - [Token counting](guides/token-counting.md#token-counting)
 - [Citations](guides/citations.md#citations)
-- [Models API](guides/models.md#models)
+- [Models API](guides/models.md#models) — now exposes structured capability metadata (thinking modes, effort tiers, context-management features)
 - [Files API](guides/files-api.md#files-api) (CRUD)
+- [Webhooks](guides/webhooks.md#webhooks) — signature verification + typed event dispatch
 - [Tips and Tricks](guides/tips-and-tricks.md#tips-and-tricks)
 
 Each topic has its own Markdown document, directly linked from the guides.
 
 <br> 
+
+## Functional Demo
+
+This repository includes a working VCL demo in the [demos](demos) folder, built on top of [Pythia-WebView2](https://github.com/MaxiDonkey/Pythia-webView2), used here as the host application for the wrapper.
+
+This demo matters for users of the wrapper because it shows **DelphiAnthropic running inside a real application flow**, not only through isolated code snippets. It demonstrates how the `IAnthropic` client is connected to a UI-oriented conversation layer, with asynchronous SSE streaming, request/response JSON traceability, file upload and download through the Files API, reasoning display, web search, code execution, skills and MCP configuration.
+
+One key part of the demo is the context reconstruction layer (`Demo.Anthropic.Context.pas`). Instead of replaying only a flat history of user prompts and assistant answers, it rebuilds richer message context from the stored JSON request and streamed JSON response: text blocks, reasoning blocks, tool calls and matching tool results, MCP exchanges, web-search results and reusable container state for skills/code execution. This gives the next request a more faithful view of what actually happened in previous turns, while deliberately avoiding stale or ephemeral file references.
+
+The guides keep the didactic path: each API surface is explained independently, with focused Delphi examples. The demo is the complementary reference: it shows how those capabilities cooperate end-to-end in a functional Delphi application, and it provides a practical starting point for validating your API key, runtime setup and optional MCP configuration. See also the demo-specific setup notes in [demos/README.md](demos/README.md).
+
+<br>
 
 ## Functional Coverage
 
@@ -256,6 +281,13 @@ Each topic has its own Markdown document, directly linked from the guides.
 | File management (Files API)                       | ● | ● |
 | Data residency (inference geo)                    | ● | |
 | Fast mode (research preview)                      | ● | ● |
+| Managed Agents — Agents                           | ● | ● |
+| Managed Agents — Environments                     | ● | ● |
+| Managed Agents — Sessions (Events / Resources / Threads) | ● | ● |
+| Managed Agents — Vaults & Credentials             | ● | ● |
+| Managed Agents — Memory Stores                    | ● | ● |
+| Webhooks (HMAC verification + typed events)       | ● | ● |
+| Advisor tool                                      | ● | ● |
 
 >- Supported: support provided by `DelphiAnthropic`
 >- Anthropic API (Beta): Feature available only via the Anthropic API (beta).

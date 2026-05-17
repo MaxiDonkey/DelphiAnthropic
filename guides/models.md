@@ -12,7 +12,7 @@ ___
 
 ## Overview of the model API
 
-The Claude API exposes a family ***of versioned models***, each identified by a stable model ID (e.g. `claude-opus-4-6`).
+The Claude API exposes a family ***of versioned models***, each identified by a stable model ID (e.g. `claude-opus-4-7`).
 Each model is defined by:
 - **capabilities** (reasoning, vision, extended/adaptive thinking),
 - **technical constraints** (context window, maximum output, latency),
@@ -37,7 +37,7 @@ In practice, models are always grouped into:
 - **legacy models** (still accessible but being phased out).
 
 From an API perspective, models are not discovered dynamically:
-they are ***explicitly referenced*** in requests (e.g. `model: "claude-opus-4-6"`).
+they are ***explicitly referenced*** in requests (e.g. `model: "claude-opus-4-7"`).
 The documentation therefore acts as the authoritative source for:
 - knowing which models exist,
 - identifying which ones to migrate to or avoid,
@@ -105,7 +105,7 @@ a model with the same version/date is guaranteed to behave identically across pl
 ### Example
 
 ```pascal
-  var ModelID := 'claude-opus-4-6';
+  var ModelID := 'claude-opus-4-7';
 
   // Asynchronous example
   var Promise := Client.Models.AsyncAwaitRetrieve(ModelID);

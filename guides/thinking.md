@@ -108,7 +108,7 @@ This mode is now the ***recommended approach*** on ***Claude Opus 4.6***: it del
 - JSON Payload creation - adaptive reasoning 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 16000;
     var Prompt := 'Explain why the sum of two even numbers is always even.';
 
@@ -131,7 +131,7 @@ This mode is now the ***recommended approach*** on ***Claude Opus 4.6***: it del
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 16000,
       "thinking": {
           "type": "adaptive"
@@ -175,7 +175,7 @@ On `Opus 4.6`, **effort** becomes the ***primary control lever*** for reasoning 
 - JSON Payload creation - adaptive reasoning 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 16000;
     var Prompt := 'Can we find accumulation points in a discrete topology?';
 
@@ -201,7 +201,7 @@ On `Opus 4.6`, **effort** becomes the ***primary control lever*** for reasoning 
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 16000,
       "thinking": {
           "type": "adaptive"

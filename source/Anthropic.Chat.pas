@@ -251,6 +251,7 @@ begin
           Result.OnProgress :=
             procedure (Sender: TObject; Event: TChatStream)
             begin
+              try
               Buffer.Aggregate(Event, procedure
                 begin
                   var Error := EmptyStr;
@@ -261,6 +262,10 @@ begin
 
               if Assigned(Callbacks) and Assigned(Callbacks.OnProgress) then
                 Callbacks.OnProgress(Sender, Event);
+              except
+                on E: Exception do
+                  Reject(Exception.Create(E.Message));
+              end;
             end;
 
           Result.OnSuccess :=
@@ -290,8 +295,14 @@ begin
             procedure (Sender: TObject)
             begin
               var Error := 'aborted';
+
               if Assigned(Callbacks) and Assigned(Callbacks.OnCancellation) then
-                Error := Callbacks.OnCancellation(Sender);
+                begin
+                  var CallbackError := Callbacks.OnCancellation(Sender);
+                  if not CallbackError.IsEmpty then
+                    Error := CallbackError;
+                end;
+
               Reject(Exception.Create(Error));
             end;
         end,

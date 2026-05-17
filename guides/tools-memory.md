@@ -62,7 +62,7 @@ The interaction follows three steps:
     ```pascal
       TutorialHub.ToolTurns := TTurns.CreateInstance;  // <--- Instanciate ToolTurns: ITurns
 
-      var ModelName := 'claude-opus-4-6';
+      var ModelName := 'claude-opus-4-7';
       var MaxTokens := 1024;
       var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
       var Prompt := 'Maintain a persistent profile about me (interests, current work). Initialize it if necessary.';
@@ -121,7 +121,7 @@ The interaction follows three steps:
 2. If needed, it requests the creation of a `user.xml` file to store the user profile.
 
     ```pascal
-      var ModelName := 'claude-opus-4-6';
+      var ModelName := 'claude-opus-4-7';
       var MaxTokens := 1024;
       var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
       var Prompt := 'Directory: /memories';
@@ -183,7 +183,7 @@ The interaction follows three steps:
 3. Once the file is created, the conversation continues normally, and Claude can read and update this file in later messages.
 
     ```pascal
-      var ModelName := 'claude-opus-4-6';
+      var ModelName := 'claude-opus-4-7';
       var MaxTokens := 1024;
       var SystemPrompt := 'Store facts about the user and preferences in /memories as XML. Before responding, check memory. Keep it up to date.';
       var Prompt := 'File created successfully at /memories/user.xml';

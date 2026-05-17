@@ -1,0 +1,20 @@
+{
+  "type": "card-selection-dialog-set-data",
+  "dialog": "function",
+  "cards": [
+    {
+      "id": "1EC2521C-9E0A-410B-8DD4-1D6997F9AFFF",
+      "name": "Get weather",
+      "commentaire": "Injection des données météo localisées",
+      "content": ""
+    },
+    {
+      "id": "10B03BB4-B9D6-4D94-B181-0094434FEE9F",
+      "name": "Get local time",
+      "commentaire": "Injection des données temporelles",
+      "badge": "",
+      "content": ""
+    }
+  ],
+  "selectedId": "10B03BB4-B9D6-4D94-B181-1094434FEE9F"
+}

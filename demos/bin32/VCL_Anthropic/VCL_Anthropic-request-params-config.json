@@ -1,0 +1,47 @@
+﻿{
+    "systemPrompt": {
+        "systemPrompt": "",
+        "enabled": false
+    },
+    "settings": {
+        "temperature": 0.8,
+        "maxToken": {
+            "maxToken": 16000,
+            "enabled": true
+        },
+        "stopString": {
+            "stopString": [
+            ],
+            "enabled": false
+        }
+    },
+    "sampling": {
+        "topK": {
+            "topK": 20,
+            "enabled": false
+        },
+        "presencePenalty": {
+            "presencePenalty": 0,
+            "enabled": false
+        },
+        "topP": {
+            "topP": 0,
+            "enabled": false
+        },
+        "seed": {
+            "seed": 0,
+            "enabled": false
+        }
+    },
+    "structuredOutput": {
+        "jsonSchema": "{\n    \"type\": \"json_schema\",\n    \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"name\": {\n                \"type\": \"string\"\n            },\n            \"email\": {\n                \"type\": \"string\"\n            },\n            \"plan_interest\": {\n                \"type\": \"string\"\n            },\n            \"demo_requested\": {\n                \"type\": \"boolean\"\n            }\n        },\n        \"required\": [\n            \"name\",\n            \"email\",\n            \"plan_interest\",\n            \"demo_requested\"\n        ],\n        \"additionalProperties\": false\n    }\n}",
+        "enabled": false
+    },
+    "vendorSettings": {
+        "parallelToolCalls": false,
+        "backgroundResponse": false,
+        "usingPreviousId": false,
+        "store": false
+    },
+    "type": "request-initialization"
+}

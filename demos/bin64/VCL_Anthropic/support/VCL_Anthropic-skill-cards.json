@@ -1,0 +1,42 @@
+﻿{
+    "type": "card-selection-dialog-set-data",
+    "dialog": "skills",
+    "cards": [
+        {
+            "id": "4FE04234-FEFB-4659-9553-5551C00D4E23",
+            "name": "xlsx",
+            "commentaire": "source: anthropic - Privé à votre espace de travail",
+            "badge": "",
+            "content": "anthropic"
+        },
+        {
+            "id": "E3D92562-C2C9-432F-AF45-516630274EC7",
+            "name": "pptx",
+            "commentaire": "source: anthropic - Privé à votre espace de travail",
+            "badge": "",
+            "content": "anthropic"
+        },
+        {
+            "id": "4B597415-C2CD-4DF9-842D-6D97CBA73068",
+            "name": "pdf",
+            "commentaire": "source: anthropic - Privé à votre espace de travail",
+            "badge": "",
+            "content": "anthropic"
+        },
+        {
+            "id": "C2A68AF7-1F95-4A07-95E2-785B5DAC4483",
+            "name": "docx",
+            "commentaire": "source: anthropic - Privé à votre espace de travail",
+            "badge": "",
+            "content": "anthropic"
+        },
+        {
+            "name": "delphi-uses-graph",
+            "commentaire": "source: custom — graphe de dépendances `uses` Delphi (Mermaid\/DOT\/SVG + cycles)",
+            "badge": "",
+            "content": "custom",
+            "id": "skill_01HDrjLoCbsYVqnug72d3vHB"
+        }
+    ],
+    "selectedId": ""
+}

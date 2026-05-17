@@ -20,7 +20,7 @@ In practice, fast mode is well suited for ***high-volume text generation or work
 
 - JSON Payload creation
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 4096;
     var SpeedValue := 'fast';
     var Prompt := 'Refactor this module to use dependency injection';

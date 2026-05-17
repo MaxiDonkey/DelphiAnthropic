@@ -54,7 +54,7 @@ When you want a straightforward, immediate consumption of the SSE stream—no pr
   //  Increase the scope of Client by declaring it in FormCreate.
   //  var Client := TAnthropicFactory.CreateInstance(My_Anthropic_Key);
 
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 2048;
   var SystemPrompt := 'You are an expert in mathematics topology';
   var Prompt := 'Can we find accumulation points in a discrete topology?';

@@ -26,7 +26,7 @@ The selected document type determines the ***granularity*** of the citations: se
 - JSON Payload creation - using citations
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'What color is the grass and sky?';
 
@@ -62,7 +62,7 @@ The selected document type determines the ***granularity*** of the citations: se
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 1024,
       "messages": [
           {
@@ -101,7 +101,7 @@ The selected document type determines the ***granularity*** of the citations: se
     var Document := '..\media\File_Search_file.pdf';
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 2048;
     var Prompt := 'How can the work documented in the PDF be relevant?';
 
@@ -148,7 +148,7 @@ The result is traceable responses with minimal token overhead, even in iterative
 - JSON Payload creation - using caching & citations
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'What does this document say about API features?';
 
@@ -197,7 +197,7 @@ This structure allows generative reasoning and documentary evidence to be interl
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "id": "msg_01UuYAyW8Kue2Z5NfaoBgxpW",
       "type": "message",
       "role": "assistant",

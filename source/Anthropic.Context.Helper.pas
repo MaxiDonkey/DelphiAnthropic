@@ -14,9 +14,7 @@ uses
   System.Generics.Collections,
   Anthropic.Types, Anthropic.API.Params, Anthropic.Chat.Request, Anthropic.Chat.Responses,
   Anthropic.Chat.StreamEvents, Anthropic.API.JsonSafeReader, Anthropic.API, Anthropic.Exceptions,
-  Anthropic.Helpers,
-
-  VCL.Dialogs;
+  Anthropic.Helpers;
 
 type
   TPayloadReader = record

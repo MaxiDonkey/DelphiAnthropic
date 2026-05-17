@@ -18,6 +18,7 @@ type
     function GetPathValue(const Path: string): TJSONValue;
     function GetPathString(const Path: string; const Default: string = ''): string;
     function GetPathInteger(const Path: string; const Default: Integer = 0): Integer;
+    function GetPathInt64(const Path: string; const Default: Int64 = 0): Int64;
     function GetPathBoolean(const Path: string; const Default: Boolean = False): Boolean;
     function GetPathDouble(const Path: string; const Default: Double = 0.0): Double;
     function GetPathObjectText(const Path: string; const Default: string = ''): string;
@@ -71,6 +72,7 @@ type
 
     function AsString(const Path: string; const Default: string = ''): string;
     function AsInteger(const Path: string; const Default: Integer = 0): Integer;
+    function AsInt64(const Path: string; const Default: Int64 = 0): Int64;
     function AsBoolean(const Path: string; const Default: Boolean = False): Boolean;
     function AsDouble(const Path: string; const Default: Double = 0.0): Double;
 
@@ -266,15 +268,26 @@ end;
 
 function TJSONValueHelper.GetPathString(const Path: string; const Default: string): string;
 begin
+  Result := Default;
+
   var JSONValue := GetPathValue(Path);
   if JSONValue = nil then
-    Exit(Default);
+    Exit;
+
+  if JSONValue is TJSONNull then
+    Exit;
 
   if JSONValue is TJSONString then
     Exit(TJSONString(JSONValue).Value);
 
   if JSONValue is TJSONNumber then
     Exit(TJSONNumber(JSONValue).ToString);
+
+  if JSONValue is TJSONTrue then
+    Exit('true');
+
+  if JSONValue is TJSONFalse then
+    Exit('false');
 
   Result := JSONValue.Value;
   if Result.IsEmpty then
@@ -285,6 +298,15 @@ function TJSONValueHelper.GetPathInteger(const Path: string; const Default: Inte
 begin
   var S := GetPathString(Path, '');
   if not S.IsEmpty and TryStrToInt(S, Result) then
+    Exit;
+
+  Result := Default;
+end;
+
+function TJSONValueHelper.GetPathInt64(const Path: string; const Default: Int64): Int64;
+begin
+  var S := GetPathString(Path, '');
+  if not S.IsEmpty and TryStrToInt64(S, Result) then
     Exit;
 
   Result := Default;
@@ -512,6 +534,15 @@ begin
   Result := R.GetPathInteger(Path, Default);
 end;
 
+function TJsonReader.AsInt64(const Path: string; const Default: Int64): Int64;
+begin
+  var R := Root;
+  if R = nil then
+    Exit(Default);
+
+  Result := R.GetPathInt64(Path, Default);
+end;
+
 function TJsonReader.AsBoolean(const Path: string; const Default: Boolean): Boolean;
 begin
   var R := Root;
@@ -562,10 +593,14 @@ begin
         if (Item <> nil) and (Item is TJSONObject) then
           begin
             var Field := TJSONObject(Item).GetValue(FieldName);
-            if (Field <> nil) then
+            if (Field <> nil) and not (Field is TJSONNull) then
               begin
                 if Field is TJSONString then
                   Values.Add(TJSONString(Field).Value)
+                else if Field is TJSONTrue then
+                  Values.Add('true')
+                else if Field is TJSONFalse then
+                  Values.Add('false')
                 else
                   Values.Add(Field.Value);
               end;
@@ -607,6 +642,9 @@ begin
   if V = nil then
     Exit;
 
+  if V is TJSONNull then
+    Exit;
+
   if (V is TJSONObject) or (V is TJSONArray) then
     Exit(V.ToJSON);
 
@@ -615,6 +653,12 @@ begin
 
   if V is TJSONNumber then
     Exit(TJSONNumber(V).ToString);
+
+  if V is TJSONTrue then
+    Exit('true');
+
+  if V is TJSONFalse then
+    Exit('false');
 
   Result := V.Value;
   if Result.IsEmpty then

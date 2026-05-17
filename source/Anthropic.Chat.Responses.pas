@@ -28,6 +28,7 @@ type
     { Tool result blocks (shortcuts) }
     function WebFetch: TWebFetchToolResultBlockContent;
     function WebSearch: TWebSearchToolResultBlock;
+    function Advisor: TAdvisorToolResultBlock;
     function CodeExecution: TCodeExecutionToolResultBlock;
     function BashCodeExecution: TBashCodeExecutionToolResultBlock;
     function TextEditorCodeExecution: TTextEditorCodeExecutionToolResultBlock;
@@ -92,6 +93,12 @@ type
     FIsError: Boolean;
     [JsonNameAttribute('file_id')]
     FFileId: string;
+    [JsonNameAttribute('encrypted_content')]
+    FEncryptedContent: string;
+    [JSONMarshalled(False)]
+    FCompactionContent: string;
+    [JSONMarshalled(False)]
+    FCompactionContentIsNull: Boolean;
 
     {$ENDREGION}
 
@@ -117,8 +124,10 @@ type
     property FileId: string read FFileId write FFileId;
     property IsError: Boolean read FIsError write FIsError;
     property ServerName: string read FServerName write FServerName;
-
+    property EncryptedContent: string read FEncryptedContent write FEncryptedContent;
     property ToolContent: TToolContent read FToolContent write FToolContent;
+    property CompactionContent: string read FCompactionContent write FCompactionContent;
+    property CompactionContentIsNull: Boolean read FCompactionContentIsNull write FCompactionContentIsNull;
 
     {$ENDREGION}
 
@@ -300,6 +309,33 @@ type
     destructor Destroy; override;
   end;
 
+  TStopDetails = class
+  private
+    FCategory: string;
+    FExplanation: string;
+    FType: string;
+  public
+    property &Type: string read FType write FType;
+
+    /// <summary>
+    /// The policy category that triggered the refusal.
+    /// </summary>
+    /// <remarks>
+    /// This value may be <c>cyber</c>, <c>bio</c>, or null when the refusal
+    /// does not map to a named category.
+    /// </remarks>
+    property Category: string read FCategory write FCategory;
+
+    /// <summary>
+    /// Human-readable explanation of the refusal.
+    /// </summary>
+    /// <remarks>
+    /// This text is not guaranteed to be stable. It may be null when no
+    /// explanation is available for the category.
+    /// </remarks>
+    property Explanation: string read FExplanation write FExplanation;
+  end;
+
 {$REGION '[beta]'}
 
   TSkill = class
@@ -408,6 +444,8 @@ type
     FStopReason: TStopReason;
     [JsonNameAttribute('stop_sequence')]
     FStopSequence: string;
+    [JsonNameAttribute('stop_details')]
+    FStopDetails: TStopDetails;
     FUsage: TUsage;
 
   {$REGION '[beta]'}
@@ -534,7 +572,13 @@ type
     /// back as-is in a subsequent request to let the model continue.
     /// </para>
     /// <para>
+    /// • "compaction": automatic context compaction was triggered
+    /// </para>
+    /// <para>
     /// • "refusal": when streaming classifiers intervene to handle potential policy violations
+    /// </para>
+    /// <para>
+    /// • "model_context_window_exceeded": the model context window was exceeded
     /// </para>
     /// In non-streaming mode this value is always non-null. In streaming mode, it is null in
     /// the message_start event and non-null otherwise.
@@ -548,6 +592,11 @@ type
     /// This value will be a non-null string if one of your custom stop sequences was generated.
     /// </remarks>
     property StopSequence: string read FStopSequence write FStopSequence;
+
+    /// <summary>
+    /// Structured information about a refusal.
+    /// </summary>
+    property StopDetails: TStopDetails read FStopDetails write FStopDetails;
 
     /// <summary>
     /// Billing and rate-limit usage.
@@ -783,6 +832,8 @@ begin
     FContainer.Free;
   if Assigned(FContextManagement) then
     FContextManagement.Free;
+  if Assigned(FStopDetails) then
+    FStopDetails.Free;
   inherited;
 end;
 
@@ -823,6 +874,14 @@ begin
 
   {--- Extract raw JSON content (string value is returned de-quoted by ExtractSubJson) }
   var Raw := Root.ExtractSubJson(TargetPath, '');
+
+  if Self.&Type = TContentBlockType.compaction then
+    begin
+      Self.FCompactionContentIsNull := Root.Value(TargetPath) is TJSONNull;
+
+      if not Self.FCompactionContentIsNull then
+        Self.FCompactionContent := Raw;
+    end;
 
   {--- Build payload compatible with TToolContent.OverloadBuilder }
   if Root.IsStringNode(TargetPath) then
@@ -880,6 +939,11 @@ end;
 function TContentBlockContent.CodeExecution: TCodeExecutionToolResultBlock;
 begin
   Result := FOwner.ToolContent.CodeExecutionToolResultBlock;
+end;
+
+function TContentBlockContent.Advisor: TAdvisorToolResultBlock;
+begin
+  Result := FOwner.ToolContent.AdvisorToolResultBlock;
 end;
 
 function TContentBlockContent.BashCodeExecution: TBashCodeExecutionToolResultBlock;

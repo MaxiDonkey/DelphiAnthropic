@@ -99,9 +99,9 @@ function TEventData.Aggregate(const AChunk: TStreamEvent;
   const ErrorProc: TProc): TEventData;
 begin
   if not Assigned(AChunk) then
-    Exit;
+    Exit(Self);
 
-  RawJson := AChunk.JSONResponse;
+  RawJson := RawJson + AChunk.JSONResponse;
 
   case AChunk.EventType of
     TEventType.message_start:

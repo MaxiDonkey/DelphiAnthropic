@@ -1,0 +1,13 @@
+{
+  "type": "card-selection-dialog-set-data",
+  "dialog": "custom",
+  "cards": [
+    {
+      "id": "4FE14234-AEFB-4659-9553-5551C00D4237",
+      "name": "summarized",
+      "commentaire": "With Claude 4.7, display the reasoning if it is active. By default, \"omited\" hides the reasoning.",
+      "content": ""
+    }
+  ],
+  "selectedId": ""
+}

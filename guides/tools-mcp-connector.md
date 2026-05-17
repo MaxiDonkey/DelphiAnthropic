@@ -60,7 +60,7 @@ Request flow:
 ## Minimal example
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var SystemPrompt := 'Today is ''' + FormatDateTime('dd"u"mmmm"t"yyyy', Date) + ''' (' + FormatDateTime('yyyy-mm-dd', Date) + ').';
   var Prompt := 'What is the weather like in New York today?';

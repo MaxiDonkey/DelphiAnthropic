@@ -50,7 +50,7 @@ type
           function DocumentIndex(const Value: Double): TCitationPageLocationParam;
           function DocumentTitle(const Value: string): TCitationPageLocationParam;
           function EndPageNumber(const Value: Double): TCitationPageLocationParam;
-          function StartPageNCumber(const Value: Double): TCitationPageLocationParam;
+          function StartPageNumber(const Value: Double): TCitationPageLocationParam;
 
           class function New: TCitationPageLocationParam;
         end;
@@ -474,14 +474,14 @@ type
 
     {$REGION '[beta] BashCodeExecutionToolResultBlockParam  inheritage'}
 
-      {$REGION '[beta] BashCodeExecutionToolResultErrorPara'}
+      {$REGION '[beta] BashCodeExecutionToolResultErrorParam'}
 
-      TBashCodeExecutionToolResultErrorPara = class(TJSONParam)
-        function &Type(const Value: string = 'bash_code_execution_tool_result_error'): TBashCodeExecutionToolResultErrorPara;
-        function ErrorCode(const Value: TWebSearchError): TBashCodeExecutionToolResultErrorPara; overload;
-        function ErrorCode(const Value: string): TBashCodeExecutionToolResultErrorPara; overload;
+      TBashCodeExecutionToolResultErrorParam = class(TJSONParam)
+        function &Type(const Value: string = 'bash_code_execution_tool_result_error'): TBashCodeExecutionToolResultErrorParam;
+        function ErrorCode(const Value: TWebSearchError): TBashCodeExecutionToolResultErrorParam; overload;
+        function ErrorCode(const Value: string): TBashCodeExecutionToolResultErrorParam; overload;
 
-        class function New: TBashCodeExecutionToolResultErrorPara;
+        class function New: TBashCodeExecutionToolResultErrorParam;
       end;
 
       TBashCodeExecutionOutputBlockParam = class(TJSONParam)
@@ -505,7 +505,7 @@ type
 
     TBashCodeExecutionToolResultBlockParam = class(TContentBlockParam)
       function &Type(const Value: string = 'bash_code_execution_tool_result'): TBashCodeExecutionToolResultBlockParam;
-      function Content(const Value: TBashCodeExecutionToolResultErrorPara): TBashCodeExecutionToolResultBlockParam; overload;
+      function Content(const Value: TBashCodeExecutionToolResultErrorParam): TBashCodeExecutionToolResultBlockParam; overload;
       function Content(const Value: TBashCodeExecutionResultBlockParam): TBashCodeExecutionToolResultBlockParam; overload;
       function CacheControl(const Value: TCacheControlEphemeral): TBashCodeExecutionToolResultBlockParam;
       function ToolUseId(const Value: string): TBashCodeExecutionToolResultBlockParam;
@@ -549,7 +549,7 @@ type
 
       TTextEditorCodeExecutionStrReplaceResultBlockParam = class(TJSONParam)
         function &Type(const Value: string = 'text_editor_code_execution_str_replace_result'): TTextEditorCodeExecutionStrReplaceResultBlockParam;
-        function Lines(const Value: TArray<Integer>): TTextEditorCodeExecutionStrReplaceResultBlockParam;
+        function Lines(const Value: TArray<string>): TTextEditorCodeExecutionStrReplaceResultBlockParam;
         function NewLines(const Value: Integer): TTextEditorCodeExecutionStrReplaceResultBlockParam;
         function NewStart(const Value: Integer): TTextEditorCodeExecutionStrReplaceResultBlockParam;
         function OldLines(const Value: Integer): TTextEditorCodeExecutionStrReplaceResultBlockParam;
@@ -655,6 +655,28 @@ type
 
     {$ENDREGION}
 
+    {$REGION '[beta] CompactionBlockParam inheritage'}
+
+    TCompactionBlockParam = class(TContentBlockParam)
+      function &Type(const Value: string = 'compaction'): TCompactionBlockParam;
+
+      /// <summary>
+      /// Summary of previously compacted content. Empty string is not allowed by Anthropic.
+      /// </summary>
+      function Content(const Value: string): TCompactionBlockParam;
+
+      /// <summary>
+      /// Opaque metadata from prior compaction, to be round-tripped verbatim.
+      /// </summary>
+      function EncryptedContent(const Value: string): TCompactionBlockParam;
+
+      function CacheControl(const Value: TCacheControlEphemeral): TCompactionBlockParam;
+
+      class function New: TCompactionBlockParam;
+    end;
+
+    {$ENDREGION}
+
   TMessageParam = class(TJSONParam)
     function Content(const Value: TArray<TContentBlockParam>): TMessageParam; overload;
     function Content(const Value: string): TMessageParam; overload;
@@ -680,6 +702,20 @@ type
     /// Must be more than 1024 and less than max_tokens.
     /// </remarks>
     function BudgetTokens(const Value: Integer): TThinkingConfigParam;
+
+    /// <summary>
+    /// Controls how thinking content appears in the response. When set to summarized,
+    /// thinking is returned normally. When set to omitted, thinking content is redacted
+    /// but a signature is returned for multi-turn continuity. Defaults to summarized.
+    /// </summary>
+    function Display(const Value: TThinkingDisplayType): TThinkingConfigParam; overload;
+
+    /// <summary>
+    /// Controls how thinking content appears in the response. When set to summarized,
+    /// thinking is returned normally. When set to omitted, thinking content is redacted
+    /// but a signature is returned for multi-turn continuity. Defaults to summarized.
+    /// </summary>
+    function Display(const Value: string): TThinkingConfigParam; overload;
 
     class function New(const State: TThinkingType): TThinkingConfigParam; overload;
     class function New(const Value: string): TThinkingConfigParam; overload;
@@ -756,6 +792,21 @@ type
       function InputSchema(const Value: TInputSchema): TTool; overload;
 
       /// <summary>
+      /// Example input objects that help Claude understand how to call this tool.
+      /// </summary>
+      function InputExamples(const Value: TArray<TJSONObject>): TTool; overload;
+
+      /// <summary>
+      /// Example input objects that help Claude understand how to call this tool.
+      /// </summary>
+      function InputExamples(const Value: TJSONArray): TTool; overload;
+
+      /// <summary>
+      /// Example input objects that help Claude understand how to call this tool.
+      /// </summary>
+      function InputExamples(const Value: string): TTool; overload;
+
+      /// <summary>
       /// Name of the tool.
       /// </summary>
       /// <remarks>
@@ -800,6 +851,11 @@ type
       /// via tool_reference from tool search.
       /// </summary>
       function DeferLoading(const Value: Boolean): TTool;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function EagerInputStreaming(const Value: Boolean = True): TTool;
 
       /// <summary>
       /// [beta]
@@ -864,7 +920,7 @@ type
   {$REGION 'ToolTextEditor20250124'}
 
     TToolTextEditor20250124 = class(TToolUnion)
-      function &Type(const Value: string = 'bash_20250124'): TToolTextEditor20250124;
+      function &Type(const Value: string = 'text_editor_20250124'): TToolTextEditor20250124;
 
       /// <summary>
       /// Name of the tool.
@@ -912,7 +968,7 @@ type
   {$REGION 'ToolTextEditor20250429'}
 
     TToolTextEditor20250429 = class(TToolUnion)
-      function &Type(const Value: string = 'bash_20250124'): TToolTextEditor20250429;
+      function &Type(const Value: string = 'text_editor_20250429'): TToolTextEditor20250429;
 
       /// <summary>
       /// Name of the tool.
@@ -1066,6 +1122,16 @@ type
       function Name(const Value: string = 'web_search'): TWebSearchTool20250305;
 
       /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TWebSearchTool20250305; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TWebSearchTool20250305; overload;
+
+      /// <summary>
       /// If provided, only these domains will be included in results. Cannot be used alongside blocked_domains.
       /// </summary>
       function AllowedDomains(const Value: TArray<string>): TWebSearchTool20250305;
@@ -1093,18 +1159,6 @@ type
       /// </summary>
       function UserLocation(const Value: TUserLocation): TWebSearchTool20250305;
 
-      {$REGION '[beta]'}
-
-      /// <summary>
-      /// [beta]
-      /// </summary>
-      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TWebSearchTool20250305; overload;
-
-      /// <summary>
-      /// [beta]
-      /// </summary>
-      function AllowedCallers(const Value: TArray<string>): TWebSearchTool20250305; overload;
-
       /// <summary>
       /// [beta] If true, tool will not be included in initial system prompt. Only loaded when returned
       /// via tool_reference from tool search.
@@ -1112,11 +1166,9 @@ type
       function DeferLoading(const Value: Boolean): TWebSearchTool20250305;
 
       /// <summary>
-      /// [beta]
+      /// When true, guarantees schema validation on tool names and inputs
       /// </summary>
       function Strict(const Value: Boolean): TWebSearchTool20250305;
-
-      {$ENDREGION}
 
       class function New: TWebSearchTool20250305;
     end;
@@ -1254,6 +1306,51 @@ type
 
       class function New: TCodeExecutionTool20250825;
     end;
+
+    {$ENDREGION}
+
+    {$REGION '[beta] CodeExecutionTool20260120'}
+
+    TCodeExecutionTool20260120 = class(TToolUnion)
+      function &Type(const Value: string = 'code_execution_20260120'): TCodeExecutionTool20260120;
+
+      /// <summary>
+      /// Name of the tool.
+      /// </summary>
+      /// <remarks>
+      /// This is how the tool will be called by the model and in tool_use blocks.
+      /// </remarks>
+      function Name(const Value: string = 'code_execution'): TCodeExecutionTool20260120;
+
+      /// <summary>
+      /// Create a cache control breakpoint at this content block.
+      /// </summary>
+      function CacheControl(const Value: TCacheControlEphemeral): TCodeExecutionTool20260120;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TCodeExecutionTool20260120; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TCodeExecutionTool20260120; overload;
+
+      /// <summary>
+      /// [beta] If true, tool will not be included in initial system prompt. Only loaded when returned
+      /// via tool_reference from tool search.
+      /// </summary>
+      function DeferLoading(const Value: Boolean): TCodeExecutionTool20260120;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function Strict(const Value: Boolean): TCodeExecutionTool20260120;
+
+      class function New: TCodeExecutionTool20260120;
+    end;
+
 
     {$ENDREGION}
 
@@ -1540,11 +1637,78 @@ type
       function DeferLoading(const Value: Boolean): TToolComputerUse20251124;
 
       /// <summary>
-      /// [beta]
+      /// When true, guarantees schema validation on tool names and inputs
       /// </summary>
       function Strict(const Value: Boolean): TToolComputerUse20251124;
 
       class function New: TToolComputerUse20251124;
+    end;
+
+    {$ENDREGION}
+
+    {$REGION '[beta] WebSearchTool20260209'}
+
+    TWebSearchTool20260209 = class(TToolUnion)
+      function &Type(const Value: string = 'web_search_20260209'): TWebSearchTool20260209;
+
+      /// <summary>
+      /// Name of the tool.
+      /// </summary>
+      /// <remarks>
+      /// This is how the tool will be called by the model and in tool_use blocks.
+      /// </remarks>
+      function Name(const Value: string = 'web_search'): TWebSearchTool20260209;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TWebSearchTool20260209; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TWebSearchTool20260209; overload;
+
+      /// <summary>
+      /// If provided, only these domains will be included in results. Cannot be used alongside blocked_domains.
+      /// </summary>
+      function AllowedDomains(const Value: TArray<string>): TWebSearchTool20260209;
+
+      /// <summary>
+      /// If provided, these domains will never appear in results. Cannot be used alongside allowed_domains.
+      /// </summary>
+      function BlockedDomains(const Value: TArray<string>): TWebSearchTool20260209;
+
+      /// <summary>
+      /// Create a cache control breakpoint at this content block.
+      /// </summary>
+      function CacheControl(const Value: TCacheControlEphemeral): TWebSearchTool20260209;
+
+      /// <summary>
+      /// Maximum number of times the tool can be used in the API request.
+      /// </summary>
+      /// <remarks>
+      /// exclusiveMinimum 0
+      /// </remarks>
+      function MaxUses(const Value: Integer): TWebSearchTool20260209;
+
+      /// <summary>
+      /// Parameters for the user's location. Used to provide more relevant search results.
+      /// </summary>
+      function UserLocation(const Value: TUserLocation): TWebSearchTool20260209;
+
+      /// <summary>
+      /// If true, tool will not be included in initial system prompt. Only loaded when returned
+      /// via tool_reference from tool search.
+      /// </summary>
+      function DeferLoading(const Value: Boolean): TWebSearchTool20260209;
+
+      /// <summary>
+      /// When true, guarantees schema validation on tool names and inputs
+      /// </summary>
+      function Strict(const Value: Boolean): TWebSearchTool20260209;
+
+      class function New: TWebSearchTool20260209;
     end;
 
     {$ENDREGION}
@@ -1576,6 +1740,19 @@ type
       /// Create a cache control breakpoint at this content block.
       /// </summary>
       function CacheControl(const Value: TCacheControlEphemeral): TWebFetchTool20250910;
+
+      /// <summary>
+      /// Citations configuration for fetched documents. Citations are disabled by default.
+      /// </summary>
+      function Citations(const Value: TCitationsConfigParam): TWebFetchTool20250910;
+
+      /// <summary>
+      /// Maximum number of tokens used by including web page text content in the context.
+      /// </summary>
+      /// <remarks>
+      /// The limit is approximate and does not apply to binary content such as PDFs.
+      /// </remarks>
+      function MaxContentTokens(const Value: Integer): TWebFetchTool20250910;
 
       /// <summary>
       /// Maximum number of times the tool can be used in the API request.
@@ -1612,6 +1789,239 @@ type
       function Strict(const Value: Boolean): TWebFetchTool20250910;
 
       class function New: TWebFetchTool20250910;
+    end;
+
+    {$ENDREGION}
+
+    {$REGION '[beta] WebFetchTool20260209'}
+
+    TWebFetchTool20260209 = class(TToolUnion)
+      function &Type(const Value: string = 'web_fetch_20260209'): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Name of the tool.
+      /// </summary>
+      /// <remarks>
+      /// This is how the tool will be called by the model and in tool_use blocks.
+      /// </remarks>
+      function Name(const Value: string = 'web_fetch'): TWebFetchTool20260209;
+
+      /// <summary>
+      /// If provided, only these domains will be included in results. Cannot be used alongside blocked_domains.
+      /// </summary>
+      function AllowedDomains(const Value: TArray<string>): TWebFetchTool20260209;
+
+      /// <summary>
+      /// If provided, these domains will never appear in results. Cannot be used alongside allowed_domains.
+      /// </summary>
+      function BlockedDomains(const Value: TArray<string>): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Create a cache control breakpoint at this content block.
+      /// </summary>
+      function CacheControl(const Value: TCacheControlEphemeral): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Citations configuration for fetched documents. Citations are disabled by default.
+      /// </summary>
+      function Citations(const Value: TCitationsConfigParam): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Maximum number of tokens used by including web page text content in the context.
+      /// </summary>
+      /// <remarks>
+      /// The limit is approximate and does not apply to binary content such as PDFs.
+      /// </remarks>
+      function MaxContentTokens(const Value: Integer): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Maximum number of times the tool can be used in the API request.
+      /// </summary>
+      /// <remarks>
+      /// exclusiveMinimum 0
+      /// </remarks>
+      function MaxUses(const Value: Integer): TWebFetchTool20260209;
+
+      /// <summary>
+      /// Parameters for the user's location. Used to provide more relevant search results.
+      /// </summary>
+      function UserLocation(const Value: TUserLocation): TWebFetchTool20260209;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TWebFetchTool20260209; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TWebFetchTool20260209; overload;
+
+      /// <summary>
+      /// [beta] If true, tool will not be included in initial system prompt. Only loaded when returned
+      /// via tool_reference from tool search.
+      /// </summary>
+      function DeferLoading(const Value: Boolean): TWebFetchTool20260209;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function Strict(const Value: Boolean): TWebFetchTool20260209;
+
+      class function New: TWebFetchTool20260209;
+    end;
+
+    {$ENDREGION}
+
+    {$REGION '[beta] WebFetchTool20260309'}
+
+    TWebFetchTool20260309 = class(TToolUnion)
+      function &Type(const Value: string = 'web_fetch_20260309'): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Name of the tool.
+      /// </summary>
+      /// <remarks>
+      /// This is how the tool will be called by the model and in tool_use blocks.
+      /// </remarks>
+      function Name(const Value: string = 'web_fetch'): TWebFetchTool20260309;
+
+      /// <summary>
+      /// If provided, only these domains will be included in results. Cannot be used alongside blocked_domains.
+      /// </summary>
+      function AllowedDomains(const Value: TArray<string>): TWebFetchTool20260309;
+
+      /// <summary>
+      /// If provided, these domains will never appear in results. Cannot be used alongside allowed_domains.
+      /// </summary>
+      function BlockedDomains(const Value: TArray<string>): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Create a cache control breakpoint at this content block.
+      /// </summary>
+      function CacheControl(const Value: TCacheControlEphemeral): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Citations configuration for fetched documents. Citations are disabled by default.
+      /// </summary>
+      function Citations(const Value: TCitationsConfigParam): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Maximum number of tokens used by including web page text content in the context.
+      /// </summary>
+      /// <remarks>
+      /// The limit is approximate and does not apply to binary content such as PDFs.
+      /// </remarks>
+      function MaxContentTokens(const Value: Integer): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Maximum number of times the tool can be used in the API request.
+      /// </summary>
+      /// <remarks>
+      /// exclusiveMinimum 0
+      /// </remarks>
+      function MaxUses(const Value: Integer): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Parameters for the user's location. Used to provide more relevant search results.
+      /// </summary>
+      function UserLocation(const Value: TUserLocation): TWebFetchTool20260309;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TWebFetchTool20260309; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TWebFetchTool20260309; overload;
+
+      /// <summary>
+      /// If true, tool will not be included in initial system prompt. Only loaded when returned
+      /// via tool_reference from tool search.
+      /// </summary>
+      function DeferLoading(const Value: Boolean): TWebFetchTool20260309;
+
+      /// <summary>
+      /// When true, guarantees schema validation on tool names and inputs
+      /// </summary>
+      function Strict(const Value: Boolean): TWebFetchTool20260309;
+
+      /// <summary>
+      /// Whether to use cached content. Set to false to bypass the cache and fetch fresh content.
+      /// Only set to false when the user explicitly requests fresh content or when fetching
+      /// rapidly-changing sources.
+      /// </summary>
+      function UseCache(const Value: Boolean): TWebFetchTool20260309;
+
+      class function New: TWebFetchTool20260309;
+    end;
+
+    {$ENDREGION}
+
+    {$REGION '[beta] AdvisorTool20260301'}
+
+    TAdvisorTool20260301 = class(TToolUnion)
+      function &Type(const Value: string = 'advisor_20260301'): TAdvisorTool20260301;
+
+      /// <summary>
+      /// Name of the tool.
+      /// </summary>
+      /// <remarks>
+      /// This is how the tool will be called by the model and in tool_use blocks.
+      /// </remarks>
+      function Name(const Value: string = 'advisor'): TAdvisorTool20260301;
+
+      /// <summary>
+      /// The model that will complete your prompt.
+      /// </summary>
+      function Model(const Value: string): TAdvisorTool20260301; overload;
+
+      /// <summary>
+      /// The model that will complete your prompt.
+      /// </summary>
+      function Model(const Value: TArray<string>): TAdvisorTool20260301; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<TAllowedCallersType>): TAdvisorTool20260301; overload;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function AllowedCallers(const Value: TArray<string>): TAdvisorTool20260301; overload;
+
+      /// <summary>
+      /// Create a cache control breakpoint at this content block.
+      /// </summary>
+      function CacheControl(const Value: TCacheControlEphemeral): TAdvisorTool20260301;
+
+      /// <summary>
+      /// Caching for the advisor's own prompt. When set, each advisor call writes a cache entry
+      /// at the given TTL so subsequent calls in the same conversation read the stable prefix.
+      /// When omitted, the advisor prompt is not cached.
+      /// </summary>
+      function Caching(const Value: TCacheControlEphemeral): TAdvisorTool20260301;
+
+      /// <summary>
+      /// [beta] If true, tool will not be included in initial system prompt. Only loaded when returned
+      /// via tool_reference from tool search.
+      /// </summary>
+      function DeferLoading(const Value: Boolean): TAdvisorTool20260301;
+
+      /// <summary>
+      /// Maximum number of times the tool can be used in the API request.
+      /// </summary>
+      function MaxUses(const Value: Integer): TAdvisorTool20260301;
+
+      /// <summary>
+      /// [beta]
+      /// </summary>
+      function Strict(const Value: Boolean): TAdvisorTool20260301;
+
+      class function New: TAdvisorTool20260301;
     end;
 
     {$ENDREGION}
@@ -1989,13 +2399,33 @@ type
     class function New: TOutputConfigFormat;
   end;
 
+  TOutputConfigTaskBudget = class(TJSONParam)
+    /// <summary>
+    /// Total token budget across all contexts in the session.
+    /// </summary>
+    function Total(const Value: Integer): TOutputConfigTaskBudget;
+
+    /// <summary>
+    /// The budget type. Currently only 'tokens' is supported.
+    /// </summary>
+    function &type(const Value: string = 'tokens'): TOutputConfigTaskBudget;
+
+    /// <summary>
+    /// Remaining tokens in the budget. Use this to track usage across contexts
+    /// when implementing compaction client-side. Defaults to total if not provided.
+    /// </summary>
+    function Remaining(const Value: Integer): TOutputConfigTaskBudget;
+
+    class function New: TOutputConfigTaskBudget;
+  end;
+
   TOutputConfig = class(TJSONParam)
     /// <summary>
     /// How much effort the model should put into its response. Higher effort levels may result in more
     /// thorough analysis but take longer.
     /// </summary>
     /// <param name="Value">
-    /// Valid values are low, medium, or high.
+    /// Valid values are low, medium, high, xhigh, or max.
     /// </param>
     function Effort(const Value: TEffortType): TOutputConfig; overload;
 
@@ -2017,6 +2447,11 @@ type
     /// A schema to specify Claude's output format in responses.
     /// </summary>
     function Format(const Value: string): TOutputConfig; overload;
+
+    /// <summary>
+    /// User-configurable total token budget across contexts.
+    /// </summary>
+    function TaskBudget(const Value: TOutputConfigTaskBudget): TOutputConfig;
 
     class function New: TOutputConfig;
   end;
@@ -2048,6 +2483,31 @@ type
 
   {$ENDREGION}
 
+  {$REGION '[beta] Compact20260112Edit'}
+
+  TCompact20260112Edit = class(TEditsParams)
+    function &Type(const Value: string = 'compact_20260112'): TCompact20260112Edit;
+
+    /// <summary>
+    /// Additional instructions for summarization.
+    /// </summary>
+    function Instructions(const Value: string): TCompact20260112Edit;
+
+    /// <summary>
+    /// Whether to pause after compaction and return the compaction block to the user.
+    /// </summary>
+    function PauseAfterCompaction(const Value: Boolean): TCompact20260112Edit;
+
+    /// <summary>
+    /// When to trigger compaction. Defaults to 150000 input tokens.
+    /// </summary>
+    function Trigger(const Value: TInputTokensTrigger): TCompact20260112Edit;
+
+    class function New: TCompact20260112Edit;
+  end;
+
+  {$ENDREGION}
+
 {$ENDREGION}
 
   TChatParams = class(TJSONParam)
@@ -2067,6 +2527,9 @@ type
     /// </para>
     /// <para>
     /// • "computer-use-2025-01-24"
+    /// </para>
+    /// <para>
+    /// • "computer-use-2025-11-24"
     /// </para>
     /// <para>
     /// • "pdfs-2024-09-25"
@@ -2096,7 +2559,13 @@ type
     /// • "interleaved-thinking-2025-05-14"
     /// </para>
     /// <para>
+    /// • "fine-grained-tool-streaming-2025-05-14"
+    /// </para>
+    /// <para>
     /// • "code-execution-2025-05-22"
+    /// </para>
+    /// <para>
+    /// • "code-execution-2025-08-25"
     /// </para>
     /// <para>
     /// • "extended-cache-ttl-2025-04-11"
@@ -2115,6 +2584,24 @@ type
     /// </para>
     /// <para>
     /// • "compact-2026-01-12"
+    /// </para>
+    /// <para>
+    /// • "fast-mode-2026-02-01"
+    /// </para>
+    /// <para>
+    /// • "advisor-tool-2026-03-01"
+    /// </para>
+    /// <para>
+    /// • "task-budgets-2026-03-13"
+    /// </para>
+    /// <para>
+    /// • "output-300k-2026-03-24"
+    /// </para>
+    /// <para>
+    /// • "user-profiles-2026-03-24"
+    /// </para>
+    /// <para>
+    /// • "managed-agents-2026-04-01"
     /// </para>
     /// </remarks>
     function Beta(const Value: TArray<string>): TChatParams; overload;
@@ -2137,6 +2624,9 @@ type
     /// • "computer-use-2025-01-24"
     /// </para>
     /// <para>
+    /// • "computer-use-2025-11-24"
+    /// </para>
+    /// <para>
     /// • "pdfs-2024-09-25"
     /// </para>
     /// <para>
@@ -2164,7 +2654,13 @@ type
     /// • "interleaved-thinking-2025-05-14"
     /// </para>
     /// <para>
+    /// • "fine-grained-tool-streaming-2025-05-14"
+    /// </para>
+    /// <para>
     /// • "code-execution-2025-05-22"
+    /// </para>
+    /// <para>
+    /// • "code-execution-2025-08-25"
     /// </para>
     /// <para>
     /// • "extended-cache-ttl-2025-04-11"
@@ -2181,8 +2677,35 @@ type
     /// <para>
     /// • "skills-2025-10-02"
     /// </para>
+    /// <para>
+    /// • "compact-2026-01-12"
+    /// </para>
+    /// <para>
+    /// • "fast-mode-2026-02-01"
+    /// </para>
+    /// <para>
+    /// • "advisor-tool-2026-03-01"
+    /// </para>
+    /// <para>
+    /// • "task-budgets-2026-03-13"
+    /// </para>
+    /// <para>
+    /// • "output-300k-2026-03-24"
+    /// </para>
+    /// <para>
+    /// • "user-profiles-2026-03-24"
+    /// </para>
+    /// <para>
+    /// • "managed-agents-2026-04-01"
+    /// </para>
     /// </remarks>
     function Beta(const Value: TArray<TBeta>): TChatParams; overload;
+
+    /// <summary>
+    /// Top-level cache control automatically applies a cache_control marker to
+    /// the last cacheable block in the request.
+    /// </summary>
+    function CacheControl(const Value: TCacheControlEphemeral): TChatParams;
 
     /// <summary>
     /// The maximum number of tokens to generate before stopping.
@@ -2194,7 +2717,7 @@ type
     /// • Different models have different maximum values for this parameter.
     /// </para>
     /// <para>
-    /// • minimum 1
+    /// • minimum 0
     /// </para>
     /// </remarks>
     function MaxTokens(const Value: Integer): TChatParams;
@@ -2453,7 +2976,7 @@ type
     /// • maximum 1 ; minimum 0
     /// </para>
     /// </remarks>
-    function Temperature(const Value: Double): TChatParams;
+    function Temperature(const Value: Double): TChatParams; deprecated;
 
     /// <summary>
     /// Configuration for enabling Claude's extended thinking.
@@ -2518,7 +3041,7 @@ type
     /// • minimum 0
     /// </para>
     /// </remarks>
-    function TopK(const Value: Single): TChatParams;
+    function TopK(const Value: Single): TChatParams; deprecated;
 
     /// <summary>
     /// Use nucleus sampling.
@@ -2536,7 +3059,9 @@ type
     /// • maximum 1 , minimum 0
     /// </para>
     /// </remarks>
-    function TopP(const Value: Single): TChatParams;
+    function TopP(const Value: Single): TChatParams; deprecated;
+
+    function UserProfileId(const Value: string): TChatParams;
   end;
 
   TChatParamProc = TProc<TChatParams>;
@@ -2557,6 +3082,12 @@ begin
     BetaValues := BetaValues + [Item.ToString];
 
   Result := TChatParams(Add('beta', BetaValues));
+end;
+
+function TChatParams.CacheControl(
+  const Value: TCacheControlEphemeral): TChatParams;
+begin
+  Result := TChatParams(Add('cache_control', Value.Detach));
 end;
 
 function TChatParams.Container(const Value: TContainerParams): TChatParams;
@@ -2760,6 +3291,11 @@ begin
   Result := TChatParams(Add('top_p', Value));
 end;
 
+function TChatParams.UserProfileId(const Value: string): TChatParams;
+begin
+  Result := TChatParams(Add('user_profile_id', Value));
+end;
+
 { TMessageParam }
 
 function TMessageParam.Content(
@@ -2912,7 +3448,7 @@ begin
   Result := TCitationPageLocationParam.Create.&Type();
 end;
 
-function TCitationPageLocationParam.StartPageNCumber(
+function TCitationPageLocationParam.StartPageNumber(
   const Value: Double): TCitationPageLocationParam;
 begin
   Result := TCitationPageLocationParam(Add('start_page_number', Value));
@@ -3648,6 +4184,18 @@ begin
   Result := TThinkingConfigParam.Create.&Type(State);
 end;
 
+function TThinkingConfigParam.Display(
+  const Value: TThinkingDisplayType): TThinkingConfigParam;
+begin
+  Result := Display(Value.ToString);
+end;
+
+function TThinkingConfigParam.Display(
+  const Value: string): TThinkingConfigParam;
+begin
+   Result := TThinkingConfigParam(Add('display', Value));
+end;
+
 class function TThinkingConfigParam.New(
   const Value: string): TThinkingConfigParam;
 begin
@@ -3748,6 +4296,11 @@ begin
   Result := TTool(Add('description', Value));
 end;
 
+function TTool.EagerInputStreaming(const Value: Boolean): TTool;
+begin
+  Result := TTool(Add('eager_input_streaming', Value));
+end;
+
 function TTool.FunctionPlugin(const Value: IFunctionCore): TTool;
 begin
   Result := InputSchema(Value.InputSchema)
@@ -3758,6 +4311,26 @@ end;
 function TTool.InputSchema(const Value: TInputSchema): TTool;
 begin
   Result := TTool(Add('input_schema', Value.Detach));
+end;
+
+function TTool.InputExamples(const Value: TJSONArray): TTool;
+begin
+  Result := TTool(Add('input_examples', Value));
+end;
+
+function TTool.InputExamples(const Value: TArray<TJSONObject>): TTool;
+begin
+  Result := TTool(Add('input_examples', TJSONHelper.ToJsonArray(Value)));
+end;
+
+function TTool.InputExamples(const Value: string): TTool;
+var
+  JSONArray: TJSONArray;
+begin
+  if TJSONHelper.TryGetArray(Value, JSONArray) then
+    Exit(TTool(Add('input_examples', JSONArray)));
+
+  raise EAnthropicException.Create('Invalid JSON Array');
 end;
 
 function TTool.Name(const Value: string): TTool;
@@ -4048,7 +4621,7 @@ end;
 function TWebSearchTool20250305.CacheControl(
   const Value: TCacheControlEphemeral): TWebSearchTool20250305;
 begin
-  Result := TWebSearchTool20250305(Add('cache_control', Value).Detach);
+  Result := TWebSearchTool20250305(Add('cache_control', Value.Detach));
 end;
 
 function TWebSearchTool20250305.DeferLoading(
@@ -4472,7 +5045,7 @@ begin
 end;
 
 function TBashCodeExecutionToolResultBlockParam.Content(
-  const Value: TBashCodeExecutionToolResultErrorPara): TBashCodeExecutionToolResultBlockParam;
+  const Value: TBashCodeExecutionToolResultErrorParam): TBashCodeExecutionToolResultBlockParam;
 begin
   Result := TBashCodeExecutionToolResultBlockParam(Add('content', Value.Detach));
 end;
@@ -4500,29 +5073,29 @@ begin
   Result := TBashCodeExecutionToolResultBlockParam(Add('type', Value));
 end;
 
-{ TBashCodeExecutionToolResultErrorPara }
+{ TBashCodeExecutionToolResultErrorParam }
 
-function TBashCodeExecutionToolResultErrorPara.ErrorCode(
-  const Value: TWebSearchError): TBashCodeExecutionToolResultErrorPara;
+function TBashCodeExecutionToolResultErrorParam.ErrorCode(
+  const Value: TWebSearchError): TBashCodeExecutionToolResultErrorParam;
 begin
-  Result := TBashCodeExecutionToolResultErrorPara(Add('error_code', Value.ToString));
+  Result := TBashCodeExecutionToolResultErrorParam(Add('error_code', Value.ToString));
 end;
 
-function TBashCodeExecutionToolResultErrorPara.ErrorCode(
-  const Value: string): TBashCodeExecutionToolResultErrorPara;
+function TBashCodeExecutionToolResultErrorParam.ErrorCode(
+  const Value: string): TBashCodeExecutionToolResultErrorParam;
 begin
-  Result := TBashCodeExecutionToolResultErrorPara(Add('error_code', Value));
+  Result := TBashCodeExecutionToolResultErrorParam(Add('error_code', Value));
 end;
 
-class function TBashCodeExecutionToolResultErrorPara.New: TBashCodeExecutionToolResultErrorPara;
+class function TBashCodeExecutionToolResultErrorParam.New: TBashCodeExecutionToolResultErrorParam;
 begin
-  Result := TBashCodeExecutionToolResultErrorPara.Create.&Type();
+  Result := TBashCodeExecutionToolResultErrorParam.Create.&Type();
 end;
 
-function TBashCodeExecutionToolResultErrorPara.&Type(
-  const Value: string): TBashCodeExecutionToolResultErrorPara;
+function TBashCodeExecutionToolResultErrorParam.&Type(
+  const Value: string): TBashCodeExecutionToolResultErrorParam;
 begin
-  Result := TBashCodeExecutionToolResultErrorPara(Add('type', Value));
+  Result := TBashCodeExecutionToolResultErrorParam(Add('type', Value));
 end;
 
 { TBashCodeExecutionResultBlockParam }
@@ -4733,7 +5306,7 @@ end;
 { TTextEditorCodeExecutionStrReplaceResultBlockParam }
 
 function TTextEditorCodeExecutionStrReplaceResultBlockParam.Lines(
-  const Value: TArray<Integer>): TTextEditorCodeExecutionStrReplaceResultBlockParam;
+  const Value: TArray<string>): TTextEditorCodeExecutionStrReplaceResultBlockParam;
 begin
   Result := TTextEditorCodeExecutionStrReplaceResultBlockParam(Add('lines', Value));
 end;
@@ -4778,7 +5351,7 @@ end;
 function TToolSearchToolResultBlockParam.CacheControl(
   const Value: TCacheControlEphemeral): TToolSearchToolResultBlockParam;
 begin
-  Result := TToolSearchToolResultBlockParam(Add('cache_control', Value));
+  Result := TToolSearchToolResultBlockParam(Add('cache_control', Value.Detach));
 end;
 
 function TToolSearchToolResultBlockParam.Content(
@@ -5050,7 +5623,7 @@ end;
 function TClearToolUses20250919Edit.ExcludeTools(
   const Value: TArray<string>): TClearToolUses20250919Edit;
 begin
-  Result := TClearToolUses20250919Edit(Add('exclude_tool', Value));
+  Result := TClearToolUses20250919Edit(Add('exclude_tools', Value));
 end;
 
 function TClearToolUses20250919Edit.Keep(
@@ -5307,6 +5880,12 @@ end;
 class function TOutputConfig.New: TOutputConfig;
 begin
   Result := TOutputConfig.Create;
+end;
+
+function TOutputConfig.TaskBudget(
+  const Value: TOutputConfigTaskBudget): TOutputConfig;
+begin
+  Result := TOutputConfig(Add('task_budget', Value.Detach));
 end;
 
 { TJSONOutputFormat }
@@ -5847,13 +6426,25 @@ end;
 function TWebFetchTool20250910.CacheControl(
   const Value: TCacheControlEphemeral): TWebFetchTool20250910;
 begin
-  Result := TWebFetchTool20250910(Add('cache_control', Value).Detach);
+  Result := TWebFetchTool20250910(Add('cache_control', Value.Detach));
+end;
+
+function TWebFetchTool20250910.Citations(
+  const Value: TCitationsConfigParam): TWebFetchTool20250910;
+begin
+  Result := TWebFetchTool20250910(Add('citations', Value.Detach));
 end;
 
 function TWebFetchTool20250910.DeferLoading(
   const Value: Boolean): TWebFetchTool20250910;
 begin
   Result := TWebFetchTool20250910(Add('defer_loading', Value));
+end;
+
+function TWebFetchTool20250910.MaxContentTokens(
+  const Value: Integer): TWebFetchTool20250910;
+begin
+  Result := TWebFetchTool20250910(Add('max_content_tokens', Value));
 end;
 
 function TWebFetchTool20250910.MaxUses(
@@ -6073,6 +6664,479 @@ end;
 function TOutputConfigFormat.&Type(const Value: string): TOutputConfigFormat;
 begin
   Result := TOutputConfigFormat(Add('type', Value));
+end;
+
+{ TOutputConfigTaskBudget }
+
+function TOutputConfigTaskBudget.&type(
+  const Value: string): TOutputConfigTaskBudget;
+begin
+  Result := TOutputConfigTaskBudget(Add('type', Value));
+end;
+
+class function TOutputConfigTaskBudget.New: TOutputConfigTaskBudget;
+begin
+  Result := TOutputConfigTaskBudget.Create.&type();
+end;
+
+function TOutputConfigTaskBudget.Remaining(
+  const Value: Integer): TOutputConfigTaskBudget;
+begin
+  Result := TOutputConfigTaskBudget(Add('remaining', Value));
+end;
+
+function TOutputConfigTaskBudget.Total(
+  const Value: Integer): TOutputConfigTaskBudget;
+begin
+  Result := TOutputConfigTaskBudget(Add('total', Value));
+end;
+
+{ TCodeExecutionTool20260120 }
+
+function TCodeExecutionTool20260120.AllowedCallers(
+  const Value: TArray<TAllowedCallersType>): TCodeExecutionTool20260120;
+begin
+  var JSONArray := TJSONArray.Create;
+  for var Item in Value do
+    JSONArray.Add(Item.ToString);
+
+  Result := TCodeExecutionTool20260120(Add('allowed_callers', JSONArray));
+end;
+
+function TCodeExecutionTool20260120.AllowedCallers(
+  const Value: TArray<string>): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('allowed_callers', Value));
+end;
+
+function TCodeExecutionTool20260120.CacheControl(
+  const Value: TCacheControlEphemeral): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('cache_control', Value.Detach));
+end;
+
+function TCodeExecutionTool20260120.DeferLoading(
+  const Value: Boolean): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('defer_loading', Value));
+end;
+
+function TCodeExecutionTool20260120.Name(
+  const Value: string): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('name', Value));
+end;
+
+class function TCodeExecutionTool20260120.New: TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120.Create.&Type().Name();
+end;
+
+function TCodeExecutionTool20260120.Strict(
+  const Value: Boolean): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('strict', Value));
+end;
+
+function TCodeExecutionTool20260120.&Type(
+  const Value: string): TCodeExecutionTool20260120;
+begin
+  Result := TCodeExecutionTool20260120(Add('type', Value));
+end;
+
+{ TWebSearchTool20260209 }
+
+function TWebSearchTool20260209.AllowedCallers(
+  const Value: TArray<TAllowedCallersType>): TWebSearchTool20260209;
+begin
+  var JSONArray := TJSONArray.Create;
+  for var Item in Value do
+    JSONArray.Add(Item.ToString);
+
+  Result := TWebSearchTool20260209(Add('allowed_callers', JSONArray));
+end;
+
+function TWebSearchTool20260209.AllowedCallers(
+  const Value: TArray<string>): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('allowed_callers', Value));
+end;
+
+function TWebSearchTool20260209.AllowedDomains(
+  const Value: TArray<string>): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('allowed_domains', Value));
+end;
+
+function TWebSearchTool20260209.BlockedDomains(
+  const Value: TArray<string>): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('blocked_domains', Value));
+end;
+
+function TWebSearchTool20260209.CacheControl(
+  const Value: TCacheControlEphemeral): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('cache_control', Value.Detach));
+end;
+
+function TWebSearchTool20260209.DeferLoading(
+  const Value: Boolean): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('defer_loading', Value));
+end;
+
+function TWebSearchTool20260209.MaxUses(
+  const Value: Integer): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('max_uses', Value));
+end;
+
+function TWebSearchTool20260209.Name(
+  const Value: string): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('name', Value));
+end;
+
+class function TWebSearchTool20260209.New: TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209.Create.&Type().Name();
+end;
+
+function TWebSearchTool20260209.Strict(
+  const Value: Boolean): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('strict', Value));
+end;
+
+function TWebSearchTool20260209.&Type(
+  const Value: string): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('type', Value));
+end;
+
+function TWebSearchTool20260209.UserLocation(
+  const Value: TUserLocation): TWebSearchTool20260209;
+begin
+  Result := TWebSearchTool20260209(Add('user_location', Value.Detach));
+end;
+
+{ TWebFetchTool20260209 }
+
+function TWebFetchTool20260209.AllowedCallers(
+  const Value: TArray<TAllowedCallersType>): TWebFetchTool20260209;
+begin
+  var JSONArray := TJSONArray.Create;
+  for var Item in Value do
+    JSONArray.Add(Item.ToString);
+
+  Result := TWebFetchTool20260209(Add('allowed_callers', JSONArray));
+end;
+
+function TWebFetchTool20260209.AllowedCallers(
+  const Value: TArray<string>): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('allowed_callers', Value));
+end;
+
+function TWebFetchTool20260209.AllowedDomains(
+  const Value: TArray<string>): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('allowed_domains', Value));
+end;
+
+function TWebFetchTool20260209.BlockedDomains(
+  const Value: TArray<string>): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('blocked_domains', Value));
+end;
+
+function TWebFetchTool20260209.CacheControl(
+  const Value: TCacheControlEphemeral): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('cache_control', Value.Detach));
+end;
+
+function TWebFetchTool20260209.Citations(
+  const Value: TCitationsConfigParam): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('citations', Value.Detach));
+end;
+
+function TWebFetchTool20260209.DeferLoading(
+  const Value: Boolean): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('defer_loading', Value));
+end;
+
+function TWebFetchTool20260209.MaxContentTokens(
+  const Value: Integer): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('max_content_tokens', Value));
+end;
+
+function TWebFetchTool20260209.MaxUses(
+  const Value: Integer): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('max_uses', Value));
+end;
+
+function TWebFetchTool20260209.Name(const Value: string): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('name', Value));
+end;
+
+class function TWebFetchTool20260209.New: TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209.Create.&Type().Name();
+end;
+
+function TWebFetchTool20260209.Strict(
+  const Value: Boolean): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('strict', Value));
+end;
+
+function TWebFetchTool20260209.&Type(
+  const Value: string): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('type', Value));
+end;
+
+function TWebFetchTool20260209.UserLocation(
+  const Value: TUserLocation): TWebFetchTool20260209;
+begin
+  Result := TWebFetchTool20260209(Add('user_location', Value.Detach));
+end;
+
+{ TWebFetchTool20260309 }
+
+function TWebFetchTool20260309.AllowedCallers(
+  const Value: TArray<TAllowedCallersType>): TWebFetchTool20260309;
+begin
+  var JSONArray := TJSONArray.Create;
+  for var Item in Value do
+    JSONArray.Add(Item.ToString);
+
+  Result := TWebFetchTool20260309(Add('allowed_callers', JSONArray));
+end;
+
+function TWebFetchTool20260309.AllowedCallers(
+  const Value: TArray<string>): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('allowed_callers', Value));
+end;
+
+function TWebFetchTool20260309.AllowedDomains(
+  const Value: TArray<string>): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('allowed_domains', Value));
+end;
+
+function TWebFetchTool20260309.BlockedDomains(
+  const Value: TArray<string>): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('blocked_domains', Value));
+end;
+
+function TWebFetchTool20260309.CacheControl(
+  const Value: TCacheControlEphemeral): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('cache_control', Value.Detach));
+end;
+
+function TWebFetchTool20260309.Citations(
+  const Value: TCitationsConfigParam): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('citations', Value.Detach));
+end;
+
+function TWebFetchTool20260309.DeferLoading(
+  const Value: Boolean): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('defer_loading', Value));
+end;
+
+function TWebFetchTool20260309.MaxContentTokens(
+  const Value: Integer): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('max_content_tokens', Value));
+end;
+
+function TWebFetchTool20260309.MaxUses(
+  const Value: Integer): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('max_uses', Value));
+end;
+
+function TWebFetchTool20260309.Name(const Value: string): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('name', Value));
+end;
+
+class function TWebFetchTool20260309.New: TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309.Create.&Type().Name();
+end;
+
+function TWebFetchTool20260309.Strict(
+  const Value: Boolean): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('strict', Value));
+end;
+
+function TWebFetchTool20260309.&Type(
+  const Value: string): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('type', Value));
+end;
+
+function TWebFetchTool20260309.UseCache(
+  const Value: Boolean): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('use_cache', Value));
+end;
+
+function TWebFetchTool20260309.UserLocation(
+  const Value: TUserLocation): TWebFetchTool20260309;
+begin
+  Result := TWebFetchTool20260309(Add('user_location', Value.Detach));
+end;
+
+{ TAdvisorTool20260301 }
+
+function TAdvisorTool20260301.AllowedCallers(
+  const Value: TArray<TAllowedCallersType>): TAdvisorTool20260301;
+begin
+  var JSONArray := TJSONArray.Create;
+  for var Item in Value do
+    JSONArray.Add(Item.ToString);
+
+  Result := TAdvisorTool20260301(Add('allowed_callers', JSONArray));
+end;
+
+function TAdvisorTool20260301.AllowedCallers(
+  const Value: TArray<string>): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('allowed_callers', Value));
+end;
+
+function TAdvisorTool20260301.CacheControl(
+  const Value: TCacheControlEphemeral): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('cache_control', Value.Detach));
+end;
+
+function TAdvisorTool20260301.Caching(
+  const Value: TCacheControlEphemeral): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('caching', Value.Detach));
+end;
+
+function TAdvisorTool20260301.DeferLoading(
+  const Value: Boolean): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('defer_loading', Value));
+end;
+
+function TAdvisorTool20260301.MaxUses(
+  const Value: Integer): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('max_uses', Value));
+end;
+
+function TAdvisorTool20260301.Model(
+  const Value: TArray<string>): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('model', Value));
+end;
+
+function TAdvisorTool20260301.Model(const Value: string): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('model', Value));
+end;
+
+function TAdvisorTool20260301.Name(const Value: string): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('name', Value));
+end;
+
+class function TAdvisorTool20260301.New: TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301.Create.&Type().Name();
+end;
+
+function TAdvisorTool20260301.Strict(
+  const Value: Boolean): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('strict', Value));
+end;
+
+function TAdvisorTool20260301.&Type(const Value: string): TAdvisorTool20260301;
+begin
+  Result := TAdvisorTool20260301(Add('type', Value));
+end;
+
+{ TCompactionBlockParam }
+
+function TCompactionBlockParam.CacheControl(
+  const Value: TCacheControlEphemeral): TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam(Add('cache_control', Value.Detach));
+end;
+
+function TCompactionBlockParam.Content(
+  const Value: string): TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam(Add('content', Value));
+end;
+
+function TCompactionBlockParam.EncryptedContent(
+  const Value: string): TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam(Add('encrypted_content', Value));
+end;
+
+class function TCompactionBlockParam.New: TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam.Create.&Type();
+end;
+
+function TCompactionBlockParam.&Type(
+  const Value: string): TCompactionBlockParam;
+begin
+  Result := TCompactionBlockParam(Add('type', Value));
+end;
+
+{ TCompact20260112Edit }
+
+class function TCompact20260112Edit.New: TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit.Create.&Type();
+end;
+
+function TCompact20260112Edit.&Type(
+  const Value: string): TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit(Add('type', Value));
+end;
+
+function TCompact20260112Edit.Instructions(
+  const Value: string): TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit(Add('instructions', Value));
+end;
+
+function TCompact20260112Edit.PauseAfterCompaction(
+  const Value: Boolean): TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit(Add('pause_after_compaction', Value));
+end;
+
+function TCompact20260112Edit.Trigger(
+  const Value: TInputTokensTrigger): TCompact20260112Edit;
+begin
+  Result := TCompact20260112Edit(Add('trigger', Value.Detach));
 end;
 
 end.

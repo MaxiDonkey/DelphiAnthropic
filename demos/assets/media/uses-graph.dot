@@ -1,0 +1,26 @@
+digraph uses {
+    rankdir=LR;
+    node [shape=box, fontname="Helvetica"];
+    "Demo.Anthropic.AsyncUtils" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.Context" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.FileIds" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.Helpers" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.JsonResponse.Helper" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.Services" [style=filled, fillcolor="#e3f2fd"];
+    "Main" [style=filled, fillcolor="#e3f2fd"];
+    "Main in" [style=filled, fillcolor="#f5f5f5", fontcolor="#616161"];
+    "VCL.WVPythia.Services" [style=filled, fillcolor="#e3f2fd"];
+    "VCL_Anthropic" [style=filled, fillcolor="#e3f2fd"];
+    "Demo.Anthropic.Services" -> "Demo.Anthropic.AsyncUtils";
+    "Demo.Anthropic.Services" -> "Demo.Anthropic.Context";
+    "Demo.Anthropic.Services" -> "Demo.Anthropic.FileIds";
+    "Demo.Anthropic.Services" -> "Demo.Anthropic.Helpers";
+    "Demo.Anthropic.Services" -> "Demo.Anthropic.JsonResponse.Helper";
+    "Main" -> "Demo.Anthropic.AsyncUtils";
+    "Main" -> "Demo.Anthropic.Context";
+    "Main" -> "Demo.Anthropic.Services";
+    "Main" -> "VCL.WVPythia.Services";
+    "VCL.WVPythia.Services" -> "Demo.Anthropic.Services";
+    "VCL.WVPythia.Services" -> "Main";
+    "VCL_Anthropic" -> "Main in";
+}

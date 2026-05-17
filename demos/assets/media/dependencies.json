@@ -1,0 +1,135 @@
+{
+  "Demo.Anthropic.AsyncUtils": {
+    "defined_in": "Demo.Anthropic.AsyncUtils.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.IOUtils",
+      "Anthropic",
+      "Anthropic.Types",
+      "Anthropic.Helpers",
+      "WVPythia.Chat.Interfaces",
+      "WVPythia.Vendors.Services"
+    ],
+    "implementation_uses": []
+  },
+  "Demo.Anthropic.JsonResponse.Helper": {
+    "defined_in": "Demo.Anthropic.JsonResponse.Helper.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.JSON",
+      "System.Classes",
+      "WVPythia.JSON.SafeReader"
+    ],
+    "implementation_uses": []
+  },
+  "Demo.Anthropic.FileIds": {
+    "defined_in": "Demo.Anthropic.FileIds.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.JSON",
+      "System.Generics.Collections",
+      "WVPythia.JSON.SafeReader"
+    ],
+    "implementation_uses": []
+  },
+  "Demo.Anthropic.Context": {
+    "defined_in": "Demo.Anthropic.Context.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.Generics.Collections",
+      "System.JSON",
+      "WVPythia.JSON.SafeReader",
+      "Anthropic",
+      "Anthropic.Types",
+      "Anthropic.Helpers",
+      "Anthropic.API.JsonSafeReader",
+      "WVPythia.Chat.Interfaces",
+      "WVPythia.ChatSession.Controller",
+      "WVPythia.Vendors.Services"
+    ],
+    "implementation_uses": []
+  },
+  "Main": {
+    "defined_in": "Main.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.Classes",
+      "Vcl.Controls",
+      "Vcl.Forms",
+      "Vcl.Dialogs",
+      "Vcl.StdCtrls",
+      "Vcl.ExtCtrls",
+      "VCL.WVPythia.Chat",
+      "WVPythia.Types",
+      "WVPythia.Types.EnumWire",
+      "WVPythia.Strs",
+      "VCL.WVPythia.Services",
+      "Demo.Anthropic.AsyncUtils",
+      "Anthropic",
+      "Demo.Anthropic.Services",
+      "Demo.Anthropic.Context"
+    ],
+    "implementation_uses": []
+  },
+  "VCL_Anthropic": {
+    "defined_in": "VCL_Anthropic.dpr",
+    "interface_uses": [],
+    "implementation_uses": [
+      "Vcl.Forms",
+      "Main in",
+      "Vcl.Themes",
+      "Vcl.Styles"
+    ]
+  },
+  "VCL.WVPythia.Services": {
+    "defined_in": "VCL.WVPythia.Services.pas",
+    "interface_uses": [
+      "Vcl.Dialogs",
+      "System.SysUtils",
+      "WVPythia.Adapter",
+      "WVPythia.Chat.ManagedFlow",
+      "WVPythia.ManagedItemService",
+      "Demo.Anthropic.Services"
+    ],
+    "implementation_uses": [
+      "Main"
+    ]
+  },
+  "Demo.Anthropic.Helpers": {
+    "defined_in": "Demo.Anthropic.Helpers.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.IOUtils",
+      "WVPythia.TextFile.Helper",
+      "WVPythia.Vendors.Services",
+      "Anthropic",
+      "Anthropic.Types",
+      "WVPythia.Types.EnumWire"
+    ],
+    "implementation_uses": []
+  },
+  "Demo.Anthropic.Services": {
+    "defined_in": "Demo.Anthropic.Services.pas",
+    "interface_uses": [
+      "System.SysUtils",
+      "System.JSON",
+      "WVPythia.Chat.Interfaces",
+      "WVPythia.Chat.ManagedFlow",
+      "WVPythia.TextFile.Helper",
+      "WVPythia.Strs",
+      "WVPythia.Vendors.Services",
+      "WVPythia.Chat.Consts",
+      "Anthropic",
+      "Anthropic.Types",
+      "Anthropic.Async.Promise",
+      "Anthropic.Helpers",
+      "Anthropic.API.JsonSafeReader",
+      "Demo.Anthropic.Helpers",
+      "Demo.Anthropic.Context",
+      "Demo.Anthropic.FileIds",
+      "Demo.Anthropic.AsyncUtils",
+      "Demo.Anthropic.JsonResponse.Helper"
+    ],
+    "implementation_uses": []
+  }
+}

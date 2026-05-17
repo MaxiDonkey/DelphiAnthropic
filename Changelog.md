@@ -1,3 +1,66 @@
+#### 2026, May 17 version 1.3.0
+
+- Functional demo using **Pythia-WebView2** (see demo [folder](demos) and [Pythia-WebView2 project](https://github.com/MaxiDonkey/Pythia-webView2)) 
+
+<br>
+
+- Managed Agents API (new):
+  - End-to-end support for the new Anthropic agent orchestration surface, exposed through the `IAnthropic` client as dedicated routes (`Agents`, `Environments`, `Sessions`, `Vaults`, `MemoryStores`).
+  - `Agents`: create, retrieve, list, update, archive, version listing, and multi-agent composition (sub-agents) with Skills binding.
+  - `Environments`: create, retrieve, list, update, delete, archive — defines the container in which a session runs.
+  - `Sessions` (with nested sub-routes): create / retrieve / list / update / delete / archive, plus `Events` (list, send, raw SSE stream), `Resources` (GitHub repository with branch/commit checkout, Files API mount, memory-store attachment with access mode and instructions), `Threads` (list / retrieve / raw stream) and `Threads.Events` (list, raw stream).
+  - `Vaults` + nested `Credentials` route (create, retrieve, list, update, delete, archive, validate).
+  - `MemoryStores` + nested `Memories` and `MemoryVersions` routes (create, retrieve, list, update, delete; redact a memory version).
+  - Async/await variants (`AsyncAwaitXxx` returning `TPromise<T>`) for every managed-agent operation.
+
+<br>
+
+- Webhooks (new):
+  - New unit dedicated to verifying and consuming Anthropic webhook deliveries (`TWebhookVerifier`, `TWebhookEvent`, `TWebhookEventData`).
+  - HMAC signature verification with constant-time comparison and configurable freshness window (`MaxAgeSeconds`, default 300 s).
+  - Strongly typed event surface (`TWebhookEventType`, `TWebhookResourceKind`) covering session, session-thread, vault and vault-credential lifecycles, with `TryGetEventType` / `IsSessionEvent` / `IsVaultCredentialEvent` helpers.
+  - `Unwrap` / `Verify` / `VerifyOrRaise` overloads accepting either raw `TBytes` or `string` payloads.
+
+<br>
+
+- Updated server tool types (Anthropic refresh):
+  - Advisor tool `advisor_20260301` (beta header `advisor-tool-2026-03-01` is inferred).
+  - Web search tool `web_search_20260209`.
+  - Web fetch tool `web_fetch_20260209`.
+  - Code execution tool `code_execution_20260120`.
+  - Beta-header inference (`Anthropic.Headers.Beta`) distinguishes GA tool `type` values from beta header tokens and gates remaining betas per endpoint and payload shape.
+
+<br>
+
+- Custom tool definitions:
+  - Added typed `InputExamples(...)` and `EagerInputStreaming(...)` helpers for custom tools.
+  - `EagerInputStreaming(True)` now infers the `fine-grained-tool-streaming-2025-05-14` beta header.
+
+<br>
+
+- New content block params and helpers:
+  - `TCompactionBlockParam` and `TContainerUploadBlockParam` exposed at the request level.
+  - `TContentsHelper.AddCompaction` (raw / with encrypted content / from object) and `TContentsHelper.AddContainerUpload` (from file id / from object) added to simplify message composition.
+
+<br>
+
+- Models metadata expansion:
+  - `TModel` now surfaces structured capability metadata: `TModelCapabilities`, `TModelCapabilitySupport`, `TModelThinkingCapability`, `TModelThinkingTypes`, `TModelEffortCapability`, `TModelContextManagementCapability`.
+  - `Models.Retrieve` / `Models.List` consumers can now inspect supported thinking modes, effort tiers and context-management features directly from the API response.
+
+<br>
+
+- Chat responses:
+  - New `TStopDetails` object on chat responses, exposing structured stop information alongside `stop_reason` / `stop_sequence`.
+
+<br>
+
+- Beta-header coverage update:
+  - Added recognition for `managed-agents-2026-04-01`, `task-budgets-2026-03-13`, `fine-grained-tool-streaming-2025-05-14`, `user-profiles-2026-03-24`, `compact-2026-01-12`, `extended-cache-ttl-2025-04-11`, `fast-mode-2026-02-01`, `interleaved-thinking-2025-05-14`, `dev-full-thinking-2025-05-14`, `mcp-client-2025-04-04`, `model-context-window-exceeded-2025-08-26`, `pdfs-2024-09-25`, `prompt-caching-2024-07-31`, `token-counting-2024-11-01`, `token-efficient-tools-2025-02-19`.
+  - Removed superseded tokens (`advanced-tool-use-2025-11-20`, `tool-search-tool-2025-10-19`, `web-fetch-2025-09-10`).
+
+<br>
+
 #### 2026, February 19 version 1.2.0
 
 - Anthropic parity refresh (as of 2026-02-07):

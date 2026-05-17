@@ -18,10 +18,11 @@ uses
   Anthropic.Monitoring, Anthropic.Net.MediaCodec, Anthropic.Chat.StreamEngine,
   Anthropic.Chat.StreamCallbacks, Anthropic.Chat.Beta, Anthropic.API.JsonSafeReader,
   Anthropic.Files, Anthropic.Skills, Anthropic.JSONL, Anthropic.Context.Helper,
-  Anthropic.Files.Helper;
+  Anthropic.Agents, Anthropic.Environment, Anthropic.Sessions, Anthropic.Vaults,
+  Anthropic.MemoryStore, Anthropic.Files.Helper;
 
 const
-  VERSION = '1.2.0';
+  VERSION = '1.3.0';
 
 type
   /// <summary>
@@ -47,7 +48,7 @@ type
   /// </para>
   /// </remarks>
   IAnthropic = interface
-    ['{7E69221E-3C24-4B38-9AE9-894714CA9A47}']
+    ['{ECAF057E-EFB9-4615-BCEB-174391FB4F49}']
     function GetAPI: TAnthropicAPI;
     function GetHttpClient: IHttpClientAPI;
     procedure SetToken(const Value: string);
@@ -59,6 +60,11 @@ type
     function GetFilesRoute: TFilesRoute;
     function GetModelsRoute : TModelsRoute;
     function GetSkillsRoute : TSkillsRoute;
+    function GetAgentsRoute: TAgentsRoute;
+    function GetEnvironmentsRoute: TEnvironmentsRoute;
+    function GetSessionsRoute: TSessionsRoute;
+    function GetVaultsRoute: TVaultsRoute;
+    function GetMemoryStoresRoute: TMemoryStoresRoute;
 
     /// <summary>
     /// Provides access to the chat API.
@@ -81,6 +87,125 @@ type
     /// </para>
     /// </remarks>
     property Chat: TChatRoute read GetChatRoute;
+
+    /// <summary>
+    /// Provides access to the managed agents API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TAgentsRoute</c> entry point for managed agent operations such as
+    /// create, retrieve, list, update, archive, and version listing.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access managed-agent-related operations through a single, centralized
+    /// client instance.
+    /// </para>
+    /// </remarks>
+    property Agents: TAgentsRoute read GetAgentsRoute;
+
+    /// <summary>
+    /// Provides access to the managed environments API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TEnvironmentsRoute</c> entry point for managed environment operations such as
+    /// create, retrieve, list, update, delete, and archive.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access managed-environment-related operations through a single, centralized
+    /// client instance.
+    /// </para>
+    /// </remarks>
+    property Environments: TEnvironmentsRoute read GetEnvironmentsRoute;
+
+    /// <summary>
+    /// Provides access to the managed sessions API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TSessionsRoute</c> entry point for managed session operations such as
+    /// create, retrieve, list, update, delete, and archive.
+    /// </para>
+    /// <para>
+    /// • The route also exposes nested routes for session events, resources, threads, and thread events.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access session-related operations through a single, centralized client instance.
+    /// </para>
+    /// </remarks>
+    property Sessions: TSessionsRoute read GetSessionsRoute;
+
+    /// <summary>
+    /// Provides access to the managed vaults API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TVaultsRoute</c> entry point for managed vault operations such as
+    /// create, retrieve, list, update, delete, and archive.
+    /// </para>
+    /// <para>
+    /// • The route also exposes the nested <c>Credentials</c> route for credential operations scoped to a vault.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access managed-vault-related operations through a single, centralized
+    /// client instance.
+    /// </para>
+    /// </remarks>
+    property Vaults: TVaultsRoute read GetVaultsRoute;
+
+    /// <summary>
+    /// Provides access to the managed memory stores API.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// • This property exposes the <c>TMemoryStoresRoute</c> entry point for memory store operations such as
+    /// create, retrieve, list, update, delete, and archive.
+    /// </para>
+    /// <para>
+    /// • The route also exposes the nested <c>Memories</c> and <c>MemoryVersions</c> routes for operations
+    /// scoped to a memory store.
+    /// </para>
+    /// <para>
+    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// </para>
+    /// <para>
+    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// the current authentication token and base URL configuration.
+    /// </para>
+    /// <para>
+    /// • Use this property to access managed-memory-store-related operations through a single, centralized
+    /// client instance.
+    /// </para>
+    /// </remarks>
+    property MemoryStores: TMemoryStoresRoute read GetMemoryStoresRoute;
 
     /// <summary>
     /// Provides access to the batches API.
@@ -301,6 +426,11 @@ type
     FFilesLock: TObject;
     FModelsLock: TObject;
     FSkillsLock: TObject;
+    FAgentsLock: TObject;
+    FEnvironmentsLock: TObject;
+    FSessionsLock: TObject;
+    FVaultsLock: TObject;
+    FMemoryStoresLock: TObject;
 
     function Lazy<T: class>(var AField: T; const ALock: TObject;
       const AFactory: TFunc<T>): T; inline;
@@ -345,6 +475,11 @@ type
     FFilesRoute: TFilesRoute;
     FModelsRoute: TModelsRoute;
     FSkillsRoute: TSkillsRoute;
+    FAgentsRoute: TAgentsRoute;
+    FEnvironmentsRoute: TEnvironmentsRoute;
+    FSessionsRoute: TSessionsRoute;
+    FVaultsRoute: TVaultsRoute;
+    FMemoryStoresRoute: TMemoryStoresRoute;
 
     function GetAPI: TAnthropicAPI;
     function GetToken: string;
@@ -358,6 +493,11 @@ type
     function GetFilesRoute: TFilesRoute;
     function GetModelsRoute : TModelsRoute;
     function GetSkillsRoute : TSkillsRoute;
+    function GetAgentsRoute: TAgentsRoute;
+    function GetEnvironmentsRoute: TEnvironmentsRoute;
+    function GetSessionsRoute: TSessionsRoute;
+    function GetVaultsRoute: TVaultsRoute;
+    function GetMemoryStoresRoute: TMemoryStoresRoute;
 
   public
     /// <summary>
@@ -539,6 +679,16 @@ type
   TToolSearchToolResultBlock = Anthropic.Chat.Beta.TToolSearchToolResultBlock;
   TMCPToolResultBlockContent = Anthropic.Chat.Beta.TMCPToolResultBlockContent;
   TMCPToolResultBlock = Anthropic.Chat.Beta.TMCPToolResultBlock;
+  TCodeExecutionTool20260120 = Anthropic.Chat.Request.TCodeExecutionTool20260120;
+  TWebSearchTool20260209 = Anthropic.Chat.Request.TWebSearchTool20260209;
+  TWebFetchTool20260209 = Anthropic.Chat.Request.TWebFetchTool20260209;
+  TWebFetchTool20260309 = Anthropic.Chat.Request.TWebFetchTool20260309;
+  TAdvisorTool20260301 = Anthropic.Chat.Request.TAdvisorTool20260301;
+  TOutputConfigFormat = Anthropic.Chat.Request.TOutputConfigFormat;
+  TOutputConfigTaskBudget = Anthropic.Chat.Request.TOutputConfigTaskBudget;
+  TCompactionBlockParam = Anthropic.Chat.Request.TCompactionBlockParam;
+  TDirectCaller = Anthropic.Chat.Request.TDirectCaller;
+  TServerToolCaller = Anthropic.Chat.Request.TServerToolCaller;
   TToolContent = Anthropic.Chat.Beta.TToolContent;
 
 {$ENDREGION}
@@ -661,7 +811,7 @@ type
   TCodeExecutionOutputBlockParam = Anthropic.Chat.Request.TCodeExecutionOutputBlockParam;
   TCodeExecutionResultBlockParam = Anthropic.Chat.Request.TCodeExecutionResultBlockParam;
   TCodeExecutionToolResultBlockParam = Anthropic.Chat.Request.TCodeExecutionToolResultBlockParam;
-  TBashCodeExecutionToolResultErrorPara = Anthropic.Chat.Request.TBashCodeExecutionToolResultErrorPara;
+  TBashCodeExecutionToolResultErrorParam = Anthropic.Chat.Request.TBashCodeExecutionToolResultErrorParam;
   TBashCodeExecutionOutputBlockParam = Anthropic.Chat.Request.TBashCodeExecutionOutputBlockParam;
   TBashCodeExecutionResultBlockParam = Anthropic.Chat.Request.TBashCodeExecutionResultBlockParam;
   TBashCodeExecutionToolResultBlockParam = Anthropic.Chat.Request.TBashCodeExecutionToolResultBlockParam;
@@ -692,6 +842,7 @@ type
   TThinkingTurns = Anthropic.Chat.Request.TThinkingTurns;
   TAllThinkingTurns = Anthropic.Chat.Request.TAllThinkingTurns;
   TClearThinking20251015Edit = Anthropic.Chat.Request.TClearThinking20251015Edit;
+  TCompact20260112Edit = Anthropic.Chat.Request.TCompact20260112Edit;
   TContextManagementConfig = Anthropic.Chat.Request.TContextManagementConfig;
   TRequestMCPServerToolConfiguration = Anthropic.Chat.Request.TRequestMCPServerToolConfiguration;
   TRequestMCPServerURLDefinition = Anthropic.Chat.Request.TRequestMCPServerURLDefinition;
@@ -853,6 +1004,380 @@ type
 
 {$ENDREGION}
 
+{$REGION 'Anthropic.Agents'}
+
+  TAgentModelConfigParams = Anthropic.Agents.TAgentModelConfigParams;
+  TAgentMCPServerParams = Anthropic.Agents.TAgentMCPServerParams;
+  TAgentRosterEntryParams = Anthropic.Agents.TAgentRosterEntryParams;
+  TAgentReferenceParams = Anthropic.Agents.TAgentReferenceParams;
+  TAgentSelfReferenceParams = Anthropic.Agents.TAgentSelfReferenceParams;
+  TAgentMultiagentParams = Anthropic.Agents.TAgentMultiagentParams;
+
+  TAgentSkillParams = Anthropic.Agents.TAgentSkillParams;
+  TAgentAnthropicSkillParams = Anthropic.Agents.TAgentAnthropicSkillParams;
+  TAgentCustomSkillParams = Anthropic.Agents.TAgentCustomSkillParams;
+
+  TAgentPermissionPolicyParams = Anthropic.Agents.TAgentPermissionPolicyParams;
+  TAgentAlwaysAllowPolicyParams = Anthropic.Agents.TAgentAlwaysAllowPolicyParams;
+  TAgentAlwaysAskPolicyParams = Anthropic.Agents.TAgentAlwaysAskPolicyParams;
+
+  TAgentToolConfigParams = Anthropic.Agents.TAgentToolConfigParams;
+  TAgentToolsetDefaultConfigParams = Anthropic.Agents.TAgentToolsetDefaultConfigParams;
+  TAgentToolParams = Anthropic.Agents.TAgentToolParams;
+  TAgentBuiltInToolsetParams = Anthropic.Agents.TAgentBuiltInToolsetParams;
+  TAgentMCPToolsetParams = Anthropic.Agents.TAgentMCPToolsetParams;
+  TAgentCustomToolParams = Anthropic.Agents.TAgentCustomToolParams;
+
+  TAgentCreateParams = Anthropic.Agents.TAgentCreateParams;
+  TAgentUpdateParams = Anthropic.Agents.TAgentUpdateParams;
+  TAgentListParams = Anthropic.Agents.TAgentListParams;
+  TAgentRetrieveParams = Anthropic.Agents.TAgentRetrieveParams;
+
+  TAgentListParamProc = Anthropic.Agents.TAgentListParamProc;
+  TAgentRetrieveParamProc = Anthropic.Agents.TAgentRetrieveParamProc;
+  TAgentCreateParamProc = Anthropic.Agents.TAgentCreateParamProc;
+  TAgentUpdateParamProc = Anthropic.Agents.TAgentUpdateParamProc;
+
+  TAgentModelConfig = Anthropic.Agents.TAgentModelConfig;
+  TAgentMCPServer = Anthropic.Agents.TAgentMCPServer;
+  TAgentReference = Anthropic.Agents.TAgentReference;
+  TAgentMultiagent = Anthropic.Agents.TAgentMultiagent;
+  TAgentSkill = Anthropic.Agents.TAgentSkill;
+  TAgentAnthropicSkill = Anthropic.Agents.TAgentAnthropicSkill;
+  TAgentCustomSkill = Anthropic.Agents.TAgentCustomSkill;
+  TAgentPermissionPolicy = Anthropic.Agents.TAgentPermissionPolicy;
+  TAgentAlwaysAllowPolicy = Anthropic.Agents.TAgentAlwaysAllowPolicy;
+  TAgentAlwaysAskPolicy = Anthropic.Agents.TAgentAlwaysAskPolicy;
+  TAgentToolConfig = Anthropic.Agents.TAgentToolConfig;
+  TAgentToolsetDefaultConfig = Anthropic.Agents.TAgentToolsetDefaultConfig;
+  TAgentTool = Anthropic.Agents.TAgentTool;
+  TAgentBuiltInToolset = Anthropic.Agents.TAgentBuiltInToolset;
+  TAgentMCPToolset = Anthropic.Agents.TAgentMCPToolset;
+  TAgentCustomTool = Anthropic.Agents.TAgentCustomTool;
+
+  TAgent = Anthropic.Agents.TAgent;
+  TAgentList = Anthropic.Agents.TAgentList;
+
+  TAsynAgent = Anthropic.Agents.TAsynAgent;
+  TPromiseAgent = Anthropic.Agents.TPromiseAgent;
+  TAsynAgentList = Anthropic.Agents.TAsynAgentList;
+  TPromiseAgentList = Anthropic.Agents.TPromiseAgentList;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Environment'}
+
+  TEnvironmentNetworkParams = Anthropic.Environment.TEnvironmentNetworkParams;
+  TEnvironmentUnrestrictedNetworkParams = Anthropic.Environment.TEnvironmentUnrestrictedNetworkParams;
+  TEnvironmentLimitedNetworkParams = Anthropic.Environment.TEnvironmentLimitedNetworkParams;
+  TEnvironmentPackagesParams = Anthropic.Environment.TEnvironmentPackagesParams;
+  TEnvironmentCloudConfigParams = Anthropic.Environment.TEnvironmentCloudConfigParams;
+  TEnvironmentCreateParams = Anthropic.Environment.TEnvironmentCreateParams;
+  TEnvironmentUpdateParams = Anthropic.Environment.TEnvironmentUpdateParams;
+  TEnvironmentListParams = Anthropic.Environment.TEnvironmentListParams;
+
+  TEnvironmentListParamProc = Anthropic.Environment.TEnvironmentListParamProc;
+  TEnvironmentCreateParamProc = Anthropic.Environment.TEnvironmentCreateParamProc;
+  TEnvironmentUpdateParamProc = Anthropic.Environment.TEnvironmentUpdateParamProc;
+
+  TEnvironmentNetwork = Anthropic.Environment.TEnvironmentNetwork;
+  TEnvironmentUnrestrictedNetwork = Anthropic.Environment.TEnvironmentUnrestrictedNetwork;
+  TEnvironmentLimitedNetwork = Anthropic.Environment.TEnvironmentLimitedNetwork;
+  TEnvironmentPackages = Anthropic.Environment.TEnvironmentPackages;
+  TEnvironmentCloudConfig = Anthropic.Environment.TEnvironmentCloudConfig;
+  TEnvironment = Anthropic.Environment.TEnvironment;
+  TEnvironmentList = Anthropic.Environment.TEnvironmentList;
+  TEnvironmentDeleteResponse = Anthropic.Environment.TEnvironmentDeleteResponse;
+
+  TAsynEnvironment = Anthropic.Environment.TAsynEnvironment;
+  TPromiseEnvironment = Anthropic.Environment.TPromiseEnvironment;
+  TAsynEnvironmentList = Anthropic.Environment.TAsynEnvironmentList;
+  TPromiseEnvironmentList = Anthropic.Environment.TPromiseEnvironmentList;
+  TAsynEnvironmentDeleteResponse = Anthropic.Environment.TAsynEnvironmentDeleteResponse;
+  TPromiseEnvironmentDeleteResponse = Anthropic.Environment.TPromiseEnvironmentDeleteResponse;
+
+  TEnvironmentsAbstractSupport = Anthropic.Environment.TEnvironmentsAbstractSupport;
+  TEnvironmentsAsynchronousSupport = Anthropic.Environment.TEnvironmentsAsynchronousSupport;
+  TEnvironmentsRoute = Anthropic.Environment.TEnvironmentsRoute;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Sessions'}
+
+  TSessionAgentParams = Anthropic.Sessions.TSessionAgentParams;
+  TSessionCheckoutParams = Anthropic.Sessions.TSessionCheckoutParams;
+  TSessionBranchCheckoutParams = Anthropic.Sessions.TSessionBranchCheckoutParams;
+  TSessionCommitCheckoutParams = Anthropic.Sessions.TSessionCommitCheckoutParams;
+
+  TSessionResourceParams = Anthropic.Sessions.TSessionResourceParams;
+  TSessionGitHubRepositoryResourceParams = Anthropic.Sessions.TSessionGitHubRepositoryResourceParams;
+  TSessionFileResourceParams = Anthropic.Sessions.TSessionFileResourceParams;
+  TSessionMemoryStoreResourceParams = Anthropic.Sessions.TSessionMemoryStoreResourceParams;
+
+  TSessionCreateParams = Anthropic.Sessions.TSessionCreateParams;
+  TSessionUpdateParams = Anthropic.Sessions.TSessionUpdateParams;
+  TSessionListParams = Anthropic.Sessions.TSessionListParams;
+  TSessionEventListParams = Anthropic.Sessions.TSessionEventListParams;
+  TSessionSimpleListParams = Anthropic.Sessions.TSessionSimpleListParams;
+
+  TSessionSourceParams = Anthropic.Sessions.TSessionSourceParams;
+  TSessionBase64ImageSourceParams = Anthropic.Sessions.TSessionBase64ImageSourceParams;
+  TSessionUrlSourceParams = Anthropic.Sessions.TSessionUrlSourceParams;
+  TSessionFileSourceParams = Anthropic.Sessions.TSessionFileSourceParams;
+  TSessionBase64DocumentSourceParams = Anthropic.Sessions.TSessionBase64DocumentSourceParams;
+  TSessionPlainTextDocumentSourceParams = Anthropic.Sessions.TSessionPlainTextDocumentSourceParams;
+
+  TSessionContentBlockParams = Anthropic.Sessions.TSessionContentBlockParams;
+  TSessionTextBlockParams = Anthropic.Sessions.TSessionTextBlockParams;
+  TSessionImageBlockParams = Anthropic.Sessions.TSessionImageBlockParams;
+  TSessionDocumentBlockParams = Anthropic.Sessions.TSessionDocumentBlockParams;
+
+  TSessionEventParams = Anthropic.Sessions.TSessionEventParams;
+  TSessionUserMessageEventParams = Anthropic.Sessions.TSessionUserMessageEventParams;
+  TSessionUserInterruptEventParams = Anthropic.Sessions.TSessionUserInterruptEventParams;
+  TSessionUserToolConfirmationEventParams = Anthropic.Sessions.TSessionUserToolConfirmationEventParams;
+  TSessionUserCustomToolResultEventParams = Anthropic.Sessions.TSessionUserCustomToolResultEventParams;
+  TSessionRubricParams = Anthropic.Sessions.TSessionRubricParams;
+  TSessionTextRubricParams = Anthropic.Sessions.TSessionTextRubricParams;
+  TSessionFileRubricParams = Anthropic.Sessions.TSessionFileRubricParams;
+  TSessionUserDefineOutcomeEventParams = Anthropic.Sessions.TSessionUserDefineOutcomeEventParams;
+  TSessionSendEventsParams = Anthropic.Sessions.TSessionSendEventsParams;
+
+  TSessionResourceUpdateParams = Anthropic.Sessions.TSessionResourceUpdateParams;
+
+  TSessionListParamProc = Anthropic.Sessions.TSessionListParamProc;
+  TSessionCreateParamProc = Anthropic.Sessions.TSessionCreateParamProc;
+  TSessionUpdateParamProc = Anthropic.Sessions.TSessionUpdateParamProc;
+  TSessionEventListParamProc = Anthropic.Sessions.TSessionEventListParamProc;
+  TSessionSimpleListParamProc = Anthropic.Sessions.TSessionSimpleListParamProc;
+  TSessionSendEventsParamProc = Anthropic.Sessions.TSessionSendEventsParamProc;
+  TSessionResourceAddParamProc = Anthropic.Sessions.TSessionResourceAddParamProc;
+  TSessionResourceUpdateParamProc = Anthropic.Sessions.TSessionResourceUpdateParamProc;
+
+  TSessionModelConfig = Anthropic.Sessions.TSessionModelConfig;
+  TSessionAgent = Anthropic.Sessions.TSessionAgent;
+  TSessionCacheCreationUsage = Anthropic.Sessions.TSessionCacheCreationUsage;
+  TSessionUsage = Anthropic.Sessions.TSessionUsage;
+  TSessionStats = Anthropic.Sessions.TSessionStats;
+  TSessionResource = Anthropic.Sessions.TSessionResource;
+  TSessionOutcomeEvaluation = Anthropic.Sessions.TSessionOutcomeEvaluation;
+  TSession = Anthropic.Sessions.TSession;
+  TSessionList = Anthropic.Sessions.TSessionList;
+  TSessionDeleted = Anthropic.Sessions.TSessionDeleted;
+  TSessionEvent = Anthropic.Sessions.TSessionEvent;
+  TSessionEventList = Anthropic.Sessions.TSessionEventList;
+  TSessionSendEventsResponse = Anthropic.Sessions.TSessionSendEventsResponse;
+  TSessionResourceList = Anthropic.Sessions.TSessionResourceList;
+  TSessionResourceDeleted = Anthropic.Sessions.TSessionResourceDeleted;
+  TSessionThread = Anthropic.Sessions.TSessionThread;
+  TSessionThreadList = Anthropic.Sessions.TSessionThreadList;
+  TSessionStream = Anthropic.Sessions.TSessionStream;
+
+  TAsynSession = Anthropic.Sessions.TAsynSession;
+  TPromiseSession = Anthropic.Sessions.TPromiseSession;
+  TAsynSessionList = Anthropic.Sessions.TAsynSessionList;
+  TPromiseSessionList = Anthropic.Sessions.TPromiseSessionList;
+  TAsynSessionDeleted = Anthropic.Sessions.TAsynSessionDeleted;
+  TPromiseSessionDeleted = Anthropic.Sessions.TPromiseSessionDeleted;
+  TAsynSessionEventList = Anthropic.Sessions.TAsynSessionEventList;
+  TPromiseSessionEventList = Anthropic.Sessions.TPromiseSessionEventList;
+  TAsynSessionSendEventsResponse = Anthropic.Sessions.TAsynSessionSendEventsResponse;
+  TPromiseSessionSendEventsResponse = Anthropic.Sessions.TPromiseSessionSendEventsResponse;
+  TAsynSessionResource = Anthropic.Sessions.TAsynSessionResource;
+  TPromiseSessionResource = Anthropic.Sessions.TPromiseSessionResource;
+  TAsynSessionResourceList = Anthropic.Sessions.TAsynSessionResourceList;
+  TPromiseSessionResourceList = Anthropic.Sessions.TPromiseSessionResourceList;
+  TAsynSessionResourceDeleted = Anthropic.Sessions.TAsynSessionResourceDeleted;
+  TPromiseSessionResourceDeleted = Anthropic.Sessions.TPromiseSessionResourceDeleted;
+  TAsynSessionThread = Anthropic.Sessions.TAsynSessionThread;
+  TPromiseSessionThread = Anthropic.Sessions.TPromiseSessionThread;
+  TAsynSessionThreadList = Anthropic.Sessions.TSessionThreadList;
+  TPromiseSessionThreadList = Anthropic.Sessions.TPromiseSessionThreadList;
+  TAsynSessionStream = Anthropic.Sessions.TAsynSessionStream;
+  TPromiseSessionStream = Anthropic.Sessions.TPromiseSessionStream;
+
+  TSessionsAbstractSupport = Anthropic.Sessions.TSessionsAbstractSupport;
+  TSessionsAsynchronousSupport = Anthropic.Sessions.TSessionsAsynchronousSupport;
+  TSessionsRoute = Anthropic.Sessions.TSessionsRoute;
+
+  TSessionEventsAbstractSupport = Anthropic.Sessions.TSessionEventsAbstractSupport;
+  TSessionEventsAsynchronousSupport = Anthropic.Sessions.TSessionEventsAsynchronousSupport;
+  TSessionEventsRoute = Anthropic.Sessions.TSessionEventsRoute;
+
+  TSessionResourcesAbstractSupport = Anthropic.Sessions.TSessionResourcesAbstractSupport;
+  TSessionResourcesAsynchronousSupport = Anthropic.Sessions.TSessionResourcesAsynchronousSupport;
+  TSessionResourcesRoute = Anthropic.Sessions.TSessionResourcesRoute;
+
+  TSessionThreadsAbstractSupport = Anthropic.Sessions.TSessionThreadsAbstractSupport;
+  TSessionThreadsAsynchronousSupport = Anthropic.Sessions.TSessionThreadsAsynchronousSupport;
+  TSessionThreadsRoute = Anthropic.Sessions.TSessionThreadsRoute;
+
+  TSessionThreadEventsAbstractSupport = Anthropic.Sessions.TSessionThreadEventsAbstractSupport;
+  TSessionThreadEventsAsynchronousSupport = Anthropic.Sessions.TSessionThreadEventsAsynchronousSupport;
+  TSessionThreadEventsRoute = Anthropic.Sessions.TSessionThreadEventsRoute;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.Vaults'}
+
+  TVaultCreateParams = Anthropic.Vaults.TVaultCreateParams;
+  TVaultUpdateParams = Anthropic.Vaults.TVaultUpdateParams;
+  TVaultListParams = Anthropic.Vaults.TVaultListParams;
+
+  TVaultCredentialTokenEndpointAuthParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthParams;
+  TVaultCredentialTokenEndpointAuthNoneParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthNoneParams;
+  TVaultCredentialTokenEndpointAuthBasicParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthBasicParams;
+  TVaultCredentialTokenEndpointAuthPostParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthPostParams;
+
+  TVaultCredentialMCPOAuthRefreshParams = Anthropic.Vaults.TVaultCredentialMCPOAuthRefreshParams;
+  TVaultCredentialAuthCreateParams = Anthropic.Vaults.TVaultCredentialAuthCreateParams;
+  TVaultCredentialMCPOAuthCreateParams = Anthropic.Vaults.TVaultCredentialMCPOAuthCreateParams;
+  TVaultCredentialStaticBearerCreateParams = Anthropic.Vaults.TVaultCredentialStaticBearerCreateParams;
+
+  TVaultCredentialTokenEndpointAuthUpdateParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthUpdateParams;
+  TVaultCredentialTokenEndpointAuthBasicUpdateParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthBasicUpdateParams;
+  TVaultCredentialTokenEndpointAuthPostUpdateParams = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthPostUpdateParams;
+
+  TVaultCredentialMCPOAuthRefreshUpdateParams = Anthropic.Vaults.TVaultCredentialMCPOAuthRefreshUpdateParams;
+  TVaultCredentialAuthUpdateParams = Anthropic.Vaults.TVaultCredentialAuthUpdateParams;
+  TVaultCredentialMCPOAuthUpdateParams = Anthropic.Vaults.TVaultCredentialMCPOAuthUpdateParams;
+  TVaultCredentialStaticBearerUpdateParams = Anthropic.Vaults.TVaultCredentialStaticBearerUpdateParams;
+
+  TVaultCredentialCreateParams = Anthropic.Vaults.TVaultCredentialCreateParams;
+  TVaultCredentialUpdateParams = Anthropic.Vaults.TVaultCredentialUpdateParams;
+  TVaultCredentialListParams = Anthropic.Vaults.TVaultCredentialListParams;
+
+  TVaultCreateParamProc = Anthropic.Vaults.TVaultCreateParamProc;
+  TVaultUpdateParamProc = Anthropic.Vaults.TVaultUpdateParamProc;
+  TVaultListParamProc = Anthropic.Vaults.TVaultListParamProc;
+  TVaultCredentialCreateParamProc = Anthropic.Vaults.TVaultCredentialCreateParamProc;
+  TVaultCredentialUpdateParamProc = Anthropic.Vaults.TVaultCredentialUpdateParamProc;
+  TVaultCredentialListParamProc = Anthropic.Vaults.TVaultCredentialListParamProc;
+
+  TVault = Anthropic.Vaults.TVault;
+  TVaultDeleted = Anthropic.Vaults.TVaultDeleted;
+  TVaultList = Anthropic.Vaults.TVaultList;
+
+  TVaultCredentialTokenEndpointAuth = Anthropic.Vaults.TVaultCredentialTokenEndpointAuth;
+  TVaultCredentialTokenEndpointAuthNone = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthNone;
+  TVaultCredentialTokenEndpointAuthBasic = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthBasic;
+  TVaultCredentialTokenEndpointAuthPost = Anthropic.Vaults.TVaultCredentialTokenEndpointAuthPost;
+
+  TVaultCredentialMCPOAuthRefresh = Anthropic.Vaults.TVaultCredentialMCPOAuthRefresh;
+  TVaultCredentialAuth = Anthropic.Vaults.TVaultCredentialAuth;
+  TVaultCredentialMCPOAuthAuth = Anthropic.Vaults.TVaultCredentialMCPOAuthAuth;
+  TVaultCredentialStaticBearerAuth = Anthropic.Vaults.TVaultCredentialStaticBearerAuth;
+
+  TVaultCredential = Anthropic.Vaults.TVaultCredential;
+  TVaultCredentialDeleted = Anthropic.Vaults.TVaultCredentialDeleted;
+  TVaultCredentialList = Anthropic.Vaults.TVaultCredentialList;
+
+  TVaultCredentialRefreshHTTPResponse = Anthropic.Vaults.TVaultCredentialRefreshHTTPResponse;
+  TVaultCredentialMCPProbe = Anthropic.Vaults.TVaultCredentialMCPProbe;
+  TVaultCredentialRefreshObject = Anthropic.Vaults.TVaultCredentialRefreshObject;
+  TVaultCredentialValidation = Anthropic.Vaults.TVaultCredentialValidation;
+
+  TAsynVault = Anthropic.Vaults.TAsynVault;
+  TPromiseVault = Anthropic.Vaults.TPromiseVault;
+  TAsynVaultList = Anthropic.Vaults.TAsynVaultList;
+  TPromiseVaultList = Anthropic.Vaults.TPromiseVaultList;
+  TAsynVaultDeleted = Anthropic.Vaults.TAsynVaultDeleted;
+  TPromiseVaultDeleted = Anthropic.Vaults.TPromiseVaultDeleted;
+
+  TAsynVaultCredential = Anthropic.Vaults.TAsynVaultCredential;
+  TPromiseVaultCredential = Anthropic.Vaults.TPromiseVaultCredential;
+  TAsynVaultCredentialList = Anthropic.Vaults.TAsynVaultCredentialList;
+  TPromiseVaultCredentialList = Anthropic.Vaults.TPromiseVaultCredentialList;
+  TAsynVaultCredentialDeleted = Anthropic.Vaults.TAsynVaultCredentialDeleted;
+  TPromiseVaultCredentialDeleted = Anthropic.Vaults.TPromiseVaultCredentialDeleted;
+  TAsynVaultCredentialValidation = Anthropic.Vaults.TAsynVaultCredentialValidation;
+  TPromiseVaultCredentialValidation = Anthropic.Vaults.TPromiseVaultCredentialValidation;
+
+  TVaultCredentialsAbstractSupport = Anthropic.Vaults.TVaultCredentialsAbstractSupport;
+  TVaultCredentialsAsynchronousSupport = Anthropic.Vaults.TVaultCredentialsAsynchronousSupport;
+  TVaultCredentialsRoute = Anthropic.Vaults.TVaultCredentialsRoute;
+
+  TVaultsAbstractSupport = Anthropic.Vaults.TVaultsAbstractSupport;
+  TVaultsAsynchronousSupport = Anthropic.Vaults.TVaultsAsynchronousSupport;
+  TVaultsRoute = Anthropic.Vaults.TVaultsRoute;
+
+{$ENDREGION}
+
+{$REGION 'Anthropic.MemoryStore'}
+
+  TMemoryStoreCreateParams = Anthropic.MemoryStore.TMemoryStoreCreateParams;
+  TMemoryStoreUpdateParams = Anthropic.MemoryStore.TMemoryStoreUpdateParams;
+  TMemoryStoreListParams = Anthropic.MemoryStore.TMemoryStoreListParams;
+
+  TMemoryViewParams = Anthropic.MemoryStore.TMemoryViewParams;
+  TMemoryCreateParams = Anthropic.MemoryStore.TMemoryCreateParams;
+  TMemoryPreconditionParams = Anthropic.MemoryStore.TMemoryPreconditionParams;
+  TMemoryUpdateParams = Anthropic.MemoryStore.TMemoryUpdateParams;
+  TMemoryListParams = Anthropic.MemoryStore.TMemoryListParams;
+  TMemoryDeleteParams = Anthropic.MemoryStore.TMemoryDeleteParams;
+
+  TMemoryVersionListParams = Anthropic.MemoryStore.TMemoryVersionListParams;
+
+  TMemoryStoreCreateParamProc = Anthropic.MemoryStore.TMemoryStoreCreateParamProc;
+  TMemoryStoreUpdateParamProc = Anthropic.MemoryStore.TMemoryStoreUpdateParamProc;
+  TMemoryStoreListParamProc = Anthropic.MemoryStore.TMemoryStoreListParamProc;
+
+  TMemoryCreateParamProc = Anthropic.MemoryStore.TMemoryCreateParamProc;
+  TMemoryUpdateParamProc = Anthropic.MemoryStore.TMemoryUpdateParamProc;
+  TMemoryListParamProc = Anthropic.MemoryStore.TMemoryListParamProc;
+  TMemoryViewParamProc = Anthropic.MemoryStore.TMemoryViewParamProc;
+  TMemoryDeleteParamProc = Anthropic.MemoryStore.TMemoryDeleteParamProc;
+
+  TMemoryVersionListParamProc = Anthropic.MemoryStore.TMemoryVersionListParamProc;
+  TMemoryVersionRetrieveParamProc = Anthropic.MemoryStore.TMemoryVersionRetrieveParamProc;
+
+  TMemoryStore = Anthropic.MemoryStore.TMemoryStore;
+  TMemoryStoreDeleted = Anthropic.MemoryStore.TMemoryStoreDeleted;
+  TMemoryStoreList = Anthropic.MemoryStore.TMemoryStoreList;
+
+  TMemoryListItem = Anthropic.MemoryStore.TMemoryListItem;
+  TMemoryPrefix = Anthropic.MemoryStore.TMemoryPrefix;
+  TMemory = Anthropic.MemoryStore.TMemory;
+  TMemoryDeleted = Anthropic.MemoryStore.TMemoryDeleted;
+  TMemoryList = Anthropic.MemoryStore.TMemoryList;
+
+  TMemoryActor = Anthropic.MemoryStore.TMemoryActor;
+  TMemoryVersion = Anthropic.MemoryStore.TMemoryVersion;
+  TMemoryVersionList = Anthropic.MemoryStore.TMemoryVersionList;
+
+  TAsynMemoryStore = Anthropic.MemoryStore.TAsynMemoryStore;
+  TPromiseMemoryStore = Anthropic.MemoryStore.TPromiseMemoryStore;
+  TAsynMemoryStoreList = Anthropic.MemoryStore.TAsynMemoryStoreList;
+  TPromiseMemoryStoreList = Anthropic.MemoryStore.TPromiseMemoryStoreList;
+  TAsynMemoryStoreDeleted = Anthropic.MemoryStore.TAsynMemoryStoreDeleted;
+  TPromiseMemoryStoreDeleted = Anthropic.MemoryStore.TPromiseMemoryStoreDeleted;
+
+  TAsynMemory = Anthropic.MemoryStore.TAsynMemory;
+  TPromiseMemory = Anthropic.MemoryStore.TPromiseMemory;
+  TAsynMemoryList = Anthropic.MemoryStore.TAsynMemoryList;
+  TPromiseMemoryList = Anthropic.MemoryStore.TPromiseMemoryList;
+  TAsynMemoryDeleted = Anthropic.MemoryStore.TAsynMemoryDeleted;
+  TPromiseMemoryDeleted = Anthropic.MemoryStore.TPromiseMemoryDeleted;
+
+  TAsynMemoryVersion = Anthropic.MemoryStore.TAsynMemoryVersion;
+  TPromiseMemoryVersion = Anthropic.MemoryStore.TPromiseMemoryVersion;
+  TAsynMemoryVersionList = Anthropic.MemoryStore.TAsynMemoryVersionList;
+  TPromiseMemoryVersionList = Anthropic.MemoryStore.TPromiseMemoryVersionList;
+
+  TMemoriesAbstractSupport = Anthropic.MemoryStore.TMemoriesAbstractSupport;
+  TMemoriesAsynchronousSupport = Anthropic.MemoryStore.TMemoriesAsynchronousSupport;
+  TMemoriesRoute = Anthropic.MemoryStore.TMemoriesRoute;
+
+  TMemoryVersionsAbstractSupport = Anthropic.MemoryStore.TMemoryVersionsAbstractSupport;
+  TMemoryVersionsAsynchronousSupport = Anthropic.MemoryStore.TMemoryVersionsAsynchronousSupport;
+  TMemoryVersionsRoute = Anthropic.MemoryStore.TMemoryVersionsRoute;
+
+  TMemoryStoresAbstractSupport = Anthropic.MemoryStore.TMemoryStoresAbstractSupport;
+  TMemoryStoresAsynchronousSupport = Anthropic.MemoryStore.TMemoryStoresAsynchronousSupport;
+  TMemoryStoresRoute = Anthropic.MemoryStore.TMemoryStoresRoute;
+
+{$ENDREGION}
+
 {$REGION 'Anthropic.Context.Helper'}
 
   TToolResponse = Anthropic.Context.Helper.TToolResponse;
@@ -900,8 +1425,22 @@ begin
   FFilesRoute.Free;
   FModelsRoute.Free;
   FSkillsRoute.Free;
+  FAgentsRoute.Free;
+  FEnvironmentsRoute.Free;
+  FSessionsRoute.Free;
+  FVaultsRoute.Free;
+  FMemoryStoresRoute.Free;
   FAPI.Free;
   inherited;
+end;
+
+function TAnthropic.GetAgentsRoute: TAgentsRoute;
+begin
+  Result := Lazy<TAgentsRoute>(FAgentsRoute, FAgentsLock,
+    function: TAgentsRoute
+    begin
+      Result := TAgentsRoute.CreateRoute(API);
+    end);
 end;
 
 function TAnthropic.GetAPI: TAnthropicAPI;
@@ -932,6 +1471,15 @@ begin
     end);
 end;
 
+function TAnthropic.GetEnvironmentsRoute: TEnvironmentsRoute;
+begin
+  Result := Lazy<TEnvironmentsRoute>(FEnvironmentsRoute, FEnvironmentsLock,
+    function: TEnvironmentsRoute
+    begin
+      Result := TEnvironmentsRoute.CreateRoute(API);
+    end);
+end;
+
 function TAnthropic.GetFilesRoute: TFilesRoute;
 begin
   Result := Lazy<TFilesRoute>(FFilesRoute, FFilesLock,
@@ -946,12 +1494,30 @@ begin
   Result := API.HttpClient;
 end;
 
+function TAnthropic.GetMemoryStoresRoute: TMemoryStoresRoute;
+begin
+  Result := Lazy<TMemoryStoresRoute>(FMemoryStoresRoute, FMemoryStoresLock,
+    function: TMemoryStoresRoute
+    begin
+      Result := TMemoryStoresRoute.CreateRoute(API);
+    end);
+end;
+
 function TAnthropic.GetModelsRoute: TModelsRoute;
 begin
   Result := Lazy<TModelsRoute>(FModelsRoute, FModelsLock,
     function: TModelsRoute
     begin
       Result := TModelsRoute.CreateRoute(API);
+    end);
+end;
+
+function TAnthropic.GetSessionsRoute: TSessionsRoute;
+begin
+  Result := Lazy<TSessionsRoute>(FSessionsRoute, FSessionsLock,
+    function: TSessionsRoute
+    begin
+      Result := TSessionsRoute.CreateRoute(API);
     end);
 end;
 
@@ -967,6 +1533,15 @@ end;
 function TAnthropic.GetToken: string;
 begin
   Result := FAPI.Token;
+end;
+
+function TAnthropic.GetVaultsRoute: TVaultsRoute;
+begin
+  Result := Lazy<TVaultsRoute>(FVaultsRoute, FVaultsLock,
+    function: TVaultsRoute
+    begin
+      Result := TVaultsRoute.CreateRoute(API);
+    end);
 end;
 
 procedure TAnthropic.SetBaseUrl(const Value: string);
@@ -996,6 +1571,11 @@ begin
   FFilesLock := TObject.Create;
   FModelsLock := TObject.Create;
   FSkillsLock := TObject.Create;
+  FAgentsLock := TObject.Create;
+  FEnvironmentsLock := TObject.Create;
+  FSessionsLock := TObject.Create;
+  FVaultsLock := TObject.Create;
+  FMemoryStoresLock := TObject.Create;
 end;
 
 destructor TLazyRouteFactory.Destroy;
@@ -1005,6 +1585,11 @@ begin
   FFilesLock.Free;
   FModelsLock.Free;
   FSkillsLock.Free;
+  FAgentsLock.Free;
+  FEnvironmentsLock.Free;
+  FSessionsLock.Free;
+  FVaultsLock.Free;
+  FMemoryStoresLock.Free;
   inherited;
 end;
 

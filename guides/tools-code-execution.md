@@ -118,7 +118,7 @@ Enable a model to execute code and system operations inside an ***isolated conta
 Ask Claude to check system information:
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 4096;
   var Prompt := 'Check the Python version and list installed packages';
 

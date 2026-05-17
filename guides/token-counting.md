@@ -50,7 +50,7 @@ ___
 
 - JSON Payload creation
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var SystemPrompt := 'You are a scientist';
     var Prompt := 'Hello, Claude';
 
@@ -80,7 +80,7 @@ ___
 
 - JSON Payload creation
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var Prompt := 'What is the weather in San Francisco?';
 
     // Schema Payload creation using TSchemaParams class
@@ -130,7 +130,7 @@ ___
     var Base64 := TMediaCodec.EncodeBase64(Document);
     var MimeType := TMediaCodec.GetMimeType(Document);
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var Prompt := 'Describe this image';
 
     //JSON payload generation
@@ -196,7 +196,7 @@ ___
     var Document := '..\media\File_Search_file.pdf';
     var Base64 := TMediaCodec.EncodeBase64(Document);
 
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var Prompt := 'Please summarize this document.';
 
     //JSON payload generation

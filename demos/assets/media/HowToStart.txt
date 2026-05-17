@@ -1,0 +1,370 @@
+- [Introduction](#introduction)
+- [1. Clone the project pattern](#1-clone-the-project-pattern)
+- [2. Define IDE environment variables in Delphi](#2-define-ide-environment-variables-in-delphi)
+- [3. Configure the project search paths](#3-configure-the-project-search-paths)
+- [4. Configure the output directory](#4-configure-the-output-directory)
+- [5. Check that WebView2Loader.dll is present](#5-check-that-webview2loaderdll-is-present)
+- [6. Check the assets folder](#6-check-the-assets-folder)
+- [7. Install or verify the Microsoft WebView2 Evergreen Runtime](#7-install-or-verify-the-microsoft-webview2-evergreen-runtime)
+- [8. Recommended final structure](#8-recommended-final-structure)
+- [Summary](#summary)
+
+___
+
+
+## Introduction
+
+The simplest way to start a project with Pythia-Webview2 is to use one of the two minimal project patterns provided with the repository, then adjust the Delphi project paths according to your local environment.
+
+Pythia-Webview2 provides two ready-to-use starting points:
+
+```
+<Pythia-Webview2>\demos\VCL\new-projet
+```
+
+and:
+
+```
+<Pythia-Webview2>\demos\FMX\new-projet
+```
+
+Use the first one for a **VCL** application and the second one for an **FMX** application. These projects are intended to be minimal starting templates. They already contain the expected structure, the browser setup, and the ready-to-use service unit:
+
+```
+VCL.WVPythia.Services.pas
+```
+
+or:
+
+```
+FMX.WVPythia.Services.pas
+```
+
+Starting from these templates avoids most of the common setup issues: missing `ServiceAdapter`, incorrect output folder, missing `assets`, or missing `WebView2Loader.dll`.
+
+___
+
+## 1. Clone the project pattern
+
+Copy the folder that matches your framework:
+
+```
+<Pythia-Webview2>\demos\VCL\new-projet
+```
+
+or:
+
+```
+<Pythia-Webview2>\demos\FMX\new-projet
+```
+
+Then rename the folder, the Delphi project, and the files as needed for your application.
+
+The idea is to keep the minimal structure provided by the pattern and adapt it progressively. The `new-projet` projects are specifically designed to be used as skeletons for applications based on **Pythia-Webview2**.
+
+___
+
+## 2. Define IDE environment variables in Delphi
+
+To make project configuration easier, it is recommended to create IDE environment variables in Delphi.
+
+In Delphi, open:
+
+```
+Tools → Options → IDE → Environment Variables
+```
+
+Create a variable such as:
+
+```
+PYTHIA = C:\Path\To\Pythia-Webview2
+```
+
+This variable should point to the folder where the Pythia-Webview2 repository is installed.
+
+It is also recommended to clone the official WebView4Delphi repository and create a second variable:
+
+```
+WEBVIEW4DELPHI = C:\Path\To\WebView4Delphi
+```
+
+You can then use these variables in the project options:
+
+```
+$(PYTHIA)\source
+$(WEBVIEW4DELPHI)\source
+```
+
+This makes the project easier to move between machines or folders without having to rewrite all paths manually.
+
+___
+
+## 3. Configure the project search paths
+
+In the Delphi project options, open:
+
+```
+Project → Options → Building → Delphi Compiler → Search path
+```
+
+Add at least:
+
+```
+$(PYTHIA)\source
+$(WEBVIEW4DELPHI)\source
+```
+
+Pythia-Webview2 also includes a copy of WebView4Delphi under its `dependencies` folder. This makes the examples quick to compile and easier to discover:
+
+```
+$(PYTHIA)\dependencies\WebView4Delphi\source
+```
+
+However, for a real project, it is recommended to clone the official WebView4Delphi repository and use its own `source` folder instead. WebView4Delphi is an open-source project maintained by `salvadordf` and released under the MIT license. Pythia-Webview2 relies heavily on it.
+
+The version included in `dependencies` is not necessarily the latest version. It is mainly provided so that the demos compile quickly. For project use, prefer:
+
+```
+$(WEBVIEW4DELPHI)\source
+```
+
+If **WebView4Delphi** code is redistributed with your project or kept in your repository, the original license and copyright notices must be preserved in the corresponding third-party files.
+
+___
+
+## 4. Configure the output directory
+
+Pythia-Webview2 resolves several paths from the executable location. It is therefore important to keep a consistent folder structure around bin32, bin64, and assets.
+
+In:
+
+```
+Project → Options → Building → Delphi Compiler → Output directory
+```
+
+use:
+
+```
+..\bin32
+```
+
+for a Win32 target, or:
+
+```
+..\bin64
+```
+
+for a Win64 target.
+
+During development, you may also use environment variables if you want to compile directly into the **Pythia-Webview2** repository folders, for example:
+
+```
+$(PYTHIA)\bin32
+```
+
+or:
+
+```
+$(PYTHIA)\bin64
+```
+
+This can be useful during early testing because `WebView2Loader.dll` and the `assets` folder are already available in the expected structure.
+
+For a standalone application, however, it is better to keep your own project structure and copy the required files into it.
+
+___
+
+## 5. Check that WebView2Loader.dll is present
+
+The following DLL must be placed next to the executable:
+
+```
+WebView2Loader.dll
+```
+
+The DLL must match the target architecture.
+
+For a 32-bit application, copy:
+
+```
+$(PYTHIA)\bin32\WebView2Loader.dll
+```
+
+to:
+
+```
+<MyProject>\bin32\WebView2Loader.dll
+```
+
+For a 64-bit application, copy:
+
+```
+$(PYTHIA)\bin64\WebView2Loader.dll
+```
+
+to:
+
+```
+<MyProject>\bin64\WebView2Loader.dll
+```
+
+This file is required for WebView2 initialization. Without it, the application may start, but WebView2 will not initialize correctly.
+
+___
+
+## 6. Check the assets folder
+
+The `assets` folder must be available at the same level as `bin32` and `bin64`.
+
+Recommended structure:
+
+```
+MyProject
+├── assets
+│   ├── index.htm
+│   ├── scripts
+│   ├── media (empty)
+│   └── lang
+├── bin32
+│   ├── MyProject.exe
+│   └── WebView2Loader.dll
+├── bin64
+│   ├── MyProject.exe
+│   └── WebView2Loader.dll
+└── dcu
+```
+
+The `assets` folder contains the HTML interface, JavaScript scripts, and language files used by **Pythia-Webview2**. It must be copied as a complete folder.
+
+If you compile directly into:
+
+```
+$(PYTHIA)\bin32
+```
+
+or:
+
+```
+$(PYTHIA)\bin64
+```
+
+you can rely on:
+
+```
+$(PYTHIA)\assets
+```
+
+during development, without copying the assets into your own project immediately.
+
+For a deployed application, you should ship your own copy of the `assets` folder with your executable.
+
+___
+
+## 7. Install or verify the Microsoft WebView2 Evergreen Runtime
+
+There are two separate elements to keep in mind:
+
+```
+WebView2Loader.dll
+```
+
+and the **Microsoft Edge WebView2 Runtime**.
+
+`WebView2Loader.dll` is the DLL loaded by your application.
+The WebView2 Runtime is the Microsoft Edge-based runtime used to render the web interface.
+
+The target machine must have the **Microsoft Edge WebView2 Evergreen Runtime** installed. On recent Windows versions, it is often already present with Microsoft Edge. If it is not present, you must install it separately.
+
+The **Evergreen Runtime** means that WebView2 is installed on the machine and updated automatically by Microsoft. This is the recommended deployment mode for most applications.
+
+The official Microsoft download page is:
+
+```
+https://developer.microsoft.com/microsoft-edge/webview2/
+```
+
+It provides:
+
+```
+- Evergreen Bootstrapper
+- Evergreen Standalone Installer
+- x86, x64, and ARM64 versions
+```
+
+The bootstrapper downloads and installs the appropriate runtime for the machine. The standalone installer is better suited for offline environments or enterprise deployment.
+
+___
+
+## 8. Recommended final structure
+
+For a standalone project, the expected structure is:
+
+```
+MyProject
+├── assets
+│   ├── index.htm
+│   ├── scripts
+│   ├── media (empty)
+│   └── lang
+├── bin32
+│   ├── MyProject.exe
+│   └── WebView2Loader.dll
+├── bin64
+│   ├── MyProject.exe
+│   └── WebView2Loader.dll
+├── dcu
+├── Main.pas
+├── Main.dfm or Main.fmx
+├── VCL.WVPythia.Services.pas
+│   or
+├── FMX.WVPythia.Services.pas
+└── MyProject.dproj
+```
+
+On first launch, Pythia-Webview2 will create the application support folder, for example:
+
+```
+bin32\MyProject\support
+```
+
+or:
+
+```
+bin64\MyProject\support
+```
+
+This folder will contain the generated or pre-filled JSON configuration files: capabilities, model list, category configuration, cards, and other support files.
+
+These files can also be pre-populated before deployment so the application starts with a controlled configuration.
+
+___
+
+## Summary
+
+To start as simply as possible:
+
+```
+1. Copy demos\VCL\new-projet or demos\FMX\new-projet.
+2. Rename the project for your application.
+3. Create a PYTHIA IDE environment variable pointing to the Pythia-Webview2 repository.
+4. Clone the official WebView4Delphi repository.
+5. Create a WEBVIEW4DELPHI IDE environment variable pointing to that repository.
+6. Configure the Search path with:
+   $(PYTHIA)\source
+   $(WEBVIEW4DELPHI)\source
+7. Configure the Output directory as ..\bin32 or ..\bin64.
+8. Make sure WebView2Loader.dll is next to the executable.
+9. Make sure the assets folder is available at the correct level.
+10. Make sure the Microsoft Edge WebView2 Evergreen Runtime is installed.
+```
+
+By starting from the `new-projet` templates, you get a clean baseline for integrating **Pythia-Webview2** while keeping full control over paths, dependencies, and deployment structure.
+
+
+
+
+
+
+
+
+

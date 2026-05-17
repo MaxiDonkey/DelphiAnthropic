@@ -31,7 +31,7 @@ They’re well-suited for ([see](https://platform.claude.com/docs/en/build-with-
 - JSON Payload creation 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'Extract the key information from this email: John Smith (john@example.com) is interested in our Enterprise plan and wants to schedule a demo for next Tuesday at 2pm.';
 
@@ -78,7 +78,7 @@ They’re well-suited for ([see](https://platform.claude.com/docs/en/build-with-
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 1024,
       "messages": [
           {
@@ -125,7 +125,7 @@ They’re well-suited for ([see](https://platform.claude.com/docs/en/build-with-
 - JSON Payload creation 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'Extract the key information from this email: John Smith (john@example.com) is interested in our Enterprise plan and wants to schedule a demo for next Tuesday at 2pm.';
 
@@ -185,7 +185,7 @@ It’s a key building block for ***reliable agentic systems*** at scale.
 - JSON Payload creation 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'What is the weather in San Francisco?';
 
@@ -233,7 +233,7 @@ It’s a key building block for ***reliable agentic systems*** at scale.
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 1024,
       "messages": [
           {
@@ -291,7 +291,7 @@ Together, they enable agents that can orchestrate tools with schema-safe paramet
 - JSON Payload creation 
 
   ```pascal
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'Help me plan a trip to Paris for next month';
 
@@ -354,7 +354,7 @@ Together, they enable agents that can orchestrate tools with schema-safe paramet
 
   ```json
   {
-      "model": "claude-opus-4-6",
+      "model": "claude-opus-4-7",
       "max_tokens": 1024,
       "messages": [
           {

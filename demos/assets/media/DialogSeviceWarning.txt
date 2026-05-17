@@ -1,0 +1,96 @@
+The warning:
+
+```
+DialogService not assigned
+``` 
+
+means that the **Pythia-Webview2** interface has been loaded, but no service adapter has been assigned to the component. As a result, the chat area may display correctly, but when a prompt is submitted, the event cannot be routed back to the Delphi code.
+
+The most common cause is that the `ServiceAdapter` property was not assigned, or was assigned after calling `Pythia.Update`. The documentation explains that the service adapter is the essential bridge between events emitted by the **WebView2** interface and the Delphi application code.
+
+## Solution:
+
+### Use the ready-to-use service unit provided in the new project template that matches your framework.
+
+- For a VCL application, copy:
+
+```
+<Pythia-Webview2>\demos\VCL\new-projet\VCL.WVPythia.Services.pas
+``` 
+
+- For an FMX application, copy:
+
+```
+<Pythia-Webview2>\demos\FMX\new-projet\FMX.WVPythia.Services.pas
+```
+
+Copy the corresponding file into your project folder, for example:
+
+```
+MyProject
+├── Main.pas
+├── Main.dfm ou Main.fmx
+├── VCL.WVPythia.Services.pas
+└── ...
+```
+
+<br>
+
+### Then add this unit to your Delphi project and declare it in the `uses` clause of your main form.
+
+- **VCL example**
+
+```delphi
+uses
+  VCL.WVPythia.Chat,
+  WVPythia.Types,
+  VCL.WVPythia.Services;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Pythia := TVCLPythia.Create(Panel2);
+
+  Pythia.ServiceAdapter :=
+    TVCLChatManagedItemDialogService.Create;
+
+  Pythia.Update;
+end;
+```
+
+- **FMX example**
+
+```delphi
+uses
+  FMX.WVPythia.Chat,
+  WVPythia.Types,
+  FMX.WVPythia.Services;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  Pythia := TFMXPythia.Create(Panel2);
+  Pythia.AttachHost(Self);
+
+  Pythia.ServiceAdapter :=
+    TFMXChatManagedItemDialogService.Create;
+
+  Pythia.Update;
+end;
+```
+
+<br>
+
+### Things to check
+
+- Make sure that `VCL.WVPythia.Services.pas` or `FMX.WVPythia.Services.pas` is actually included in your project, not only copied somewhere on disk.
+
+- Also make sure that the following assignment is executed before `Pythia.Update`:
+
+```delphi
+Pythia.ServiceAdapter := ...;
+```
+
+The order matters: the `ServiceAdapter` must be available when **Pythia-Webview2** initializes the communication chain between the **WebView** and the **Delphi code**.
+
+Once the adapter is properly wired, UI actions such as prompt submission, card selection, copy actions, and custom events can be transmitted to the Delphi application code.
+
+

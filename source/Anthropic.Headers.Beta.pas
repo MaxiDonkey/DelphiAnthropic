@@ -1,4 +1,4 @@
-﻿unit Anthropic.Headers.Beta;
+unit Anthropic.Headers.Beta;
 
 {-------------------------------------------------------------------------------
 
@@ -50,17 +50,24 @@ implementation
 
    1. Update beta tokens (global search for dated strings like *-20-..-..) and fix all occurrences.
 
-   2. Update BuildToolTypeToBetaMap for any new or renamed tool type → beta token.
+   2. Update BuildToolTypeToBetaMap for any new or renamed tool type -> beta token.
+      Keep GA tool types out of this map; only map features that still require
+      an anthropic-beta token.
 
-   3. Check hard-coded tool type detections (RootHasCodeExecutionTool, RootHasAnyWebFetchTool,
-      RootHasAnyToolSearchTool, RootHasAnyMcpToolset).
+   3. Check hard-coded tool type detections (RootHasAnyToolSearchTool, RootHasAnyMcpToolset,
+      RootHasManualThinkingWithTools, RootHasContainerSkills).
 
    4. Check detections based on messages.content[].type (container_upload, tool_search_tool_result,
       web_fetch_tool_result, etc.).
 
-   5. Check the special /v1/files endpoint handling (IsFilesEndpoint and its forced beta token).
+   5. Check endpoint-level beta gates (files, skills, message batches, and managed agents:
+      agents/environments/sessions/vaults/memory_stores).
 
-   6. Revalidate all guards that raise errors (ValidateTextEditorMaxCharacters,
+   6. Check payload-level beta gates such as speed=fast, task budgets, compaction,
+      context editing, Agent Skills, and server tool type mappings
+      (advisor, computer use, MCP, etc.).
+
+   7. Revalidate all guards that raise errors (ValidateTextEditorMaxCharacters,
       ValidateToolSearchCompatibility, ValidateToolSearchNotDeferred, ValidateAllToolsDeferred).
 *)
 {$ENDREGION}
@@ -102,10 +109,10 @@ begin
     Exit;
 
   if not FSeen.ContainsKey(K) then
-  begin
-    FSeen.Add(K, 0);
-    FList.Add(K);
-  end;
+    begin
+      FSeen.Add(K, 0);
+      FList.Add(K);
+    end;
 end;
 
 function TOrderedSet.Count: Integer;
@@ -127,6 +134,9 @@ type
     class function IsFilesEndpoint(const NormPath: string): Boolean; static;
     class function IsMessageBatchesEndpoint(const NormPath: string): Boolean; static;
     class function IsSkillsEndpoint(const NormPath: string): Boolean; static;
+    class function IsAgentsEndpoint(const NormPath: string): Boolean; static;
+    class function IsEnvironmentsEndpoint(const NormPath: string): Boolean; static;
+    class function IsManagedAgentsEndpoint(const NormPath: string): Boolean; static;
 
     class function TryGetJSONArray(const Obj: TJSONObject; const Name: string; out Arr: TJSONArray): Boolean; static;
     class function TryGetJSONObject(const Obj: TJSONObject; const Name: string; out Child: TJSONObject): Boolean; static;
@@ -140,48 +150,46 @@ type
     class function IsKnownBetaToken(const S: string): Boolean; static;
     class function BuildToolTypeToBetaMap: TDictionary<string, string>; static;
 
-    class procedure AddAdvancedToolUseIfExamplesPresentInTool(const ToolObj: TJSONObject; const Betas: TOrderedSet); static;
     class procedure AddBetasFromSingleToolObject(const ToolObj: TJSONObject; const Betas: TOrderedSet; const Map: TDictionary<string,string>); static;
 
     class function RootHasTools(const Root: TJSONValue): Boolean; static;
     class function RootHasField(const Root: TJSONValue; const FieldName: string): Boolean; static;
 
-    class function RootHasContainerReuse(const Root: TJSONValue): Boolean; static;
+    class function RootHasContainerSkills(const Root: TJSONValue): Boolean; static;
     class function RootHasMcpServers(const Root: TJSONValue): Boolean; static;
+    class function RootHasFastMode(const Root: TJSONValue): Boolean; static;
 
-    class function RootHasProgrammaticSignalsInMessages(const Root: TJSONValue): Boolean; static;
     class function JsonContainsToolReference(const V: TJSONValue): Boolean; static;
     class function RootHasToolSearchServerToolUseInMessages(const Root: TJSONValue): Boolean; static;
     class function RootHasToolSearchSignalsInMessages(const Root: TJSONValue): Boolean; static;
 
-    class function RootHasCodeExecutionTool(const Root: TJSONValue): Boolean; static;
     class function RootHasAnyToolSearchTool(const Root: TJSONValue): Boolean; static;
     class function RootHasAnyToolWithInputExamples(const Root: TJSONValue): Boolean; static;
+    class function RootHasAnyToolWithEagerInputStreaming(const Root: TJSONValue): Boolean; static;
+    class function RootHasManualThinkingWithTools(const Root: TJSONValue): Boolean; static;
+    class function RootHasTaskBudget(const Root: TJSONValue): Boolean; static;
+    class function ContextManagementEditsContainType(const Root: TJSONValue; const EditType: string): Boolean; static;
+    class function RootHasCompactionEdit(const Root: TJSONValue): Boolean; static;
+    class function RootHasContextEditingEdit(const Root: TJSONValue): Boolean; static;
 
     class procedure ValidateToolSearchCompatibility(const Root: TJSONValue); static;
     class procedure ValidateToolSearchNotDeferred(const Root: TJSONValue); static;
     class procedure ValidateAllToolsDeferred(const Root: TJSONValue); static;
 
-    class function DetectBetaProvider(const Root: TJSONValue): string; static;
-    class function ToolSearchBetaTokenForProvider(const Provider: string): string; static;
-
     class function RootHasAnyMcpToolset(const Root: TJSONValue): Boolean; static;
-    class function RootHasAnyWebSearchTool(const Root: TJSONValue): Boolean; static;
-    class function RootHasWebSearchSignalsInMessages(const Root: TJSONValue): Boolean; static;
-    class function RootHasAnyWebFetchTool(const Root: TJSONValue): Boolean; static;
-    class function RootHasWebFetchSignalsInMessages(const Root: TJSONValue): Boolean; static;
     class function RootHasMcpSignalsInMessages(const Root: TJSONValue): Boolean; static;
 
+    class procedure AddEndpointBetas(const NormPath: string; const Betas: TOrderedSet); static;
     class procedure AddBetasFromToolsAnyRoot(const Root: TJSONValue; const Betas: TOrderedSet); static;
     class procedure AddBetasFromOutputFormat(const Root: TJSONValue; const Betas: TOrderedSet); static;
+    class procedure AddBetasFromContainerSkills(const Root: TJSONValue; const Betas: TOrderedSet); static;
     class procedure AddBetasFromMessagesContainerUpload(const Root: TJSONValue; const Betas: TOrderedSet); static;
-    class procedure AddFineGrainedToolStreamingIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
-    class procedure AddAdvancedToolUseIfProgrammaticCallingSignals(const Root: TJSONValue; const Betas: TOrderedSet); static;
-    class procedure AddToolSearchBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
     class procedure AddMcpBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
     class procedure AddContextManagementBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
-    class procedure AddWebFetchBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
-    class procedure AddWebSearchNotesNoBeta(const Root: TJSONValue; const Betas: TOrderedSet); static;
+    class procedure AddFastModeBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
+    class procedure AddTaskBudgetBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
+    class procedure AddFineGrainedToolStreamingBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
+    class procedure AddInterleavedThinkingBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet); static;
   public
     class function BuildHeaders(const Path, PayloadJson: string): TNetHeaders; static;
   end;
@@ -310,18 +318,36 @@ end;
 class function TBetaHeaderOps.IsKnownBetaToken(const S: string): Boolean;
 begin
   Result :=
-    SameText(S, 'advanced-tool-use-2025-11-20') or
-    SameText(S, 'tool-search-tool-2025-10-19') or
-    SameText(S, 'code-execution-2025-08-25') or
-    SameText(S, 'context-management-2025-06-27') or
-    SameText(S, 'files-api-2025-04-14') or
-    SameText(S, 'fine-grained-tool-streaming-2025-05-14') or
-    SameText(S, 'mcp-client-2025-11-20') or
-    SameText(S, 'structured-outputs-2025-11-13') or
-    SameText(S, 'web-fetch-2025-09-10') or
-    SameText(S, 'computer-use-2025-11-24') or
+    SameText(S, 'message-batches-2024-09-24') or
+    SameText(S, 'prompt-caching-2024-07-31') or
+    SameText(S, 'computer-use-2024-10-22') or
     SameText(S, 'computer-use-2025-01-24') or
-    SameText(S, 'computer-use-2024-10-22');
+    SameText(S, 'computer-use-2025-11-24') or
+    SameText(S, 'pdfs-2024-09-25') or
+    SameText(S, 'token-counting-2024-11-01') or
+    SameText(S, 'token-efficient-tools-2025-02-19') or
+    SameText(S, 'output-128k-2025-02-19') or
+    SameText(S, 'files-api-2025-04-14') or
+    SameText(S, 'mcp-client-2025-04-04') or
+    SameText(S, 'mcp-client-2025-11-20') or
+    SameText(S, 'dev-full-thinking-2025-05-14') or
+    SameText(S, 'interleaved-thinking-2025-05-14') or
+    SameText(S, 'fine-grained-tool-streaming-2025-05-14') or
+    SameText(S, 'code-execution-2025-05-22') or
+    SameText(S, 'code-execution-2025-08-25') or
+    SameText(S, 'extended-cache-ttl-2025-04-11') or
+    SameText(S, 'context-1m-2025-08-07') or
+    SameText(S, 'context-management-2025-06-27') or
+    SameText(S, 'model-context-window-exceeded-2025-08-26') or
+    SameText(S, 'skills-2025-10-02') or
+    SameText(S, 'fast-mode-2026-02-01') or
+    SameText(S, 'structured-outputs-2025-11-13') or
+    SameText(S, 'compact-2026-01-12') or
+    SameText(S, 'output-300k-2026-03-24') or
+    SameText(S, 'user-profiles-2026-03-24') or
+    SameText(S, 'advisor-tool-2026-03-01') or
+    SameText(S, 'managed-agents-2026-04-01') or
+    SameText(S, 'task-budgets-2026-03-13');
 end;
 
 class function TBetaHeaderOps.IsMessageBatchesEndpoint(
@@ -335,50 +361,44 @@ begin
   Result := (NormPath = 'skills') or NormPath.StartsWith('skills/', True);
 end;
 
+class function TBetaHeaderOps.IsAgentsEndpoint(const NormPath: string): Boolean;
+begin
+  Result := (NormPath = 'agents') or NormPath.StartsWith('agents/', True);
+end;
+
+class function TBetaHeaderOps.IsEnvironmentsEndpoint(const NormPath: string): Boolean;
+begin
+  Result := (NormPath = 'environments') or NormPath.StartsWith('environments/', True);
+end;
+
+class function TBetaHeaderOps.IsManagedAgentsEndpoint(const NormPath: string): Boolean;
+begin
+  Result :=
+    IsAgentsEndpoint(NormPath) or
+    IsEnvironmentsEndpoint(NormPath) or
+    (NormPath = 'sessions') or NormPath.StartsWith('sessions/', True) or
+    (NormPath = 'vaults') or NormPath.StartsWith('vaults/', True) or
+    (NormPath = 'memory_stores') or NormPath.StartsWith('memory_stores/', True) or
+    (NormPath = 'memory-stores') or NormPath.StartsWith('memory-stores/', True);
+end;
+
 class function TBetaHeaderOps.BuildToolTypeToBetaMap: TDictionary<string, string>;
 begin
   Result := TDictionary<string, string>.Create;
 
-  Result.Add('code_execution_20250825',         'code-execution-2025-08-25');
-  Result.Add('web_fetch_20250910',              'web-fetch-2025-09-10');
+  Result.Add('code_execution_20250522',         'code-execution-2025-05-22');
+  { code_execution_20250825 and code_execution_20260120 are GA as tools.
+    Agent Skills still require code-execution-2025-08-25 and are handled from
+    container.skills, not from the generic tool type. }
+
   Result.Add('files_api_20250414',              'files-api-2025-04-14');
-  Result.Add('memory_20250818',                 'context-management-2025-06-27');
 
   Result.Add('computer_20251124',               'computer-use-2025-11-24');
   Result.Add('computer_20250124',               'computer-use-2025-01-24');
   Result.Add('computer_20241022',               'computer-use-2024-10-22');
 
-  Result.Add('tool_search_tool_regex_20251119', 'advanced-tool-use-2025-11-20');
-  Result.Add('tool_search_tool_bm25_20251119',  'advanced-tool-use-2025-11-20');
-
   Result.Add('mcp_toolset',                     'mcp-client-2025-11-20');
-
-  Result.Add('clear_tool_uses_20250919',        'context-management-2025-06-27');
-end;
-
-class procedure TBetaHeaderOps.AddAdvancedToolUseIfExamplesPresentInTool(const ToolObj: TJSONObject; const Betas: TOrderedSet);
-var
-  B: Boolean;
-begin
-  if ToolObj = nil then Exit;
-
-  if ToolObj.GetValue('input_examples') <> nil then
-    begin
-      Betas.Add('advanced-tool-use-2025-11-20');
-      Exit;
-    end;
-
-  if ToolObj.GetValue('allowed_callers') <> nil then
-    begin
-      Betas.Add('advanced-tool-use-2025-11-20');
-      Exit;
-    end;
-
-  if TryGetBool(ToolObj, 'defer_loading', B) and B then
-    begin
-      Betas.Add('advanced-tool-use-2025-11-20');
-      Exit;
-    end;
+  Result.Add('advisor_20260301',                'advisor-tool-2026-03-01');
 end;
 
 class procedure TBetaHeaderOps.AddBetasFromSingleToolObject(
@@ -389,19 +409,22 @@ begin
   if ToolObj = nil then Exit;
 
   ValidateTextEditorMaxCharacters(ToolObj);
-  AddAdvancedToolUseIfExamplesPresentInTool(ToolObj, Betas);
 
   if not TryGetString(ToolObj, 'type', ToolType) then Exit;
-
-  if StartsWithI(ToolType, 'web_search_') then Exit;
-  if IsTextEditorToolType(ToolType) then Exit;
-  if StartsWithI(ToolType, 'bash_') then Exit;
 
   if Map.TryGetValue(ToolType, Beta) then
     begin
       Betas.Add(Beta);
       Exit;
     end;
+
+  if StartsWithI(ToolType, 'web_search_') then Exit;
+  if StartsWithI(ToolType, 'web_fetch_') then Exit;
+  if StartsWithI(ToolType, 'code_execution_') then Exit;
+  if StartsWithI(ToolType, 'tool_search_tool_') then Exit;
+  if StartsWithI(ToolType, 'memory_') then Exit;
+  if IsTextEditorToolType(ToolType) then Exit;
+  if StartsWithI(ToolType, 'bash_') then Exit;
 
   if IsKnownBetaToken(ToolType) then
     Betas.Add(ToolType);
@@ -424,9 +447,19 @@ begin
   Result := (Root is TJSONObject) and (TJSONObject(Root).GetValue(FieldName) <> nil);
 end;
 
-class function TBetaHeaderOps.RootHasContainerReuse(const Root: TJSONValue): Boolean;
+class function TBetaHeaderOps.RootHasContainerSkills(const Root: TJSONValue): Boolean;
+var
+  ContainerObj: TJSONObject;
+  SkillsArr: TJSONArray;
 begin
-  Result := RootHasField(Root, 'container');
+  Result := False;
+  if not (Root is TJSONObject) then Exit;
+
+  var ContainerVal := TJSONObject(Root).GetValue('container');
+  if (ContainerVal = nil) or not (ContainerVal is TJSONObject) then Exit;
+
+  ContainerObj := TJSONObject(ContainerVal);
+  Result := TryGetJSONArray(ContainerObj, 'skills', SkillsArr) and (SkillsArr.Count > 0);
 end;
 
 class function TBetaHeaderOps.RootHasMcpServers(const Root: TJSONValue): Boolean;
@@ -434,39 +467,24 @@ begin
   Result := RootHasField(Root, 'mcp_servers');
 end;
 
-class function TBetaHeaderOps.RootHasProgrammaticSignalsInMessages(const Root: TJSONValue): Boolean;
+class function TBetaHeaderOps.RootHasFastMode(const Root: TJSONValue): Boolean;
 var
-  Messages: TJSONArray;
-  CType: string;
+  ModelObj: TJSONObject;
+  Speed: string;
 begin
   Result := False;
   if not (Root is TJSONObject) then Exit;
 
   var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'messages', Messages) then Exit;
 
-  for var MsgVal in Messages do
-    begin
-      if not (MsgVal is TJSONObject) then Continue;
-      var MsgObj := TJSONObject(MsgVal);
+  { Messages API: speed is a top-level body parameter. }
+  if TryGetString(RootObj, 'speed', Speed) and SameText(Speed, 'fast') then
+    Exit(True);
 
-      var ContentVal := MsgObj.GetValue('content');
-      if (ContentVal <> nil) and (ContentVal is TJSONArray) then
-        begin
-          var ContentArr := TJSONArray(ContentVal);
-          for var ItemVal in ContentArr do
-          begin
-            if not (ItemVal is TJSONObject) then Continue;
-            var ItemObj := TJSONObject(ItemVal);
-
-            if TryGetString(ItemObj, 'type', CType) then
-              begin
-                if SameText(CType, 'server_tool_use') then Exit(True);
-                if SameText(CType, 'tool_use') and (ItemObj.GetValue('caller') <> nil) then Exit(True);
-              end;
-          end;
-        end;
-    end;
+  { Managed Agents API: model may be either a string or an object containing speed. }
+  if TryGetJSONObject(RootObj, 'model', ModelObj) then
+    if TryGetString(ModelObj, 'speed', Speed) and SameText(Speed, 'fast') then
+      Exit(True);
 end;
 
 class function TBetaHeaderOps.JsonContainsToolReference(const V: TJSONValue): Boolean;
@@ -581,27 +599,6 @@ begin
     end;
 end;
 
-class function TBetaHeaderOps.RootHasCodeExecutionTool(const Root: TJSONValue): Boolean;
-var
-  ToolsArr: TJSONArray;
-  ToolType: string;
-begin
-  Result := False;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'tools', ToolsArr) then Exit;
-
-  for var ToolVal in ToolsArr do
-    begin
-      if not (ToolVal is TJSONObject) then Continue;
-      var ToolObj := TJSONObject(ToolVal);
-
-      if TryGetString(ToolObj, 'type', ToolType) and SameText(ToolType, 'code_execution_20250825') then
-        Exit(True);
-    end;
-end;
-
 class function TBetaHeaderOps.RootHasAnyToolSearchTool(const Root: TJSONValue): Boolean;
 var
   ToolsArr: TJSONArray;
@@ -642,6 +639,86 @@ begin
       if ToolObj.GetValue('input_examples') <> nil then
         Exit(True);
     end;
+end;
+
+class function TBetaHeaderOps.RootHasAnyToolWithEagerInputStreaming(const Root: TJSONValue): Boolean;
+var
+  ToolsArr: TJSONArray;
+  Enabled: Boolean;
+begin
+  Result := False;
+  if not (Root is TJSONObject) then Exit;
+
+  var RootObj := TJSONObject(Root);
+  if not TryGetJSONArray(RootObj, 'tools', ToolsArr) then Exit;
+
+  for var ToolVal in ToolsArr do
+    begin
+      if not (ToolVal is TJSONObject) then Continue;
+      var ToolObj := TJSONObject(ToolVal);
+
+      if TryGetBool(ToolObj, 'eager_input_streaming', Enabled) and Enabled then
+        Exit(True);
+    end;
+end;
+
+class function TBetaHeaderOps.RootHasManualThinkingWithTools(const Root: TJSONValue): Boolean;
+var
+  ThinkingObj: TJSONObject;
+  ThinkingType: string;
+begin
+  Result := False;
+  if not (Root is TJSONObject) then Exit;
+  if not RootHasTools(Root) then Exit;
+
+  if not TryGetJSONObject(TJSONObject(Root), 'thinking', ThinkingObj) then Exit;
+
+  Result := TryGetString(ThinkingObj, 'type', ThinkingType) and
+    SameText(ThinkingType, 'enabled');
+end;
+
+class function TBetaHeaderOps.RootHasTaskBudget(const Root: TJSONValue): Boolean;
+var
+  OutputConfig: TJSONObject;
+begin
+  Result := False;
+  if not (Root is TJSONObject) then Exit;
+
+  if TryGetJSONObject(TJSONObject(Root), 'output_config', OutputConfig) then
+    Result := OutputConfig.GetValue('task_budget') <> nil;
+end;
+
+class function TBetaHeaderOps.ContextManagementEditsContainType(
+  const Root: TJSONValue; const EditType: string): Boolean;
+var
+  ContextManagement: TJSONObject;
+  Edits: TJSONArray;
+  CurrentType: string;
+begin
+  Result := False;
+  if not (Root is TJSONObject) then Exit;
+
+  if not TryGetJSONObject(TJSONObject(Root), 'context_management', ContextManagement) then Exit;
+  if not TryGetJSONArray(ContextManagement, 'edits', Edits) then Exit;
+
+  for var EditVal in Edits do
+    begin
+      if not (EditVal is TJSONObject) then Continue;
+      if TryGetString(TJSONObject(EditVal), 'type', CurrentType) and SameText(CurrentType, EditType) then
+        Exit(True);
+    end;
+end;
+
+class function TBetaHeaderOps.RootHasCompactionEdit(const Root: TJSONValue): Boolean;
+begin
+  Result := ContextManagementEditsContainType(Root, 'compact_20260112');
+end;
+
+class function TBetaHeaderOps.RootHasContextEditingEdit(const Root: TJSONValue): Boolean;
+begin
+  Result :=
+    ContextManagementEditsContainType(Root, 'clear_tool_uses_20250919') or
+    ContextManagementEditsContainType(Root, 'clear_thinking_20251015');
 end;
 
 class procedure TBetaHeaderOps.ValidateToolSearchCompatibility(const Root: TJSONValue);
@@ -717,26 +794,6 @@ begin
     );
 end;
 
-class function TBetaHeaderOps.DetectBetaProvider(const Root: TJSONValue): string;
-var
-  S: string;
-begin
-  Result := EmptyStr;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if TryGetString(RootObj, 'beta_provider', S) then
-    Result := S.Trim.ToLowerInvariant;
-end;
-
-class function TBetaHeaderOps.ToolSearchBetaTokenForProvider(const Provider: string): string;
-begin
-  if (Provider = 'vertex') or (Provider = 'bedrock') then
-    Exit('tool-search-tool-2025-10-19');
-
-  Result := 'advanced-tool-use-2025-11-20';
-end;
-
 class function TBetaHeaderOps.RootHasAnyMcpToolset(const Root: TJSONValue): Boolean;
 var
   ToolsArr: TJSONArray;
@@ -755,118 +812,6 @@ begin
 
       if TryGetString(ToolObj, 'type', ToolType) and SameText(ToolType, 'mcp_toolset') then
         Exit(True);
-    end;
-end;
-
-class function TBetaHeaderOps.RootHasAnyWebSearchTool(const Root: TJSONValue): Boolean;
-var
-  ToolsArr: TJSONArray;
-  ToolType: string;
-begin
-  Result := False;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'tools', ToolsArr) then Exit;
-
-  for var ToolVal in ToolsArr do
-    begin
-      if not (ToolVal is TJSONObject) then Continue;
-      var ToolObj := TJSONObject(ToolVal);
-
-      if TryGetString(ToolObj, 'type', ToolType) and StartsWithI(ToolType, 'web_search_') then
-        Exit(True);
-    end;
-end;
-
-class function TBetaHeaderOps.RootHasWebSearchSignalsInMessages(const Root: TJSONValue): Boolean;
-var
-  Messages: TJSONArray;
-  CType: string;
-begin
-  Result := False;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'messages', Messages) then Exit;
-
-  for var MsgVal in Messages do
-    begin
-      if not (MsgVal is TJSONObject) then Continue;
-      var MsgObj := TJSONObject(MsgVal);
-
-      var ContentVal := MsgObj.GetValue('content');
-      if (ContentVal <> nil) and (ContentVal is TJSONArray) then
-        begin
-          var ContentArr := TJSONArray(ContentVal);
-          for var ItemVal in ContentArr do
-            begin
-              if not (ItemVal is TJSONObject) then Continue;
-              var ItemObj := TJSONObject(ItemVal);
-
-              if TryGetString(ItemObj, 'type', CType) and SameText(CType, 'web_search_tool_result') then
-                Exit(True);
-            end;
-        end;
-    end;
-end;
-
-class function TBetaHeaderOps.RootHasAnyWebFetchTool(const Root: TJSONValue): Boolean;
-var
-  ToolsArr: TJSONArray;
-  ToolType: string;
-begin
-  Result := False;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'tools', ToolsArr) then Exit;
-
-  for var ToolVal in ToolsArr do
-    begin
-      if not (ToolVal is TJSONObject) then Continue;
-      var ToolObj := TJSONObject(ToolVal);
-
-      if TryGetString(ToolObj, 'type', ToolType) and SameText(ToolType, 'web_fetch_20250910') then
-        Exit(True);
-    end;
-end;
-
-class function TBetaHeaderOps.RootHasWebFetchSignalsInMessages(const Root: TJSONValue): Boolean;
-var
-  Messages: TJSONArray;
-  CType, NameS: string;
-begin
-  Result := False;
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetJSONArray(RootObj, 'messages', Messages) then Exit;
-
-  for var MsgVal in Messages do
-    begin
-      if not (MsgVal is TJSONObject) then Continue;
-      var MsgObj := TJSONObject(MsgVal);
-
-      var ContentVal := MsgObj.GetValue('content');
-      if (ContentVal <> nil) and (ContentVal is TJSONArray) then
-        begin
-          var ContentArr := TJSONArray(ContentVal);
-          for var ItemVal in ContentArr do
-            begin
-              if not (ItemVal is TJSONObject) then Continue;
-              var ItemObj := TJSONObject(ItemVal);
-
-              if not TryGetString(ItemObj, 'type', CType) then Continue;
-
-              if SameText(CType, 'web_fetch_tool_result') then
-                Exit(True);
-
-              if SameText(CType, 'server_tool_use') then
-                if TryGetString(ItemObj, 'name', NameS) and SameText(NameS, 'web_fetch') then
-                  Exit(True);
-            end;
-        end;
     end;
 end;
 
@@ -900,6 +845,18 @@ begin
               Exit(True);
         end;
     end;
+end;
+
+class procedure TBetaHeaderOps.AddEndpointBetas(const NormPath: string; const Betas: TOrderedSet);
+begin
+  if IsMessageBatchesEndpoint(NormPath) then
+    Betas.Add('message-batches-2024-09-24');
+
+  if IsSkillsEndpoint(NormPath) then
+    Betas.Add('skills-2025-10-02');
+
+  if IsManagedAgentsEndpoint(NormPath) then
+    Betas.Add('managed-agents-2026-04-01');
 end;
 
 class procedure TBetaHeaderOps.AddBetasFromToolsAnyRoot(const Root: TJSONValue; const Betas: TOrderedSet);
@@ -943,8 +900,19 @@ begin
   var RootObj := TJSONObject(Root);
   if not TryGetJSONObject(RootObj, 'output_format', OutputFormat) then Exit;
 
+  { Legacy structured outputs shape. The current API uses output_config.format
+    and does not require a beta header. }
   if TryGetString(OutputFormat, 'type', OutputType) and SameText(OutputType, 'json_schema') then
     Betas.Add('structured-outputs-2025-11-13');
+end;
+
+class procedure TBetaHeaderOps.AddBetasFromContainerSkills(const Root: TJSONValue; const Betas: TOrderedSet);
+begin
+  if not RootHasContainerSkills(Root) then Exit;
+
+  Betas.Add('code-execution-2025-08-25');
+  Betas.Add('skills-2025-10-02');
+  Betas.Add('files-api-2025-04-14');
 end;
 
 class procedure TBetaHeaderOps.AddBetasFromMessagesContainerUpload(const Root: TJSONValue; const Betas: TOrderedSet);
@@ -983,54 +951,10 @@ begin
     end;
 end;
 
-class procedure TBetaHeaderOps.AddFineGrainedToolStreamingIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
-var
-  StreamEnabled: Boolean;
-begin
-  if not (Root is TJSONObject) then Exit;
-
-  var RootObj := TJSONObject(Root);
-  if not TryGetBool(RootObj, 'stream', StreamEnabled) then Exit;
-  if not StreamEnabled then Exit;
-
-  if RootHasTools(Root) then
-    Betas.Add('fine-grained-tool-streaming-2025-05-14');
-end;
-
-class procedure TBetaHeaderOps.AddAdvancedToolUseIfProgrammaticCallingSignals(const Root: TJSONValue; const Betas: TOrderedSet);
-begin
-  if RootHasContainerReuse(Root) then
-    Betas.Add('advanced-tool-use-2025-11-20');
-
-  if RootHasProgrammaticSignalsInMessages(Root) then
-    Betas.Add('advanced-tool-use-2025-11-20');
-
-  if (Root is TJSONObject) and RootHasCodeExecutionTool(Root) then
-    begin
-      var ToolsArr: TJSONArray;
-      if TryGetJSONArray(TJSONObject(Root), 'tools', ToolsArr) and (ToolsArr.Count > 1) then
-        Betas.Add('advanced-tool-use-2025-11-20');
-    end;
-end;
-
-class procedure TBetaHeaderOps.AddToolSearchBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
-var
-  Provider, Token: string;
-begin
-  if not (RootHasAnyToolSearchTool(Root) or RootHasToolSearchSignalsInMessages(Root)) then Exit;
-
-  Provider := DetectBetaProvider(Root);
-  Token := ToolSearchBetaTokenForProvider(Provider);
-  Betas.Add(Token);
-end;
-
 class procedure TBetaHeaderOps.AddMcpBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
 begin
   if RootHasMcpServers(Root) or RootHasAnyMcpToolset(Root) or RootHasMcpSignalsInMessages(Root) then
-    begin
-      Betas.Add('mcp-client-2025-11-20');
-      Betas.Add('advanced-tool-use-2025-11-20');
-    end;
+    Betas.Add('mcp-client-2025-11-20');
 end;
 
 class procedure TBetaHeaderOps.AddContextManagementBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
@@ -1041,21 +965,35 @@ begin
   var CtxMgmtVal := RootObj.GetValue('context_management');
   if (CtxMgmtVal = nil) or not (CtxMgmtVal is TJSONObject) then Exit;
 
-  Betas.Add('context-management-2025-06-27');
+  if RootHasCompactionEdit(Root) then
+    Betas.Add('compact-2026-01-12');
+
+  if RootHasContextEditingEdit(Root) then
+    Betas.Add('context-management-2025-06-27');
 end;
 
-class procedure TBetaHeaderOps.AddWebFetchBetasIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
+class procedure TBetaHeaderOps.AddFastModeBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
 begin
-  if RootHasAnyWebFetchTool(Root) or RootHasWebFetchSignalsInMessages(Root) then
-    Betas.Add('web-fetch-2025-09-10');
+  if RootHasFastMode(Root) then
+    Betas.Add('fast-mode-2026-02-01');
 end;
 
-class procedure TBetaHeaderOps.AddWebSearchNotesNoBeta(const Root: TJSONValue; const Betas: TOrderedSet);
+class procedure TBetaHeaderOps.AddTaskBudgetBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
 begin
-  if RootHasAnyWebSearchTool(Root) or RootHasWebSearchSignalsInMessages(Root) then
-  begin
-    { no-op (by design) }
-  end;
+  if RootHasTaskBudget(Root) then
+    Betas.Add('task-budgets-2026-03-13');
+end;
+
+class procedure TBetaHeaderOps.AddFineGrainedToolStreamingBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
+begin
+  if RootHasAnyToolWithEagerInputStreaming(Root) then
+    Betas.Add('fine-grained-tool-streaming-2025-05-14');
+end;
+
+class procedure TBetaHeaderOps.AddInterleavedThinkingBetaIfNeeded(const Root: TJSONValue; const Betas: TOrderedSet);
+begin
+  if RootHasManualThinkingWithTools(Root) then
+    Betas.Add('interleaved-thinking-2025-05-14');
 end;
 
 class function TBetaHeaderOps.BuildHeaders(const Path, PayloadJson: string): TNetHeaders;
@@ -1063,6 +1001,7 @@ begin
   Result := [];
 
   var NormPath := NormalizePath(Path);
+  var ManagedAgentsEndpoint := IsManagedAgentsEndpoint(NormPath);
 
   if IsFilesEndpoint(NormPath) then
     begin
@@ -1074,11 +1013,15 @@ begin
 
   if Clean.IsEmpty then
     begin
-      if IsMessageBatchesEndpoint(NormPath) then
-        Result := [TNetHeader.Create('anthropic-beta', 'message-batches-2024-09-24')]
-      else
-      if IsSkillsEndpoint(NormPath) then
-        Result := [TNetHeader.Create('anthropic-beta', 'skills-2025-10-02')];
+      var Betas := TOrderedSet.Create;
+      try
+        AddEndpointBetas(NormPath, Betas);
+
+        if Betas.Count > 0 then
+          Result := [TNetHeader.Create('anthropic-beta', Betas.Join(','))];
+      finally
+        Betas.Free;
+      end;
 
       Exit;
     end;
@@ -1090,31 +1033,27 @@ begin
     );
 
   try
-    ValidateToolSearchCompatibility(Root);
-    ValidateToolSearchNotDeferred(Root);
-    ValidateAllToolsDeferred(Root);
-
     var Betas := TOrderedSet.Create;
     try
-      if IsMessageBatchesEndpoint(NormPath) then
-        Betas.Add('message-batches-2024-09-24');
+      AddEndpointBetas(NormPath, Betas);
+      AddFastModeBetaIfNeeded(Root, Betas);
 
-      if IsSkillsEndpoint(NormPath) then
-        Betas.Add('skills-2025-10-02');
+      if not ManagedAgentsEndpoint then
+        begin
+          ValidateToolSearchCompatibility(Root);
+          ValidateToolSearchNotDeferred(Root);
+          ValidateAllToolsDeferred(Root);
 
-
-      AddBetasFromToolsAnyRoot(Root, Betas);
-      AddBetasFromMessagesContainerUpload(Root, Betas);
-      AddBetasFromOutputFormat(Root, Betas);
-      AddFineGrainedToolStreamingIfNeeded(Root, Betas);
-      AddAdvancedToolUseIfProgrammaticCallingSignals(Root, Betas);
-
-      AddToolSearchBetaIfNeeded(Root, Betas);
-
-      AddMcpBetasIfNeeded(Root, Betas);
-      AddContextManagementBetasIfNeeded(Root, Betas);
-      AddWebFetchBetasIfNeeded(Root, Betas);
-      AddWebSearchNotesNoBeta(Root, Betas);
+          AddBetasFromToolsAnyRoot(Root, Betas);
+          AddBetasFromMessagesContainerUpload(Root, Betas);
+          AddBetasFromOutputFormat(Root, Betas);
+          AddBetasFromContainerSkills(Root, Betas);
+          AddMcpBetasIfNeeded(Root, Betas);
+          AddContextManagementBetasIfNeeded(Root, Betas);
+          AddTaskBudgetBetaIfNeeded(Root, Betas);
+          AddFineGrainedToolStreamingBetaIfNeeded(Root, Betas);
+          AddInterleavedThinkingBetaIfNeeded(Root, Betas);
+        end;
 
       if Betas.Count = 0 then
         Exit;

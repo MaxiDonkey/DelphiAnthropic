@@ -110,7 +110,7 @@ Session state is preserved across commands, allowing multi-step workflows to be 
 #### Code example
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'Using PowerShell, display the list of executable (.exe) files in the current directory';
 
@@ -160,7 +160,7 @@ Session state is preserved across commands, allowing multi-step workflows to be 
 
   ```json
   {
-    "model": "claude-opus-4-6",
+    "model": "claude-opus-4-7",
     "id": "msg_018JN634XZPNFgKQHweRgsa1",
     "type": "message",
     "role": "assistant",
@@ -252,7 +252,7 @@ Search execution and source attribution are handled natively, ensuring traceabil
 #### Code example
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'What is the weather in NYC?';
 
@@ -268,7 +268,7 @@ Search execution and source attribution are handled natively, ensuring traceabil
               .User( Prompt )
           )
           .Tools( ToolParts
-              .Add( Tool.CreateWebSearchTool20250305
+              .Add( Tool.Beta.CreateWebSearchTool20260209
                   .MaxUses(5)
               )
           );
@@ -324,7 +324,7 @@ Search execution and source attribution are handled natively, ensuring traceabil
 <br>
 
 ##### 3. Tool declaration
-- Add `web_search_20250305` to the `tools` field
+- Add `web_search_20260209` to the `tools` field
 - Set a defensive `max_uses`
 - Optional configuration:
   - `allowed_domains` or `blocked_domains`

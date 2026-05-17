@@ -127,6 +127,14 @@ type
     property Url: string read FUrl write FUrl;
   end;
 
+  /// <remarks>
+  /// Anthropic defines web_search_tool_result.content as:
+  ///   - an array of web_search_result blocks on success;
+  ///   - a single web_search_tool_result_error object on failure.
+  /// This wrapper intentionally types the nominal array form only.
+  /// The object-error form remains available through TContentBlock.RawContent.
+  /// This avoids introducing a heavy discriminated-union layer for beta-only server tools.
+  /// </remarks>
   TWebSearchToolResultBlock = class(TOptionalContent)
   private
     FContent: TArray<TWebSearchToolResultBlockContent>;
@@ -180,8 +188,8 @@ type
   TWebFetchToolResultBlockContent = class(TToolResultErrorCode)
   private
     FType: string;
-    [JsonNameAttribute('retrieved_at')]
     FContent: TDocumentBlock;
+    [JsonNameAttribute('retrieved_at')]
     FRetrievedAt: string;
     FUrl: string;
   public
@@ -213,6 +221,35 @@ type
 
   {$ENDREGION}
 
+  {$REGION 'AdvisorToolResultBlock'}
+
+  TAdvisorToolResultBlockContent = class(TToolResultErrorCode)
+  private
+    FText: string;
+
+    [JsonNameAttribute('encrypted_content')]
+    FEncryptedContent: string;
+  public
+    property Text: string read FText write FText;
+
+    /// <summary>
+    /// Opaque blob containing the advisor's output.
+    /// Round-trip verbatim; do not inspect or modify.
+    /// </summary>
+    property EncryptedContent: string read FEncryptedContent write FEncryptedContent;
+  end;
+
+  TAdvisorToolResultBlock = class(TOptionalContent)
+  private
+    FContent: TAdvisorToolResultBlockContent;
+  public
+    property Content: TAdvisorToolResultBlockContent read FContent write FContent;
+
+    destructor Destroy; override;
+  end;
+
+  {$ENDREGION}
+
   {$REGION 'CodeExecutionToolResultBlock'}
 
   TCodeExecutionOutputBlock = class
@@ -233,6 +270,8 @@ type
     FReturnCode: Double;
     FStderr: string;
     FStdout: string;
+    [JsonNameAttribute('encrypted_stdout')]
+    FEncryptedStdout: string;
   public
     property &Type: string read FType write FType;
 
@@ -240,6 +279,7 @@ type
     property ReturnCode: Double read FReturnCode write FReturnCode;
     property Stderr: string read FStderr write FStderr;
     property Stdout: string read FStdout write FStdout;
+    property EncryptedStdout: string read FEncryptedStdout write FEncryptedStdout;
 
     destructor Destroy; override;
   end;
@@ -319,6 +359,8 @@ type
 
     // TextEditorCodeExecutionStrReplaceResultBlock
     FLines: TArray<string>;
+    [JsonNameAttribute('new_lines')]
+    FNewLines: Int64;
     [JsonNameAttribute('new_start')]
     FNewStart: Int64;
     [JsonNameAttribute('old_lines')]
@@ -337,6 +379,7 @@ type
     property IsFileUpdate: Boolean read FIsFileUpdate write FIsFileUpdate;
 
     property Lines: TArray<string> read FLines write FLines;
+    property NewLines: Int64 read FNewLines write FNewLines;
     property NewStart: Int64 read FNewStart write FNewStart;
     property OldLines: Int64 read FOldLines write FOldLines;
     property OldStart: Int64 read FOldStart write FOldStart;
@@ -438,6 +481,7 @@ type
     FRaw: string;
     FWebSearchToolResultBlock: TWebSearchToolResultBlock;
     FWebFetchToolResultBlock: TWebFetchToolResultBlock;
+    FAdvisorToolResultBlock: TAdvisorToolResultBlock;
     FCodeExecutionToolResultBlock: TCodeExecutionToolResultBlock;
     FBashCodeExecutionToolResultBlock: TBashCodeExecutionToolResultBlock;
     FTextEditorCodeExecutionToolResultBlock: TTextEditorCodeExecutionToolResultBlock;
@@ -448,12 +492,27 @@ type
     property Raw: string read FRaw write SetRaw;
 
     property WebSearchToolResultBlock: TWebSearchToolResultBlock read FWebSearchToolResultBlock;
-    property WebFetchToolResultBlock: TWebFetchToolResultBlock read FWebFetchToolResultBlock write FWebFetchToolResultBlock;
-    property CodeExecutionToolResultBlock: TCodeExecutionToolResultBlock read FCodeExecutionToolResultBlock write FCodeExecutionToolResultBlock;
-    property BashCodeExecutionToolResultBlock: TBashCodeExecutionToolResultBlock read FBashCodeExecutionToolResultBlock write FBashCodeExecutionToolResultBlock;
-    property TextEditorCodeExecutionToolResultBlock: TTextEditorCodeExecutionToolResultBlock read FTextEditorCodeExecutionToolResultBlock write FTextEditorCodeExecutionToolResultBlock;
-    property ToolSearchToolResultBlock: TToolSearchToolResultBlock read FToolSearchToolResultBlock write FToolSearchToolResultBlock;
-    property MCPToolResultBlock: TMCPToolResultBlock read FMCPToolResultBlock write FMCPToolResultBlock;
+
+    property WebFetchToolResultBlock: TWebFetchToolResultBlock
+      read FWebFetchToolResultBlock write FWebFetchToolResultBlock;
+
+    property AdvisorToolResultBlock: TAdvisorToolResultBlock
+      read FAdvisorToolResultBlock write FAdvisorToolResultBlock;
+
+    property CodeExecutionToolResultBlock: TCodeExecutionToolResultBlock
+      read FCodeExecutionToolResultBlock write FCodeExecutionToolResultBlock;
+
+    property BashCodeExecutionToolResultBlock: TBashCodeExecutionToolResultBlock
+      read FBashCodeExecutionToolResultBlock write FBashCodeExecutionToolResultBlock;
+
+    property TextEditorCodeExecutionToolResultBlock: TTextEditorCodeExecutionToolResultBlock
+      read FTextEditorCodeExecutionToolResultBlock write FTextEditorCodeExecutionToolResultBlock;
+
+    property ToolSearchToolResultBlock: TToolSearchToolResultBlock
+      read FToolSearchToolResultBlock write FToolSearchToolResultBlock;
+
+    property MCPToolResultBlock: TMCPToolResultBlock
+      read FMCPToolResultBlock write FMCPToolResultBlock;
 
     constructor Create;
     destructor Destroy; override;
@@ -480,6 +539,7 @@ begin
   FWebSearchToolResultBlock := TWebSearchToolResultBlock.Create;
 
   FWebFetchToolResultBlock := TWebFetchToolResultBlock.Create;
+  FAdvisorToolResultBlock := TAdvisorToolResultBlock.Create;
   FCodeExecutionToolResultBlock := TCodeExecutionToolResultBlock.Create;
   FBashCodeExecutionToolResultBlock := TBashCodeExecutionToolResultBlock.Create;
   FTextEditorCodeExecutionToolResultBlock := TTextEditorCodeExecutionToolResultBlock.Create;
@@ -491,6 +551,7 @@ destructor TToolContent.Destroy;
 begin
   FWebSearchToolResultBlock.Free;
   FWebFetchToolResultBlock.Free;
+  FAdvisorToolResultBlock.Free;
   FCodeExecutionToolResultBlock.Free;
   FBashCodeExecutionToolResultBlock.Free;
   FTextEditorCodeExecutionToolResultBlock.Free;
@@ -519,9 +580,15 @@ begin
 
     TContentBlockType.web_search_tool_result:
       begin
-        FWebSearchToolResultBlock.Free;
-        FWebSearchToolResultBlock := TApiDeserializer.Parse<TWebSearchToolResultBlock>(FRaw);
-        FWebSearchToolResultBlock.MarkHasValue;
+        var CurrentJson := TJsonReader.Parse(FRaw);
+
+        if CurrentJson.IsArrayNode('content') then
+          begin
+            FWebSearchToolResultBlock.Free;
+            FWebSearchToolResultBlock := TApiDeserializer.Parse<TWebSearchToolResultBlock>(FRaw);
+            FWebSearchToolResultBlock.MarkHasValue;
+          end;
+        // else : error form object retained in Raw / RawContent.
       end;
 
     TContentBlockType.web_fetch_tool_result:
@@ -530,6 +597,13 @@ begin
         FWebFetchToolResultBlock := TApiDeserializer.Parse<TWebFetchToolResultBlock>(FRaw);
         FWebFetchToolResultBlock.MarkHasValue;
       end;
+
+    TContentBlockType.advisor_tool_result:
+    begin
+      FAdvisorToolResultBlock.Free;
+      FAdvisorToolResultBlock := TApiDeserializer.Parse<TAdvisorToolResultBlock>(FRaw);
+      FAdvisorToolResultBlock.MarkHasValue;
+    end;
 
     TContentBlockType.code_execution_tool_result:
       begin
@@ -582,6 +656,8 @@ begin
       end;
 
     TContentBlockType.container_upload: ;
+
+    TContentBlockType.compaction: ;
   end;
 end;
 
@@ -692,6 +768,15 @@ destructor TMCPToolResultBlock.Destroy;
 begin
   for var Item in FContent do
     Item.Free;
+  inherited;
+end;
+
+{ TAdvisorToolResultBlock }
+
+destructor TAdvisorToolResultBlock.Destroy;
+begin
+  if Assigned(FContent) then
+    FContent.Free;
   inherited;
 end;
 

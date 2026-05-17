@@ -5,12 +5,13 @@ They let Claude trigger deterministic operations (e.g., computation, data access
 Function execution is handled outside the model, preserving a clear separation between reasoning and application-side execution.
 
 >[!NOTE]
-> The code examples presented below are directly included in the `Sample.dpr` demonstration project.
+> The code examples below use the lightweight tutorial support units (`Anthropic.Tutorial.VCL.pas` / `Anthropic.Tutorial.FMX.pas`) as their host context.
 
 - [Introduction](#introduction)
 - [JSON Payload creation](#json-payload-creation)
 - [Function calling](#function-calling)
 - [Function calling using plugin](#function-calling-using-plugin)
+- [Optional custom tool hints](#optional-custom-tool-hints)
 - [Function calling using orchestration](#function-calling-using-orchestration)
 - [Key Takeaways](#key-takeaways)
 - [Implementation Checklist](#implementation-checklist)
@@ -50,7 +51,7 @@ Before executing a function call, it is necessary to build a JSON payload that d
 
 ```json
 {
-    "model": "claude-opus-4-6",
+    "model": "claude-opus-4-7",
     "max_tokens": 1024,
     "tools": [
         {
@@ -93,12 +94,26 @@ The JSON payload above represents the canonical form; the following sections dem
 - [Approach using only the `Generation` record helper](#approach-using-only-the-generation-record-helper)
 - [Approach based on using a string](#approach-based-on-using-a-string)
 
+### Optional custom tool hints
+
+Custom tools also support `input_examples` and `eager_input_streaming`.
+Use `InputExamples(...)` to provide representative input objects. Use `EagerInputStreaming(True)` when streaming tool arguments incrementally; the wrapper infers the `fine-grained-tool-streaming-2025-05-14` beta header when this flag is enabled.
+
+```pascal
+  Tool.CreateToolCustom
+    .Name('get_weather')
+    .Description('Get the weather at a specific location')
+    .InputSchema(GetWeather)
+    .InputExamples('[{"location":"San Francisco, CA","unit":"fahrenheit"}]')
+    .EagerInputStreaming(True);
+```
+
 <br>
 
 ### Approach using the `TSchemaParams` class and the `Generation` record helper
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'What''s the weather like in San Francisco?';
 
@@ -145,7 +160,7 @@ The JSON payload above represents the canonical form; the following sections dem
 ### Approach using only the `Generation` record helper
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'What''s the weather like in San Francisco?';
 
@@ -204,7 +219,7 @@ With this approach, declaring multiple functions is both efficient and visually 
 ### Approach based on using a string
 
 ```pascal
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'What''s the weather like in San Francisco?';
 
@@ -348,7 +363,7 @@ With this asynchronous approach, the `Display` method handles the second step by
   // Execute the second step and display the resulting output.
   procedure TFMXTutorialHub.WeatherReporter(const Value: string);
   begin
-    var ModelName := 'claude-opus-4-6';
+    var ModelName := 'claude-opus-4-7';
     var MaxTokens := 1024;
     var Prompt := 'Announce the day''s weather forecast';
 
@@ -405,7 +420,7 @@ The second step is once again handled by the `Display` method, as described in t
   var FunctionPlugin := TWeatherReportFunction.CreateInstance;
   TutorialHub.Tool := FunctionPlugin;
 
-  var ModelName := 'claude-opus-4-6';
+  var ModelName := 'claude-opus-4-7';
   var MaxTokens := 1024;
   var Prompt := 'What''s the weather like in Paris?';
 

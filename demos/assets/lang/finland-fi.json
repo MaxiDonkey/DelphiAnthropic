@@ -16,7 +16,8 @@
       "media": "Media",
       "custom": "Mukautettu",
       "settings": "Asetukset",
-      "model": "Malli"
+      "model": "Malli",
+      "project": "Projekti"
     },
     "thinking": {
       "low": "Matala",
@@ -52,6 +53,12 @@
       "createAudio": "Luo ääni",
       "speechToText": "Puhe tekstiksi",
       "textToSpeech": "Teksti puheeksi"
+    },
+    "project": {
+      "add": "Lisää projekti",
+      "none": "ei mitään",
+      "noneUsed": "Projektia ei ole käytössä",
+      "delete": "Poista"
     },
     "chips": {
       "endpoint": "Päätepiste: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Peruuta"
   },
+  "webDecisionDlg": {
+    "title": "Vahvistus",
+    "message": "Vahvista.",
+    "ok": "OK",
+    "cancel": "Peruuta",
+    "close": "Sulje"
+  },
   "displayFile": {
     "fallbackName": "Tiedosto {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Päättely"
+    },
+    "toolGroup": {
+      "label": "Käytetyt työkalut"
     },
     "code": {
       "copy": "Kopioi",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-avain on olemassa",
     "api_key_modified": "%s: API-avainta on muutettu.",
     "api_key_inserted": "%s: API-avain on lisätty",
+    "web_decision_dlg_title": "Vahvistus",
+    "web_decision_dlg_message": "Vahvista.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Peruuta",
+    "web_decision_dlg_close": "Sulje",
+    "demo_anthropic_tool_confirmation_title": "Vahvistus",
+    "demo_anthropic_tool_allow": "Salli",
+    "demo_anthropic_tool_deny": "Estä",
+    "demo_anthropic_tool_allow_call": "Sallitaanko tämä työkalukutsu?",
+    "demo_anthropic_interrupted_by_user": "Käyttäjä keskeytti.",
     "command_plugin_not_be_null": "Laajennus ei voi olla tyhjä",
     "command_unknown": "Tuntematon komento: /%s",
     "command_action_unknown": "Tuntematon toiminto: /%s %s",

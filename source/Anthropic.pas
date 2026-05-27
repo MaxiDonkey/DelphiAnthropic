@@ -1,4 +1,4 @@
-unit Anthropic;
+ï»¿unit Anthropic;
 
 {-------------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ uses
   Anthropic.MemoryStore, Anthropic.Files.Helper;
 
 const
-  VERSION = '1.3.0';
+  VERSION = '1.3.2';
 
 type
   /// <summary>
@@ -30,20 +30,20 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>IAnthropic</c> represents the main entry point of the client library and provides structured
+  /// ï¿½ <c>IAnthropic</c> represents the main entry point of the client library and provides structured
   /// access to all supported Anthropic API domains.
   /// </para>
   /// <para>
-  /// • It exposes route-specific properties (such as <c>Chat</c>, <c>Models</c>, <c>Files</c>,
+  /// ï¿½ It exposes route-specific properties (such as <c>Chat</c>, <c>Models</c>, <c>Files</c>,
   /// <c>Batch</c>, <c>Skills</c>, etc.) that encapsulate related operations behind cohesive route
   /// abstractions.
   /// </para>
   /// <para>
-  /// • Each route property is typically lazily instantiated and shares the same underlying
+  /// ï¿½ Each route property is typically lazily instantiated and shares the same underlying
   /// <c>TAnthropicAPI</c> configuration, including authentication credentials and base URL.
   /// </para>
   /// <para>
-  /// • This interface is designed to be consumed as a long-lived service object, promoting clear
+  /// ï¿½ This interface is designed to be consumed as a long-lived service object, promoting clear
   /// separation of concerns, testability, and consistent API usage patterns.
   /// </para>
   /// </remarks>
@@ -71,18 +71,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TChatRoute</c> entry point for chat operations such as message
+    /// ï¿½ This property exposes the <c>TChatRoute</c> entry point for chat operations such as message
     /// creation, streaming message creation, and token counting.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access chat-related operations through a single, centralized client
+    /// ï¿½ Use this property to access chat-related operations through a single, centralized client
     /// instance.
     /// </para>
     /// </remarks>
@@ -93,18 +93,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TAgentsRoute</c> entry point for managed agent operations such as
+    /// ï¿½ This property exposes the <c>TAgentsRoute</c> entry point for managed agent operations such as
     /// create, retrieve, list, update, archive, and version listing.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access managed-agent-related operations through a single, centralized
+    /// ï¿½ Use this property to access managed-agent-related operations through a single, centralized
     /// client instance.
     /// </para>
     /// </remarks>
@@ -115,18 +115,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TEnvironmentsRoute</c> entry point for managed environment operations such as
+    /// ï¿½ This property exposes the <c>TEnvironmentsRoute</c> entry point for managed environment operations such as
     /// create, retrieve, list, update, delete, and archive.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access managed-environment-related operations through a single, centralized
+    /// ï¿½ Use this property to access managed-environment-related operations through a single, centralized
     /// client instance.
     /// </para>
     /// </remarks>
@@ -137,21 +137,21 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TSessionsRoute</c> entry point for managed session operations such as
+    /// ï¿½ This property exposes the <c>TSessionsRoute</c> entry point for managed session operations such as
     /// create, retrieve, list, update, delete, and archive.
     /// </para>
     /// <para>
-    /// • The route also exposes nested routes for session events, resources, threads, and thread events.
+    /// ï¿½ The route also exposes nested routes for session events, resources, threads, and thread events.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access session-related operations through a single, centralized client instance.
+    /// ï¿½ Use this property to access session-related operations through a single, centralized client instance.
     /// </para>
     /// </remarks>
     property Sessions: TSessionsRoute read GetSessionsRoute;
@@ -161,21 +161,21 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TVaultsRoute</c> entry point for managed vault operations such as
+    /// ï¿½ This property exposes the <c>TVaultsRoute</c> entry point for managed vault operations such as
     /// create, retrieve, list, update, delete, and archive.
     /// </para>
     /// <para>
-    /// • The route also exposes the nested <c>Credentials</c> route for credential operations scoped to a vault.
+    /// ï¿½ The route also exposes the nested <c>Credentials</c> route for credential operations scoped to a vault.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access managed-vault-related operations through a single, centralized
+    /// ï¿½ Use this property to access managed-vault-related operations through a single, centralized
     /// client instance.
     /// </para>
     /// </remarks>
@@ -186,22 +186,22 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TMemoryStoresRoute</c> entry point for memory store operations such as
+    /// ï¿½ This property exposes the <c>TMemoryStoresRoute</c> entry point for memory store operations such as
     /// create, retrieve, list, update, delete, and archive.
     /// </para>
     /// <para>
-    /// • The route also exposes the nested <c>Memories</c> and <c>MemoryVersions</c> routes for operations
+    /// ï¿½ The route also exposes the nested <c>Memories</c> and <c>MemoryVersions</c> routes for operations
     /// scoped to a memory store.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access managed-memory-store-related operations through a single, centralized
+    /// ï¿½ Use this property to access managed-memory-store-related operations through a single, centralized
     /// client instance.
     /// </para>
     /// </remarks>
@@ -212,18 +212,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TBatchRoute</c> entry point for message batch operations such as
+    /// ï¿½ This property exposes the <c>TBatchRoute</c> entry point for message batch operations such as
     /// create, retrieve, list, cancel, and delete.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access batch-related operations through a single, centralized client
+    /// ï¿½ Use this property to access batch-related operations through a single, centralized client
     /// instance.
     /// </para>
     /// </remarks>
@@ -234,18 +234,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TFilesRoute</c> entry point for file operations such as upload,
+    /// ï¿½ This property exposes the <c>TFilesRoute</c> entry point for file operations such as upload,
     /// retrieve, list, and delete.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access file-related operations through a single, centralized client
+    /// ï¿½ Use this property to access file-related operations through a single, centralized client
     /// instance.
     /// </para>
     /// </remarks>
@@ -256,18 +256,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TModelsRoute</c> entry point for model operations such as listing
+    /// ï¿½ This property exposes the <c>TModelsRoute</c> entry point for model operations such as listing
     /// available models and retrieving model metadata by identifier or alias.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access model-related operations through a single, centralized client
+    /// ï¿½ Use this property to access model-related operations through a single, centralized client
     /// instance.
     /// </para>
     /// </remarks>
@@ -278,18 +278,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>TSkillsRoute</c> entry point for skill management operations such as
+    /// ï¿½ This property exposes the <c>TSkillsRoute</c> entry point for skill management operations such as
     /// create, retrieve, list, and delete.
     /// </para>
     /// <para>
-    /// • The route instance is created lazily on first access and reused for subsequent calls.
+    /// ï¿½ The route instance is created lazily on first access and reused for subsequent calls.
     /// </para>
     /// <para>
-    /// • The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
+    /// ï¿½ The returned route shares the same underlying <c>TAnthropicAPI</c> instance and therefore uses
     /// the current authentication token and base URL configuration.
     /// </para>
     /// <para>
-    /// • Use this property to access skill-related operations through a single, centralized client
+    /// ï¿½ Use this property to access skill-related operations through a single, centralized client
     /// instance.
     /// </para>
     /// </remarks>
@@ -300,19 +300,19 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
+    /// ï¿½ This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
     /// objects.
     /// </para>
     /// <para>
-    /// • It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
+    /// ï¿½ It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
     /// deserialization, and header construction) when route-level abstractions are not sufficient.
     /// </para>
     /// <para>
-    /// • The returned instance reflects the current configuration (token, base URL, headers, and HTTP
+    /// ï¿½ The returned instance reflects the current configuration (token, base URL, headers, and HTTP
     /// transport template) and is intended to be long-lived.
     /// </para>
     /// <para>
-    /// • Use this property for advanced scenarios such as custom routing, diagnostics, or integration
+    /// ï¿½ Use this property for advanced scenarios such as custom routing, diagnostics, or integration
     /// with auxiliary infrastructure that requires the raw API client.
     /// </para>
     /// </remarks>
@@ -323,18 +323,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
+    /// ï¿½ This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
     /// requests.
     /// </para>
     /// <para>
-    /// • It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
+    /// ï¿½ It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
     /// </para>
     /// <para>
-    /// • Use this property when you need to customize transport behavior or integrate monitoring,
+    /// ï¿½ Use this property when you need to customize transport behavior or integrate monitoring,
     /// middleware, or client-specific options.
     /// </para>
     /// <para>
-    /// • The returned reference is shared across all routes and remains valid for the lifetime of the
+    /// ï¿½ The returned reference is shared across all routes and remains valid for the lifetime of the
     /// owning Anthropic client instance.
     /// </para>
     /// </remarks>
@@ -345,16 +345,16 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property holds the API key sent with each request to authenticate against the Anthropic API.
+    /// ï¿½ This property holds the API key sent with each request to authenticate against the Anthropic API.
     /// </para>
     /// <para>
-    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// ï¿½ Updating this value affects all subsequent requests issued by the client and its route objects.
     /// </para>
     /// <para>
-    /// • The token must be a non-empty string; otherwise request execution will fail during validation.
+    /// ï¿½ The token must be a non-empty string; otherwise request execution will fail during validation.
     /// </para>
     /// <para>
-    /// • Use this property to rotate credentials or defer token assignment until after client creation.
+    /// ï¿½ Use this property to rotate credentials or defer token assignment until after client creation.
     /// </para>
     /// </remarks>
     property Token: string read GetToken write SetToken;
@@ -364,16 +364,16 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property defines the root endpoint used to construct request URLs for all API calls.
+    /// ï¿½ This property defines the root endpoint used to construct request URLs for all API calls.
     /// </para>
     /// <para>
-    /// • The default value is <c>https://api.anthropic.com/v1</c>.
+    /// ï¿½ The default value is <c>https://api.anthropic.com/v1</c>.
     /// </para>
     /// <para>
-    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// ï¿½ Updating this value affects all subsequent requests issued by the client and its route objects.
     /// </para>
     /// <para>
-    /// • Use this property to target alternative endpoints, such as proxies, gateways, or test
+    /// ï¿½ Use this property to target alternative endpoints, such as proxies, gateways, or test
     /// environments.
     /// </para>
     /// </remarks>
@@ -385,19 +385,19 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TAnthropicFactory</c> centralizes the instantiation logic for Anthropic clients, ensuring
+  /// ï¿½ <c>TAnthropicFactory</c> centralizes the instantiation logic for Anthropic clients, ensuring
   /// consistent configuration and initialization across the application.
   /// </para>
   /// <para>
-  /// • It typically encapsulates concerns such as API key injection, base URL selection, HTTP
+  /// ï¿½ It typically encapsulates concerns such as API key injection, base URL selection, HTTP
   /// client configuration, and default headers.
   /// </para>
   /// <para>
-  /// • The factory may expose one or more creation methods that return an <c>IAnthropic</c>
+  /// ï¿½ The factory may expose one or more creation methods that return an <c>IAnthropic</c>
   /// interface, allowing consumers to remain decoupled from concrete implementation classes.
   /// </para>
   /// <para>
-  /// • Use this class to obtain fully initialized Anthropic client instances instead of creating
+  /// ï¿½ Use this class to obtain fully initialized Anthropic client instances instead of creating
   /// them directly, promoting consistency, testability, and easier future evolution of the
   /// client construction process.
   /// </para>
@@ -445,24 +445,24 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// • <c>TAnthropic</c> is the main entry point for interacting with the Anthropic API.
+  /// ï¿½ <c>TAnthropic</c> is the main entry point for interacting with the Anthropic API.
   /// </para>
   /// <para>
-  /// • It implements the <c>IAnthropic</c> interface, ensuring a stable and decoupled public
+  /// ï¿½ It implements the <c>IAnthropic</c> interface, ensuring a stable and decoupled public
   /// contract for consumers.
   /// </para>
   /// <para>
-  /// • By inheriting from <c>TLazyRouteFactory</c>, this class lazily instantiates route objects
+  /// ï¿½ By inheriting from <c>TLazyRouteFactory</c>, this class lazily instantiates route objects
   /// (such as <c>Chat</c>, <c>Models</c>, <c>Batches</c>, <c>Skills</c>, etc.) only when they are first
   /// accessed, minimizing overhead and improving startup performance.
   /// </para>
   /// <para>
-  /// • Each route instance returned by this class shares the same underlying configuration
+  /// ï¿½ Each route instance returned by this class shares the same underlying configuration
   /// (API key, base URL, HTTP client, middleware), guaranteeing consistent behavior across all
   /// API calls.
   /// </para>
   /// <para>
-  /// • Typical usage involves creating an instance via <c>TAnthropicFactory</c> and then accessing
+  /// ï¿½ Typical usage involves creating an instance via <c>TAnthropicFactory</c> and then accessing
   /// the desired route through the corresponding property exposed by <c>IAnthropic</c>.
   /// </para>
   /// </remarks>
@@ -505,19 +505,19 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
+    /// ï¿½ This property exposes the shared <c>TAnthropicAPI</c> instance used internally by all route
     /// objects.
     /// </para>
     /// <para>
-    /// • It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
+    /// ï¿½ It provides direct access to low-level request methods (GET/POST/DELETE, multipart uploads,
     /// deserialization, and header construction) when route-level abstractions are not sufficient.
     /// </para>
     /// <para>
-    /// • The returned instance reflects the current configuration (token, base URL, headers, and HTTP
+    /// ï¿½ The returned instance reflects the current configuration (token, base URL, headers, and HTTP
     /// transport template) and is intended to be long-lived.
     /// </para>
     /// <para>
-    /// • Use this property for advanced scenarios such as custom routing, diagnostics, or integration
+    /// ï¿½ Use this property for advanced scenarios such as custom routing, diagnostics, or integration
     /// with auxiliary infrastructure that requires the raw API client.
     /// </para>
     /// </remarks>
@@ -528,18 +528,18 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
+    /// ï¿½ This property exposes the <c>IHttpClientAPI</c> instance used internally to execute all HTTP
     /// requests.
     /// </para>
     /// <para>
-    /// • It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
+    /// ï¿½ It reflects the active HTTP transport configured on the shared <c>TAnthropicAPI</c> instance.
     /// </para>
     /// <para>
-    /// • Use this property when you need to customize transport behavior or integrate monitoring,
+    /// ï¿½ Use this property when you need to customize transport behavior or integrate monitoring,
     /// middleware, or client-specific options.
     /// </para>
     /// <para>
-    /// • The returned reference is shared across all routes and remains valid for the lifetime of the
+    /// ï¿½ The returned reference is shared across all routes and remains valid for the lifetime of the
     /// owning Anthropic client instance.
     /// </para>
     /// </remarks>
@@ -550,16 +550,16 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property holds the API key sent with each request to authenticate against the Anthropic API.
+    /// ï¿½ This property holds the API key sent with each request to authenticate against the Anthropic API.
     /// </para>
     /// <para>
-    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// ï¿½ Updating this value affects all subsequent requests issued by the client and its route objects.
     /// </para>
     /// <para>
-    /// • The token must be a non-empty string; otherwise request execution will fail during validation.
+    /// ï¿½ The token must be a non-empty string; otherwise request execution will fail during validation.
     /// </para>
     /// <para>
-    /// • Use this property to rotate credentials or defer token assignment until after client creation.
+    /// ï¿½ Use this property to rotate credentials or defer token assignment until after client creation.
     /// </para>
     /// </remarks>
     property Token: string read GetToken write SetToken;
@@ -569,16 +569,16 @@ type
     /// </summary>
     /// <remarks>
     /// <para>
-    /// • This property defines the root endpoint used to construct request URLs for all API calls.
+    /// ï¿½ This property defines the root endpoint used to construct request URLs for all API calls.
     /// </para>
     /// <para>
-    /// • The default value is <c>https://api.anthropic.com/v1</c>.
+    /// ï¿½ The default value is <c>https://api.anthropic.com/v1</c>.
     /// </para>
     /// <para>
-    /// • Updating this value affects all subsequent requests issued by the client and its route objects.
+    /// ï¿½ Updating this value affects all subsequent requests issued by the client and its route objects.
     /// </para>
     /// <para>
-    /// • Use this property to target alternative endpoints, such as proxies, gateways, or test
+    /// ï¿½ Use this property to target alternative endpoints, such as proxies, gateways, or test
     /// environments.
     /// </para>
     /// </remarks>
@@ -760,6 +760,8 @@ type
   TStreamEventCallBack = Anthropic.Chat.StreamCallbacks.TStreamEventCallBack;
   IStreamEventDispatcher = Anthropic.Chat.StreamCallbacks.IStreamEventDispatcher;
   TStreamEventDispatcher = Anthropic.Chat.StreamCallbacks.TStreamEventDispatcher;
+  TToolCallSnapshot = Anthropic.Chat.StreamCallbacks.TToolCallSnapshot;
+  TToolResultSnapshot = Anthropic.Chat.StreamCallbacks.TToolResultSnapshot;
 
 {$ENDREGION}
 
@@ -1171,6 +1173,8 @@ type
   TSessionResourceDeleted = Anthropic.Sessions.TSessionResourceDeleted;
   TSessionThread = Anthropic.Sessions.TSessionThread;
   TSessionThreadList = Anthropic.Sessions.TSessionThreadList;
+  TSessionStreamEvent = Anthropic.Sessions.TSessionStreamEvent;
+  TSessionStreamStatus = Anthropic.Sessions.TSessionStreamStatus;
   TSessionStream = Anthropic.Sessions.TSessionStream;
 
   TAsynSession = Anthropic.Sessions.TAsynSession;
@@ -1191,10 +1195,12 @@ type
   TPromiseSessionResourceDeleted = Anthropic.Sessions.TPromiseSessionResourceDeleted;
   TAsynSessionThread = Anthropic.Sessions.TAsynSessionThread;
   TPromiseSessionThread = Anthropic.Sessions.TPromiseSessionThread;
-  TAsynSessionThreadList = Anthropic.Sessions.TSessionThreadList;
+  TAsynSessionThreadList = Anthropic.Sessions.TAsynSessionThreadList;
   TPromiseSessionThreadList = Anthropic.Sessions.TPromiseSessionThreadList;
   TAsynSessionStream = Anthropic.Sessions.TAsynSessionStream;
   TPromiseSessionStream = Anthropic.Sessions.TPromiseSessionStream;
+  TAsynSessionStreamStatus = Anthropic.Sessions.TAsynSessionStreamStatus;
+  TPromiseSessionStreamStatus = Anthropic.Sessions.TPromiseSessionStreamStatus;
 
   TSessionsAbstractSupport = Anthropic.Sessions.TSessionsAbstractSupport;
   TSessionsAsynchronousSupport = Anthropic.Sessions.TSessionsAsynchronousSupport;

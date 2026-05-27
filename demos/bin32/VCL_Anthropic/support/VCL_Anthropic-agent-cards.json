@@ -1,14 +1,47 @@
-{
-  "type": "card-selection-dialog-set-data",
-  "dialog": "agents",
+﻿{
+    "type":  "card-selection-dialog-set-data",
+    "dialog":  "agents",
   "cards": [
     {
-      "id": "DE5FE16B-F37F-47E2-A22F-55E45AE09E10",
-      "name": "Get time",
-      "commentaire": "Récupère l'heure locale",
-      "badge": "\uE2AD",
-      "content": ""
+      "id": "A1F0C2D4-1E5B-4A37-9C80-7D2E6F3B14A0",
+      "name": "Research Analyst",
+      "version": "1.0.0",
+      "commentaire": "Simple agent: sourced, multi-step web research",
+      "badge": "",
+      "content": "{\"kind\":\"single\",\"environment\":{\"name\":\"Pythia Research Sandbox\",\"description\":\"Minimal environment for the web research analyst agent.\"},\"agent\":{\"name\":\"Research Analyst\",\"model\":\"claude-opus-4-7\",\"system\":\"You are a research analyst. Produce concise, factual, well-sourced briefings. Use web_search to find current information and web_fetch to read the most relevant sources before answering. Always cite sources with their URLs, group findings by theme, and flag uncertainty explicitly.\",\"tools\":{\"builtin\":{\"default\":{\"enabled\":false,\"policy\":\"always_ask\"},\"configs\":[{\"name\":\"web_search\",\"enabled\":true,\"policy\":\"always_allow\"},{\"name\":\"web_fetch\",\"enabled\":true,\"policy\":\"always_allow\"}]}}},\"session\":{\"title\":\"Veille Pythia\"}}"
+    },
+    {
+      "id": "C3D7E5F9-4A8B-4D6E-9F12-7A3B5C8D2E40",
+      "name": "Local Project Review",
+      "version": "1.0.0",
+      "commentaire": "Agent with sub-agent: selected project, lightweight code review",
+      "badge": "",
+      "content": "{\"kind\":\"multiagent\",\"environment\":{\"name\":\"Pythia Local Review Sandbox\",\"description\":\"Offline sandbox for a lightweight review of a small local project dropped by the operator. No networking required.\"},\"subagents\":[{\"ref\":\"code-inspector\",\"name\":\"Code Inspector\",\"model\":\"claude-opus-4-7\",\"system\":\"You inspect a small project uploaded into this session sandbox under the /mnt/session/uploads directory. The project root is normally /mnt/session/uploads/workspace/project; if that exact path is absent, locate the project by globbing under /mnt/session/uploads. Use only read, glob and grep. Do not use bash. Do not attempt to write, create or save any file. Inspect at most 12 files and report concrete findings, each citing a concrete file path, back to the coordinator as text.\",\"tools\":{\"builtin\":{\"default\":{\"enabled\":false,\"policy\":\"always_ask\"},\"configs\":[{\"name\":\"read\",\"enabled\":true,\"policy\":\"always_allow\"},{\"name\":\"glob\",\"enabled\":true,\"policy\":\"always_allow\"},{\"name\":\"grep\",\"enabled\":true,\"policy\":\"always_allow\"}]}}}],\"coordinator\":{\"name\":\"Local Review Coordinator\",\"model\":\"claude-opus-4-7\",\"system\":\"You coordinate a lightweight review of a small local project uploaded into this session sandbox under /mnt/session/uploads. Delegate the source inspection to the code-inspector sub-agent once, wait for its findings, then produce the review yourself. You have NO file-writing tools: never attempt to create, write or save a file, and never use a /mnt/session/outputs path. Deliver the report as your final text response, with three sections: Findings, Severity, Recommendations. Each finding must cite a concrete file path. Keep the run short.\",\"roster\":[\"code-inspector\"]},\"session\":{\"title\":\"Revue projet local\"}}"
+    },
+    {
+      "id": "D4E8F6A1-5B9C-4E7D-A013-8B4C6D9E3F51",
+      "name": "Supervised Exploration",
+      "version": "1.0.0",
+      "commentaire": "Agent with sub-agent: multiple confirmations on selected project",
+      "badge": "",
+      "content": "{\"kind\":\"multiagent\",\"environment\":{\"name\":\"Pythia Supervised Exploration Sandbox\",\"description\":\"Offline sandbox for a supervised, confirmation-driven inventory of a small local project. No networking required.\"},\"subagents\":[{\"ref\":\"explorateur\",\"name\":\"Explorer\",\"model\":\"claude-opus-4-7\",\"system\":\"You explore a small project uploaded into this session sandbox under the /mnt/session/uploads directory. The project root is normally /mnt/session/uploads/workspace/project; if that exact path is absent, locate it by globbing under /mnt/session/uploads. Perform only a handful of targeted operations: one glob to list the files, then read at most 3 of the most relevant files, and at most one grep for a keyword. Do not use bash. Do not write, create or save any file. Report what you found back to the coordinator as text. Keep it short.\",\"tools\":{\"builtin\":{\"default\":{\"enabled\":false,\"policy\":\"always_ask\"},\"configs\":[{\"name\":\"read\",\"enabled\":true,\"policy\":\"always_ask\"},{\"name\":\"glob\",\"enabled\":true,\"policy\":\"always_ask\"},{\"name\":\"grep\",\"enabled\":true,\"policy\":\"always_ask\"}]}}}],\"coordinator\":{\"name\":\"Supervised Exploration Coordinator\",\"model\":\"claude-opus-4-7\",\"system\":\"You coordinate a quick supervised inventory of a small local project uploaded into this session sandbox under /mnt/session/uploads. Delegate the exploration to the explorateur sub-agent once, wait for its findings, then produce a short plain-text summary: what the project is and its notable files. You have NO file-writing tools: never attempt to create, write or save a file, and never use a /mnt/session/outputs path. Deliver the summary as your final text response. Keep it short.\",\"roster\":[\"explorateur\"]},\"session\":{\"title\":\"Exploration supervisee\"}}"
+    },
+    {
+      "id": "safe-code-patch",
+      "name": "Safe Code Patch",
+      "version": "1.0.0",
+      "commentaire": "Markdown-defined multi-agent demo: inspect a selected local project and propose a small code change as a unified diff",
+      "badge": "",
+      "md_path": "..\\safe-code-patch-agent.md"
+    },
+    {
+      "id": "sandbox-to-local-code-edit",
+      "name": "Sandbox To Local Code Edit",
+      "version": "1.0.0",
+      "commentaire": "Markdown-defined multi-agent demo: edit the uploaded cloud sandbox copy and return a local apply manifest plus a unified diff",
+      "badge": "",
+      "md_path": "..\\sandbox-to-local-code-edit-agent.md"
     }
   ],
-  "selectedId": "DE5FE16B-F37F-47E2-A22F-55E45AE09E10"
+    "selectedId":  ""
 }

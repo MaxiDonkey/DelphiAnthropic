@@ -28,6 +28,9 @@
     let customBtn;
     let systemPromptBtn;
     let modelBtn;
+    let projectBtn;
+    let projectLabel;
+    let projectMenu;
 
     const INPUT_BUBBLE_I18N_EVENT =
       window.AppI18n && window.AppI18n.eventName
@@ -171,6 +174,12 @@
 
       systemPromptLabel.textContent = t("input.menu.settings", "settings");
       modelLabel.textContent = t("input.menu.model", "model");
+
+      if (host.__updateProjectButtonLabel)
+        host.__updateProjectButtonLabel();
+
+      if (host.__renderProjectMenu)
+        host.__renderProjectMenu();
     }
 
     let host = document.getElementById(INPUT_HOST_ID);
@@ -196,6 +205,7 @@
     host.__integrationSkills = [];
     host.__integrationAgents = [];
     host.__customItems = [];
+    host.__projects = [];
     host.__welcomeText = "";
     host.__sendButtonState = "input-mode";
     host.__sendButtonAvailable = true;
@@ -237,7 +247,8 @@
 
         custom: true,
         systemPrompt: true,
-        model: true
+        model: true,
+        project: true
       };
     }
 
@@ -2019,7 +2030,15 @@
     };
 
     window.onIntegrationAgentSelected = function(id, name) {
-      upsertIntegrationSelection(host.__integrationAgents, id, name, false);
+      // Single-agent invariant + sticky guard: a menu pick is IGNORED when
+      // a chip is already in place. The user must explicitly dismiss the
+      // existing chip before selecting a different agent — defense in depth
+      // for multi-turn agent conversations, where switching mid-chat would
+      // be silently routed to the original session's agent backend-side.
+      // setIntegrationAgents (Delphi-driven restore) keeps full-replace
+      // semantics so AfterSessionReloaded can still rewrite the chip.
+      if (host.__integrationAgents.length > 0) return;
+      upsertIntegrationSelection(host.__integrationAgents, id, name, true);
     };
 
     window.setIntegrationFunctions = function(items) {
@@ -2035,7 +2054,10 @@
     };
 
     window.setIntegrationAgents = function(items) {
-      upsertIntegrationSelection(host.__integrationAgents, items, null, true);
+      // Single-agent invariant: collapse bulk payloads to their last entry
+      // so legacy multi-agent state cannot reintroduce multiple chips.
+      const normalized = Array.isArray(items) ? items.slice(-1) : items;
+      upsertIntegrationSelection(host.__integrationAgents, normalized, null, true);
     };
 
     window.onCustomSelected = function(id, name) {
@@ -2137,6 +2159,10 @@
           ? window.RequestParams.getState()
           : buildDefaultRequestParams();
 
+      const activeProject = host.__enabledFunctions.project
+        ? getActiveProject()
+        : null;
+
       return {
         text: document.getElementById("InputBubbleText")?.value || "",
 
@@ -2145,6 +2171,14 @@
         thinking: extractThinking(features),
         deepResearch: features.includes("deep-research"),
         webSearch: features.includes("web-research"),
+
+        project: activeProject
+          ? {
+              displayName: activeProject.displayName || "",
+              fullPath: activeProject.fullPath || null,
+              full_path: activeProject.fullPath || null
+            }
+          : null,
 
         files: host.__files.map(f => ({
           name: f.name,
@@ -2870,6 +2904,482 @@
       }
     };
 
+    projectBtn = document.createElement("button");
+    projectBtn.id = "InputProjectButton";
+    projectBtn.type = "button";
+    projectBtn.title = "";
+
+    styleButton(projectBtn);
+    addHover(projectBtn);
+
+    projectBtn.style.display = "flex";
+    projectBtn.style.alignItems = "center";
+    projectBtn.style.justifyContent = "center";
+    projectBtn.style.gap = "6px";
+
+    projectBtn.style.width = "auto";
+    projectBtn.style.minWidth = "0";
+    projectBtn.style.padding = "6px 12px";
+
+    projectBtn.style.transform = "none";
+
+    projectBtn.style.height = "32px";
+    projectBtn.style.borderRadius = "16px";
+    projectBtn.style.whiteSpace = "nowrap";
+
+    const projectIcon = document.createElement("span");
+    projectIcon.textContent = "";
+    projectIcon.style.fontFamily = "Segoe Fluent Icons";
+    projectIcon.style.fontSize = "14px";
+    projectIcon.style.lineHeight = "1";
+
+    projectLabel = document.createElement("span");
+    projectLabel.textContent = "Project: none";
+    projectLabel.style.fontFamily = "Segoe UI, sans-serif";
+    projectLabel.style.fontSize = "13px";
+
+    projectBtn.appendChild(projectIcon);
+    projectBtn.appendChild(projectLabel);
+
+    projectMenu = document.createElement("div");
+    projectMenu.id = "InputProjectMenu";
+    projectMenu.hidden = true;
+
+    Object.assign(projectMenu.style, {
+      position: "fixed",
+      minWidth: "220px",
+      padding: "6px",
+      borderRadius: "12px",
+      background: "var(--input-menu-bg, #2b2b2b)",
+      border: "1px solid var(--input-menu-border, rgba(255,255,255,0.08))",
+      boxSizing: "border-box",
+      overflowX: "hidden",
+      overflowY: "auto",
+      zIndex: "1003",
+      opacity: "0",
+      transform: "translateY(6px) scale(0.97)",
+      transformOrigin: "bottom left",
+      transition: "opacity 180ms ease, transform 180ms ease",
+      willChange: "opacity, transform"
+    });
+
+    if (!document.getElementById("input-project-menu-style")) {
+      const projectMenuStyle = document.createElement("style");
+      projectMenuStyle.id = "input-project-menu-style";
+      projectMenuStyle.textContent = `
+        .input-project-menu-option {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 100%;
+          min-height: 32px;
+          padding: 0 12px;
+          border: 0;
+          border-radius: 10px;
+          box-sizing: border-box;
+          background: transparent;
+          color: var(--input-menu-text, #ddd);
+          font: inherit;
+          font-family: "Segoe UI", sans-serif;
+          font-size: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          text-align: left;
+          cursor: pointer;
+          transition: background 140ms ease, color 140ms ease;
+        }
+
+        .input-project-menu-remove {
+          flex: 0 0 18px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          pointer-events: none;
+          color: var(--input-menu-text, #ddd);
+          font-size: 11px;
+          line-height: 1;
+          transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+        }
+
+        .input-project-menu-option:hover .input-project-menu-remove,
+        .input-project-menu-option:focus .input-project-menu-remove,
+        .input-project-menu-option:focus-within .input-project-menu-remove {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .input-project-menu-remove:hover {
+          background: var(--input-menu-item-hover-bg, rgba(255,255,255,0.12));
+          color: var(--input-menu-item-hover-text, #ffffff);
+        }
+
+        .input-project-menu-option:hover,
+        .input-project-menu-option:focus {
+          background: var(--input-menu-item-hover-bg, rgba(255,255,255,0.08));
+          color: var(--input-menu-item-hover-text, #ffffff);
+          outline: none;
+        }
+
+        .input-project-menu-option.is-selected {
+          background: color-mix(in srgb, var(--reasoning-accent, #4f8cff) 12%, transparent);
+          color: var(--text-main, #ffffff);
+        }
+
+        .input-project-menu-option.is-selected:hover,
+        .input-project-menu-option.is-selected:focus {
+          background: color-mix(in srgb, var(--reasoning-accent, #4f8cff) 20%, transparent);
+        }
+
+        .input-project-menu-option-label {
+          min-width: 0;
+          flex: 1 1 auto;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .input-project-menu-option-check {
+          flex: 0 0 auto;
+          width: 18px;
+          text-align: right;
+          color: var(--reasoning-accent, #4f8cff);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .input-project-menu-separator {
+          border: 0;
+          border-top: 1px solid var(--input-menu-border, rgba(255,255,255,0.08));
+          margin: 6px 4px;
+        }
+      `;
+      document.head.appendChild(projectMenuStyle);
+    }
+
+    function buildProjectMenuOption(labelText, opts) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "input-project-menu-option" + (opts && opts.selected ? " is-selected" : "");
+
+      if (opts && typeof opts.onRemove === "function") {
+        const removeSpan = document.createElement("span");
+        removeSpan.className = "input-project-menu-remove";
+        removeSpan.textContent = "✕";
+        removeSpan.title = t("input.project.delete", "Delete");
+        removeSpan.setAttribute("aria-hidden", "true");
+        removeSpan.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          opts.onRemove(e);
+        });
+        btn.appendChild(removeSpan);
+      }
+
+      const labelSpan = document.createElement("span");
+      labelSpan.className = "input-project-menu-option-label";
+      labelSpan.textContent = labelText;
+      btn.appendChild(labelSpan);
+
+      const checkSpan = document.createElement("span");
+      checkSpan.className = "input-project-menu-option-check";
+      checkSpan.textContent = opts && opts.selected ? "✓" : "";
+      btn.appendChild(checkSpan);
+
+      if (opts && typeof opts.onClick === "function")
+        btn.addEventListener("click", opts.onClick);
+
+      if (opts && opts.role)
+        btn.dataset.role = opts.role;
+
+      return btn;
+    }
+
+    function renderProjectMenu() {
+      projectMenu.innerHTML = "";
+
+      const addLabel = t("input.project.add", "Add project");
+      const addBtn = buildProjectMenuOption("+  " + addLabel, {
+        role: "project-menu-add",
+        onClick: function (e) {
+          e.stopPropagation();
+          closeProjectMenu();
+          if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.postMessage({ event: "folder-selection" });
+          }
+        }
+      });
+      projectMenu.appendChild(addBtn);
+
+      host.__projects.forEach(function (project) {
+        if (!project) return;
+
+        const row = buildProjectMenuOption(project.displayName || project.fullPath, {
+          selected: !!project.selected,
+          onClick: function (e) {
+            e.stopPropagation();
+            setActiveProject(project.fullPath);
+            closeProjectMenu();
+          },
+          onRemove: function () {
+            removeProject(project.fullPath);
+          }
+        });
+        row.dataset.role = "project-menu-item";
+        row.dataset.fullPath = project.fullPath;
+
+        projectMenu.appendChild(row);
+      });
+
+      const separator = document.createElement("hr");
+      separator.className = "input-project-menu-separator";
+      projectMenu.appendChild(separator);
+
+      const noneLabelText = t("input.project.noneUsed", "No project used");
+      const noneBtn = buildProjectMenuOption("-  " + noneLabelText, {
+        role: "project-menu-none",
+        onClick: function (e) {
+          e.stopPropagation();
+          clearActiveProject();
+          closeProjectMenu();
+        }
+      });
+      projectMenu.appendChild(noneBtn);
+
+      if (!projectMenu.hidden)
+        positionProjectMenu();
+    }
+
+    function getProjectDisplayName(fullPath) {
+      const value = typeof fullPath === "string" ? fullPath.trim() : "";
+      if (!value) return "";
+
+      const segments = value.split(/[\\/]+/).filter(Boolean);
+      return segments.length ? segments[segments.length - 1] : value;
+    }
+
+    function buildProjectState() {
+      return host.__projects
+        .filter(function (project) {
+          return !!(project && project.fullPath);
+        })
+        .map(function (project) {
+          return {
+            displayName: project.displayName || getProjectDisplayName(project.fullPath),
+            fullPath: project.fullPath,
+            selected: !!project.selected
+          };
+        });
+    }
+
+    function notifyProjectStateChanged() {
+      if (!window.chrome || !window.chrome.webview)
+        return;
+
+      window.chrome.webview.postMessage({
+        event: "folder-state",
+        state: buildProjectState()
+      });
+    }
+
+    function applyProjectState(projects) {
+      if (!Array.isArray(projects))
+        return;
+
+      const seen = new Set();
+      const nextProjects = [];
+      let selectedFound = false;
+
+      projects.forEach(function (project) {
+        if (!project) return;
+
+        const fullPath = String(
+          project.fullPath ||
+          project.full_path ||
+          project.folder_path ||
+          ""
+        ).trim();
+
+        if (!fullPath || seen.has(fullPath))
+          return;
+
+        seen.add(fullPath);
+
+        const selected = !!project.selected && !selectedFound;
+        if (selected)
+          selectedFound = true;
+
+        nextProjects.push({
+          displayName: project.displayName || project.display_name || getProjectDisplayName(fullPath),
+          fullPath: fullPath,
+          selected: selected
+        });
+      });
+
+      host.__projects = nextProjects;
+      updateProjectButtonLabel();
+      renderProjectMenu();
+    }
+
+    function setActiveProject(fullPath) {
+      let changed = false;
+      for (let i = 0; i < host.__projects.length; i += 1) {
+        const p = host.__projects[i];
+        if (!p) continue;
+        const next = (p.fullPath === fullPath);
+        if (p.selected !== next) {
+          p.selected = next;
+          changed = true;
+        }
+      }
+      if (changed) {
+        updateProjectButtonLabel();
+        renderProjectMenu();
+        notifyProjectStateChanged();
+      }
+    }
+
+    function clearActiveProject() {
+      let changed = false;
+      for (let i = 0; i < host.__projects.length; i += 1) {
+        const p = host.__projects[i];
+        if (p && p.selected) {
+          p.selected = false;
+          changed = true;
+        }
+      }
+      if (changed) {
+        updateProjectButtonLabel();
+        renderProjectMenu();
+        notifyProjectStateChanged();
+      }
+    }
+
+    function removeProject(fullPath) {
+      let wasSelected = false;
+      let changed = false;
+      for (let i = host.__projects.length - 1; i >= 0; i -= 1) {
+        const p = host.__projects[i];
+        if (p && p.fullPath === fullPath) {
+          if (p.selected) wasSelected = true;
+          host.__projects.splice(i, 1);
+          changed = true;
+        }
+      }
+      if (wasSelected)
+        updateProjectButtonLabel();
+      renderProjectMenu();
+      if (changed)
+        notifyProjectStateChanged();
+    }
+
+    host.__renderProjectMenu = renderProjectMenu;
+    host.__applyProjectState = applyProjectState;
+    host.__notifyProjectStateChanged = notifyProjectStateChanged;
+
+    function getActiveProject() {
+      for (let i = 0; i < host.__projects.length; i += 1) {
+        if (host.__projects[i] && host.__projects[i].selected)
+          return host.__projects[i];
+      }
+      return null;
+    }
+
+    function updateProjectButtonLabel() {
+      const active = getActiveProject();
+      const noneLabel = t("input.project.none", "none");
+      const prefix = t("input.menu.project", "Project");
+      const name = active && active.displayName ? active.displayName : noneLabel;
+      projectLabel.textContent = prefix + ": " + name;
+    }
+
+    host.__updateProjectButtonLabel = updateProjectButtonLabel;
+
+    function positionProjectMenu() {
+      const btnRect = projectBtn.getBoundingClientRect();
+      const prevMaxHeight = projectMenu.style.maxHeight;
+      const prevTransform = projectMenu.style.transform;
+
+      projectMenu.style.maxHeight = "none";
+      projectMenu.style.transform = "none";
+      projectMenu.style.visibility = "hidden";
+      projectMenu.style.display = "block";
+      const menuRect = projectMenu.getBoundingClientRect();
+      projectMenu.style.display = "";
+      projectMenu.style.visibility = "";
+      projectMenu.style.transform = prevTransform;
+
+      const margin = 8;
+      const gap = 6;
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const availableHeight = Math.max(0, viewportHeight - (margin * 2));
+      const menuHeight = Math.min(menuRect.height, availableHeight);
+      let left = btnRect.left;
+      let top = btnRect.bottom + gap;
+      const overflowBottom = top + menuHeight - (viewportHeight - margin);
+
+      if (left + menuRect.width > viewportWidth - margin)
+        left = Math.max(margin, viewportWidth - menuRect.width - margin);
+
+      if (overflowBottom > 0)
+        top -= overflowBottom;
+
+      if (top < margin)
+        top = margin;
+
+      projectMenu.style.maxHeight = availableHeight > 0
+        ? availableHeight + "px"
+        : prevMaxHeight;
+      projectMenu.style.left = left + "px";
+      projectMenu.style.top = top + "px";
+    }
+
+    function openProjectMenu() {
+      renderProjectMenu();
+      projectMenu.hidden = false;
+      projectMenu.style.opacity = "0";
+      projectMenu.style.transform = "translateY(6px) scale(0.97)";
+      positionProjectMenu();
+      projectMenu.getBoundingClientRect();
+      projectMenu.style.opacity = "1";
+      projectMenu.style.transform = "translateY(0) scale(1)";
+    }
+
+    function closeProjectMenu() {
+      projectMenu.hidden = true;
+      projectMenu.style.opacity = "0";
+      projectMenu.style.transform = "translateY(6px) scale(0.97)";
+    }
+
+    host.__closeProjectMenu = closeProjectMenu;
+
+    projectBtn.onclick = function (e) {
+      e.stopPropagation();
+      if (projectMenu.hidden)
+        openProjectMenu();
+      else
+        closeProjectMenu();
+    };
+
+    document.addEventListener("click", function (e) {
+      const inProjectMenu = projectMenu.contains(e.target);
+      const inProjectButton = projectBtn.contains(e.target);
+
+      if (projectMenu.hidden) return;
+      if (inProjectMenu || inProjectButton) return;
+
+      closeProjectMenu();
+    }, true);
+
+    window.addEventListener("resize", function () {
+      if (!projectMenu.hidden) positionProjectMenu();
+    });
+
     bindSubmenuHover(endpointBtn, endpointMenu);
     bindSubmenuHover(thinkingBtn, thinkingMenu);
     bindSubmenuHover(integrationBtn, integrationMenu);
@@ -2965,6 +3475,12 @@
 
     menuIconsZone.appendChild(systemPromptBtn);
     menuIconsZone.appendChild(modelBtn);
+    menuIconsZone.appendChild(projectBtn);
+
+    document.body.appendChild(projectMenu);
+
+    updateProjectButtonLabel();
+    renderProjectMenu();
 
     dropdown.appendChild(menuItemsZone);
     dropdown.appendChild(menuIconsZone);
@@ -3213,9 +3729,14 @@
 
       systemPromptBtn.style.display = host.__enabledFunctions.systemPrompt ? "flex" : "none";
       modelBtn.style.display = host.__enabledFunctions.model ? "flex" : "none";
+      projectBtn.style.display = host.__enabledFunctions.project ? "flex" : "none";
 
       menuIconsZone.style.display =
-        (host.__enabledFunctions.systemPrompt || host.__enabledFunctions.model)
+        (
+          host.__enabledFunctions.systemPrompt ||
+          host.__enabledFunctions.model ||
+          host.__enabledFunctions.project
+        )
           ? "flex"
           : "none";
     }
@@ -3258,7 +3779,8 @@
         ["mediaTextToSpeech", "mediaTextToSpeech"],
         ["custom", "custom"],
         ["systemPrompt", "systemPrompt"],
-        ["model", "model"]
+        ["model", "model"],
+        ["project", "project"]
       ].forEach(function (pair) {
         const targetKey = pair[0];
         const sourceKey = pair[1];
@@ -3372,6 +3894,10 @@
       if (hasOwn("custom") && !host.__enabledFunctions.custom) {
         host.__features.delete("custom");
         host.__customItems = [];
+      }
+
+      if (hasOwn("project") && !host.__enabledFunctions.project) {
+        closeProjectMenu();
       }
 
       closeDropdown();
@@ -3921,6 +4447,60 @@
         return;
 
       host.__applyCapabilities(msg);
+      return;
+    }
+
+    if (msg.type === "folder-state") {
+      const host = document.getElementById("InputHost");
+      if (!host || typeof host.__applyProjectState !== "function")
+        return;
+
+      host.__applyProjectState(msg.state);
+      return;
+    }
+
+    if (msg.type === "folder-selected") {
+      const host = document.getElementById("InputHost");
+      if (!host || !Array.isArray(host.__projects)) return;
+
+      const rawPath = typeof msg.folder_path === "string" ? msg.folder_path : "";
+      const fullPath = rawPath.trim();
+      if (!fullPath) return;
+
+      const segments = fullPath.split(/[\\/]+/).filter(Boolean);
+      const displayName = segments.length
+        ? segments[segments.length - 1]
+        : fullPath;
+
+      let target = null;
+      for (let i = 0; i < host.__projects.length; i += 1) {
+        if (host.__projects[i] && host.__projects[i].fullPath === fullPath) {
+          target = host.__projects[i];
+          break;
+        }
+      }
+
+      if (!target) {
+        target = { displayName: displayName, fullPath: fullPath, selected: false };
+        host.__projects.push(target);
+      } else if (!target.displayName) {
+        target.displayName = displayName;
+      }
+
+      for (let i = 0; i < host.__projects.length; i += 1) {
+        if (host.__projects[i])
+          host.__projects[i].selected = (host.__projects[i] === target);
+      }
+
+      if (host.__updateProjectButtonLabel)
+        host.__updateProjectButtonLabel();
+
+      if (host.__renderProjectMenu)
+        host.__renderProjectMenu();
+
+      if (host.__notifyProjectStateChanged)
+        host.__notifyProjectStateChanged();
+
       return;
     }
 

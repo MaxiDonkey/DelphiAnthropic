@@ -90,7 +90,10 @@
       close: null,
       btnSettings: null,
       btnCancel: null,
-      btnSelect: null
+      btnSelect: null,
+      footerSummary: null,
+      footerSummaryName: null,
+      footerSummaryText: null
     }
   };
 
@@ -275,6 +278,11 @@
     };
   }
 
+  function isCardSelectable(item) {
+    const source = item && typeof item === "object" ? item : {};
+    return source.selectable !== false;
+  }
+
   function setCards(cards) {
     const list = Array.isArray(cards) ? cards : [];
     const cardsById = Object.create(null);
@@ -282,6 +290,7 @@
     let i;
 
     for (i = 0; i < list.length; i += 1) {
+      if (!isCardSelectable(list[i])) continue;
       const card = normalizeCard(list[i], i);
       if (!card.id || cardsById[card.id]) continue;
       cardsById[card.id] = card;
@@ -443,7 +452,7 @@
         scrollbar-color: var(--scrollbar-thumb) transparent;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        grid-auto-rows: minmax(124px, auto);
+        grid-auto-rows: 124px;
         gap: 18px;
         align-content: start;
         box-sizing: border-box;
@@ -486,6 +495,7 @@
         -webkit-appearance: none;
         width: 100%;
         min-height: 124px;
+        height: 124px;
         padding: 16px 20px;
         border: 1px solid color-mix(in srgb, var(--input-shell-border) 78%, transparent);
         border-radius: 16px;
@@ -556,18 +566,24 @@
         overflow-wrap: anywhere;
         word-break: break-word;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
       }
 
       .csd-footer {
         display: flex;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-between;
         gap: 16px;
-        padding: 16px 20px;
+        height: 80px;
+        min-height: 80px;
+        padding: 12px 20px;
         border-top: 1px solid var(--input-shell-border);
+        box-sizing: border-box;
+        flex: 0 0 80px;
       }
 
       .csd-footer-left,
@@ -577,8 +593,52 @@
         gap: 12px;
       }
 
+      .csd-footer-left {
+        min-width: 0;
+        flex: 1 1 auto;
+        align-items: flex-start;
+      }
+
       .csd-footer-right {
+        flex: 0 0 auto;
         margin-left: auto;
+      }
+
+      .csd-selection-summary {
+        min-width: 0;
+        max-width: min(550px, 100%);
+        flex: 1 1 auto;
+        display: grid;
+        gap: 3px;
+      }
+
+      .csd-selection-summary[hidden] {
+        display: none;
+      }
+
+      .csd-selection-name {
+        min-width: 0;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--text-main);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .csd-selection-comment {
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.3;
+        color: var(--request-params-nav-muted);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .csd-btn {
@@ -716,9 +776,40 @@
     state.elements.list.innerHTML = state.cards.map(cardHtml).join("");
   }
 
+  function renderSelectionSummary() {
+    const selectedCard = getSelectedCard();
+    let comment;
+
+    if (
+      !state.elements.footerSummary ||
+      !state.elements.footerSummaryName ||
+      !state.elements.footerSummaryText
+    ) {
+      return;
+    }
+
+    if (!selectedCard) {
+      state.elements.footerSummary.hidden = true;
+      state.elements.footerSummaryName.textContent = "";
+      state.elements.footerSummaryText.textContent = "";
+      state.elements.footerSummary.removeAttribute("title");
+      return;
+    }
+
+    comment = selectedCard.commentaire || getResolvedLabel("noComment") || "";
+    state.elements.footerSummary.hidden = false;
+    state.elements.footerSummaryName.textContent = selectedCard.name || "";
+    state.elements.footerSummaryText.textContent = comment;
+    state.elements.footerSummary.setAttribute(
+      "title",
+      (selectedCard.name ? selectedCard.name + "\n" : "") + comment
+    );
+  }
+
   function render() {
     renderTitle();
     renderButtons();
+    renderSelectionSummary();
     renderCards();
   }
 
@@ -898,6 +989,10 @@
         <div class="csd-footer">
           <div class="csd-footer-left">
             <button type="button" class="csd-btn" data-role="settings" hidden></button>
+            <div class="csd-selection-summary" aria-live="polite" hidden>
+              <div class="csd-selection-name"></div>
+              <div class="csd-selection-comment"></div>
+            </div>
           </div>
           <div class="csd-footer-right">
             <button type="button" class="csd-btn" data-role="cancel"></button>
@@ -918,6 +1013,9 @@
     state.elements.btnSettings = root.querySelector('[data-role="settings"]');
     state.elements.btnCancel = root.querySelector('[data-role="cancel"]');
     state.elements.btnSelect = root.querySelector('[data-role="select"]');
+    state.elements.footerSummary = root.querySelector(".csd-selection-summary");
+    state.elements.footerSummaryName = root.querySelector(".csd-selection-name");
+    state.elements.footerSummaryText = root.querySelector(".csd-selection-comment");
 
     root.addEventListener("click", handleClick);
     root.addEventListener("dblclick", handleDoubleClick);

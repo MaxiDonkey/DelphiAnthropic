@@ -4,9 +4,6 @@
 
 The demo ships with a pre-wired GitHub MCP server entry, but it cannot connect to GitHub on its own — it needs a personal access token (PAT) issued from your GitHub account.
 
->[!IMPORTANT]
->Visit the [Pythia-WebView2 project's GitHub repository](https://github.com/MaxiDonkey/Pythia-webView2)
-
 ### 1. Create a Personal Access Token
 
 1. Sign in to your GitHub account.

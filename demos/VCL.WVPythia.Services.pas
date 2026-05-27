@@ -70,6 +70,30 @@ type
 
 implementation
 
+{$REGION 'Dev note'}
+(*
+
+  VCL adapter hooks for the pythia-anthropic demo.
+
+  Pythia asks a TCustomChatManagedItemDialogService implementation to handle
+  UI actions such as selecting managed items, opening settings panes, copying
+  content and submitting the current input state. This unit provides the VCL
+  demo implementation and keeps those callbacks small.
+
+  The only production path here is ActivateInputState: it forwards the input
+  prompt state to the global Anthropic vendor service, which then decides
+  whether the turn goes through regular Messages streaming or Managed Agents.
+  Most other handlers are demo placeholders that either let Pythia's standard
+  selection UI continue or show a simple TODO dialog.
+
+  The implementation uses Main from the implementation section on purpose.
+  That creates a cross-interface dependency, but it keeps this sample compact:
+  the real vendor logic remains in Demo.Anthropic.Services while this unit
+  only bridges VCL UI events to that service.
+
+*)
+{$ENDREGION}
+
 uses
   {--- Here we have a cross-interface dependency, which is something to be aware of.
        I took the liberty of doing it here because this is a demo. }
@@ -189,25 +213,25 @@ end;
 class function TToolContainer.ActivateModelSelection: Boolean;
 begin
   Result := True;
-  ShowMessage('Model selection is not implemented in this demo.');
+  ShowMessage('Todo Model selection');
 end;
 
 class function TToolContainer.ActivateSystemPrompt: Boolean;
 begin
   Result := True;
-  ShowMessage('Custom system settings are not implemented in this demo.');
+  ShowMessage('Todo custom settings');
 end;
 
 class function TToolContainer.ActivateAudioInputEvent: Boolean;
 begin
   Result := True;
-  ShowMessage('Audio input is not implemented in this demo.');
+  ShowMessage('Todo audio input');
 end;
 
 class function TToolContainer.ActivateCardSettingsEvent: Boolean;
 begin
   Result := True;
-  ShowMessage('Card settings are not implemented in this demo.');
+  ShowMessage('Todo settings card');
 end;
 
 class function TToolContainer.ActivateNewChatEvent: Boolean;
@@ -219,17 +243,18 @@ end;
 class function TToolContainer.SelectAgentItem(
   out AItem: TChatManagedItemRef): Boolean;
 begin
-  Result := True;
-  ShowMessage('Demo placeholder: Agent item selection.');
-  var Code := Trunc(Random(20000) + 1);
-  AItem := TChatManagedItemRef.Create(Code.ToString, 'web search agent');
+  {--- Non-intrusive: do not intercept the selection. The standard agent-card
+       selector populates State.Integration.Agents, exactly as it does for
+       skill and MCP cards; TAnthropicServices routes the turn from there. }
+  AItem := Default(TChatManagedItemRef);
+  Result := False;
 end;
 
 class function TToolContainer.SelectCustomItem(
   out AItem: TChatManagedItemRef): Boolean;
 begin
   Result := True;
-  ShowMessage('Demo placeholder: custom item selection.');
+  ShowMessage('Todo custom selection: custom Item');
   var Code := Trunc(Random(20000) + 1);
   AItem := TChatManagedItemRef.Create(Code.ToString, 'provider');
 end;
@@ -238,7 +263,7 @@ class function TToolContainer.SelectFunctionItem(
   out AItem: TChatManagedItemRef): Boolean;
 begin
   Result := True;
-  ShowMessage('Demo placeholder: function item selection.');
+  ShowMessage('Todo custom selection: function Item');
   var Code := Trunc(Random(20000) + 1);
   AItem := TChatManagedItemRef.Create(Code.ToString, 'GetWeather');
 end;
@@ -247,7 +272,7 @@ class function TToolContainer.SelectMCPItem(
   out AItem: TChatManagedItemRef): Boolean;
 begin
   Result := True;
-  ShowMessage('Demo placeholder: MCP item selection.');
+  ShowMessage('Todo custom selection: MCP Item');
   var Code := Trunc(Random(20000) + 1);
   AItem := TChatManagedItemRef.Create(Code.ToString, 'jMCPWeather');
 end;
@@ -256,10 +281,11 @@ class function TToolContainer.SelectSkillItem(
   out AItem: TChatManagedItemRef): Boolean;
 begin
   Result := True;
-  ShowMessage('Demo placeholder: skill item selection.');
+  ShowMessage('Todo custom selection: skill Item');
   var Code := Trunc(Random(20000) + 1);
   AItem := TChatManagedItemRef.Create(Code.ToString, 'custom-skill');
 end;
 
 end.
+
 

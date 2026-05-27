@@ -92,13 +92,54 @@ type
 
 implementation
 
+{$REGION 'Dev note'}
+(*
+
+  Asynchronous Anthropic client helpers for the pythia-anthropic VCL demo.
+
+  This unit contains provider-specific fire-and-forget operations that should
+  not clutter the main service flow: chat title generation, custom skill
+  registration, file-name retrieval, local downloads and best-effort cloud
+  file deletion.
+
+  UI updates are always marshalled back through TThread.Queue before touching
+  the Pythia browser. Most cleanup operations are intentionally silent on
+  failure because they run after the user-facing turn has already completed;
+  missing files or repeated deletes are expected in normal retry paths.
+
+  Promise aggregation in WhenAllRetrieve is handled by TFileRetrievalContext
+  rather than nested local closures. That keeps result ordering stable while
+  avoiding reference cycles between promise handlers and their captured state.
+
+  Skill-card JSON updates are protected by a process-local monitor because the
+  registration path can be launched asynchronously while the demo is still
+  active. The JSON mutation itself is delegated to the existing safe helper
+  code in Demo.Anthropic.Helpers.
+
+*)
+{$ENDREGION}
+
 var
   GSkillCardsJsonLock: TObject;
 
-function TryUpdateSkillIDInSkillCardsFile(
-  const SkillCardsFileName: string;
-  const AName: string;
-  const NewId: string): Boolean;
+type
+  TSkillCardFileUpdater = record
+  public
+    class function TryUpdateSkillId(const SkillCardsFileName, AName,
+      NewId: string): Boolean; static;
+  end;
+
+  TPythiaQueuedMessage = record
+  public
+    class procedure Error(const Pythia: IPythiaBrowser; const Message: string); static;
+    class procedure Success(const Pythia: IPythiaBrowser; const Message: string); static;
+    class procedure Warning(const Pythia: IPythiaBrowser; const Message: string); static;
+  end;
+
+{ TSkillCardFileUpdater }
+
+class function TSkillCardFileUpdater.TryUpdateSkillId(
+  const SkillCardsFileName, AName, NewId: string): Boolean;
 begin
   Result := False;
   var UpdatedSkillJsonAsString := '';
@@ -130,7 +171,10 @@ begin
   end;
 end;
 
-procedure QueuePythiaError(const Pythia: IPythiaBrowser; const Message: string);
+{ TPythiaQueuedMessage }
+
+class procedure TPythiaQueuedMessage.Error(
+  const Pythia: IPythiaBrowser; const Message: string);
 begin
   if not Assigned(Pythia) then
     Exit;
@@ -143,7 +187,8 @@ begin
     end);
 end;
 
-procedure QueuePythiaSuccess(const Pythia: IPythiaBrowser; const Message: string);
+class procedure TPythiaQueuedMessage.Success(
+  const Pythia: IPythiaBrowser; const Message: string);
 begin
   if not Assigned(Pythia) then
     Exit;
@@ -156,7 +201,8 @@ begin
     end);
 end;
 
-procedure QueuePythiaWarning(const Pythia: IPythiaBrowser; const Message: string);
+class procedure TPythiaQueuedMessage.Warning(
+  const Pythia: IPythiaBrowser; const Message: string);
 begin
   if not Assigned(Pythia) then
     Exit;
@@ -537,22 +583,22 @@ begin
 
         if CardSkillID <> RegisteredSkillID then
           begin
-            if TryUpdateSkillIDInSkillCardsFile(
+            if TSkillCardFileUpdater.TryUpdateSkillId(
               SkillCardsFileName,
               AName,
               RegisteredSkillID) then
-              QueuePythiaSuccess(Pythia, Format('Custom skill card updated: %s', [RegisteredSkillID]))
+              TPythiaQueuedMessage.Success(Pythia, Format('Custom skill card updated: %s', [RegisteredSkillID]))
             else
-              QueuePythiaWarning(Pythia, Format('Custom skill card update failed: %s', [AName]));
+              TPythiaQueuedMessage.Warning(Pythia, Format('Custom skill card update failed: %s', [AName]));
           end;
 
         if SkillCreated then
-          QueuePythiaSuccess(Pythia, Format('Custom skill registered: %s', [RegisteredSkillID]))
+          TPythiaQueuedMessage.Success(Pythia, Format('Custom skill registered: %s', [RegisteredSkillID]))
         else
-          QueuePythiaSuccess(Pythia, Format('Custom skill found: %s', [RegisteredSkillID]));
+          TPythiaQueuedMessage.Success(Pythia, Format('Custom skill found: %s', [RegisteredSkillID]));
       except
         on E: Exception do
-          QueuePythiaError(Pythia, Format('Custom skill registration failed (%s): %s', [AName, E.Message]));
+          TPythiaQueuedMessage.Error(Pythia, Format('Custom skill registration failed (%s): %s', [AName, E.Message]));
       end;
     end);
 end;

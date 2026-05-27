@@ -52,6 +52,7 @@ type
     js_promptSummary,
     js_inputDialog,
     js_activityLogo,
+    js_webDecision,
     js_injectionEnded);
 
   TTemplateTypeHelper = record Helper for TTemplateType
@@ -81,6 +82,7 @@ type
         'scripts\PromptSummaryTemplate.js',
         'scripts\InputDialogTemplate.js',
         'scripts\ActivityLogoTemplate.js',
+        'scripts\WebDecisionDlgTemplate.js',
         'scripts\InjectionEndedTemplate.js'
       );
   public
@@ -112,6 +114,7 @@ type
     function GetPromptSummaryTemplate: string;
     function GetInputDialogTemplate: string;
     function GetActivityLogoTemplate: string;
+    function GetWebDecisionTemplate: string;
     function GetInjectionEndedTemplate: string;
 
     function LoadCustomTemplate(const FileName: string): string;
@@ -169,6 +172,7 @@ type
     property ModelsTemplate: string read GetModelsTemplate;
     property InputDialogTemplate: string read GetInputDialogTemplate;
     property ActivityLogoTemplate: string read GetActivityLogoTemplate;
+    property WebDecisionTemplate: string read GetWebDecisionTemplate;
     property InjectionEndedTemplate: string read GetInjectionEndedTemplate;
   end;
 
@@ -197,6 +201,7 @@ type
     FPromptSummaryTemplate: string;
     FInputDialogTemplate: string;
     FActivityLogoTemplate: string;
+    FWebDecisionTemplate: string;
     FInjectionEndedTemplate: string;
 
     FAlwaysReloading: Boolean;
@@ -228,6 +233,7 @@ type
     function GetPromptSummaryTemplate: string;
     function GetInputDialogTemplate: string;
     function GetActivityLogoTemplate: string;
+    function GetWebDecisionTemplate: string;
     function GetInjectionEndedTemplate: string;
 
     function GetSelectorTemplate: string;
@@ -458,6 +464,13 @@ begin
   Result := FVideoTemplate;
 end;
 
+function TEdgeInjection.GetWebDecisionTemplate: string;
+begin
+  if FAlwaysReloading then
+    FWebDecisionTemplate := LoadTemplate(js_webDecision.ToString);
+  Result := FWebDecisionTemplate;
+end;
+
 procedure TEdgeInjection.InitializeTemplates;
 begin
   FInitialHtml := LoadTemplate(main_html.ToString);
@@ -483,6 +496,7 @@ begin
   FCardSelectorTemplate := LoadTemplate(js_cardSelector.ToString);
   FInputDialogTemplate := LoadTemplate(js_inputDialog.ToString);
   FActivityLogoTemplate := LoadTemplate(js_activityLogo.ToString);
+  FWebDecisionTemplate := LoadTemplate(js_webDecision.ToString);
   FInjectionEndedTemplate := LoadTemplate(js_injectionEnded.ToString);
 end;
 

@@ -44,6 +44,8 @@ type
     { IHttpClientAPI }
     function Get(const URL: string; Response: TStringStream; const Headers: TNetHeaders): Integer; overload;
     function Get(const URL: string; const Response: TStream; const Headers: TNetHeaders): Integer; overload;
+    function Get(const URL: string; const Response: TStream;
+      const Headers: TNetHeaders; OnReceiveData: TReceiveDataCallback): Integer; overload;
 
     function Delete(const URL: string; Response: TStringStream; const Headers: TNetHeaders): Integer;
 
@@ -110,6 +112,18 @@ function THttpClientAPI.Get(const URL: string; const Response: TStream; const He
 begin
   CheckAPISettings;
   Result := FHttpClient.Get(URL, Response, Headers).StatusCode;
+end;
+
+function THttpClientAPI.Get(const URL: string; const Response: TStream;
+  const Headers: TNetHeaders; OnReceiveData: TReceiveDataCallback): Integer;
+begin
+  CheckAPISettings;
+  FHttpClient.ReceiveDataCallBack := OnReceiveData;
+  try
+    Result := FHttpClient.Get(URL, Response, Headers).StatusCode;
+  finally
+    FHttpClient.ReceiveDataCallBack := nil;
+  end;
 end;
 
 function THttpClientAPI.Delete(const URL: string; Response: TStringStream; const Headers: TNetHeaders): Integer;

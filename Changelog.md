@@ -1,3 +1,39 @@
+#### 2026, May 27 version 1.3.2
+
+- Pre-installed [managed agent cards](demos/bin64/VCL_Anthropic/support/VCL_Anthropic-agent-cards.json): Added five ready-to-use cards for the agent selector — three defined inline in JSON (Research Analyst: single-agent claude-opus-4-7 with web_search/web_fetch always allowed; Local Project Review: coordinator + sub-agent code-inspector read-only on the uploaded local project; Supervised Exploration: coordinator + sub-agent explorer with confirmation on each tool) and two referenced by md_path (Safe Code Patch and Sandbox To Local Code Edit...).
+
+- Added streamed async/await variants for Anthropic sessions with progress/cancellation callbacks and TSessionStreamStatus typed status.
+
+- Ajout d’un GetStream SDK générique avec callback de réception, exposé sur les routes Sessions.StreamRaw, afin de supporter les flux SSE via la couche HTTP injectable et monitorée. 
+
+
+#### 2026, May 19 version 1.3.1
+
+- Typed stream routing:
+  - `TEventData` exposes block-aware accumulators alongside the legacy `Text` / `Thought` properties: `AssistantText` (text-only blocks), `ToolCalls: TArray<TToolCallSnapshot>`, `ToolResults: TArray<TToolResultSnapshot>`, plus `CurrentBlockType` / `CurrentBlockIndex` and per-chunk `LastAssistantDelta` / `LastReasoningDelta` / `LastToolInputDelta` / `LastToolResultDelta`.
+  - New public records `TToolCallSnapshot` and `TToolResultSnapshot` re-exported through `Anthropic`.
+
+<br>
+
+- Semantic streaming callbacks:
+  - `TStreamEventCallBack` adds optional typed slots: `OnAssistantTextDelta`, `OnReasoningDelta`, `OnToolUseStart`, `OnToolUseInputDelta`, `OnToolUseStop`, `OnToolResultStart`, `OnToolResultDelta`, `OnToolResultStop`.
+  - `IStreamEventDispatcher` gains matching `Dispatch*` methods.
+  - Consumers can subscribe to high-level events (assistant text, reasoning, tool input, tool output) without re-implementing block-type routing on top of raw `TChatStream` events.
+
+<br>
+
+- Stream engine internals:
+  - `TEventEngineManager` maintains an `Index → TContentBlockType` map across `content_block_start` / `_stop` events and primes `TEventData.SetActiveBlock` before each `Aggregate`.
+  - Legacy dispatch (`OnContentStart` / `OnContentDelta` / `OnContentStop`, `OnMessageStart` / `OnMessageDelta` / `OnMessageStop`, `OnError`) is preserved verbatim and fires first; the typed dispatch runs after.
+
+<br>
+
+- Backward compatibility:
+  - All pre-existing fields, properties, methods and callbacks are preserved unchanged. Consumers relying on `TPromiseChatStream.OnProgress` or on the legacy `OnContentDelta` / `TEventData.Text` see identical behavior.
+  - Typed callbacks are opt-in: slots left unassigned are no-ops.
+
+<br>
+
 #### 2026, May 17 version 1.3.0
 
 - Functional demo using **Pythia-WebView2** (see demo [folder](demos) and [Pythia-WebView2 project](https://github.com/MaxiDonkey/Pythia-webView2)) 

@@ -16,7 +16,8 @@
       "media": "Multimédia",
       "custom": "Personalizado",
       "settings": "Definições",
-      "model": "Modelo"
+      "model": "Modelo",
+      "project": "Projeto"
     },
     "thinking": {
       "low": "Baixo",
@@ -52,6 +53,12 @@
       "createAudio": "Criar áudio",
       "speechToText": "Voz para texto",
       "textToSpeech": "Texto para voz"
+    },
+    "project": {
+      "add": "Adicionar projeto",
+      "none": "nenhum",
+      "noneUsed": "Nenhum projeto utilizado",
+      "delete": "Eliminar"
     },
     "chips": {
       "endpoint": "Ponto final: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Cancelar"
   },
+  "webDecisionDlg": {
+    "title": "Confirmação",
+    "message": "Por favor, confirme.",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "close": "Fechar"
+  },
   "displayFile": {
     "fallbackName": "Ficheiro {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Raciocínio"
+    },
+    "toolGroup": {
+      "label": "Ferramentas utilizadas"
     },
     "code": {
       "copy": "Copiar",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: a chave de API existe",
     "api_key_modified": "%s: a chave de API foi modificada.",
     "api_key_inserted": "%s: a chave de API foi inserida",
+    "web_decision_dlg_title": "Confirmação",
+    "web_decision_dlg_message": "Por favor, confirme.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Cancelar",
+    "web_decision_dlg_close": "Fechar",
+    "demo_anthropic_tool_confirmation_title": "Confirmação",
+    "demo_anthropic_tool_allow": "Permitir",
+    "demo_anthropic_tool_deny": "Negar",
+    "demo_anthropic_tool_allow_call": "Permitir esta chamada de ferramenta?",
+    "demo_anthropic_interrupted_by_user": "Interrompido pelo utilizador.",
     "command_plugin_not_be_null": "O plugin não pode ser nulo",
     "command_unknown": "Comando desconhecido: /%s",
     "command_action_unknown": "Ação desconhecida: /%s %s",

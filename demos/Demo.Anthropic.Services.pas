@@ -3,68 +3,22 @@
 interface
 
 uses
-  System.SysUtils, System.IOUtils, System.JSON, System.Net.URLClient,
-  Winapi.Windows,
+  System.SysUtils, System.IOUtils, System.Net.URLClient, System.JSON,
   WVPythia.Chat.Interfaces, WVPythia.Chat.ManagedFlow, WVPythia.TextFile.Helper,
-  WVPythia.Strs, WVPythia.Vendors.Services, WVPythia.Chat.Consts,
-  Anthropic, Anthropic.Types, Anthropic.Async.Promise, Anthropic.Helpers,
-  Anthropic.API.JsonSafeReader, Anthropic.Headers.Beta,
+  WVPythia.Strs, WVPythia.Vendors.Services,
+  Anthropic, Anthropic.Types, Anthropic.Helpers, Anthropic.API.JsonSafeReader,
+  Anthropic.Headers.Beta,
   Demo.Anthropic.Helpers, Demo.Anthropic.Context,
   Demo.Anthropic.AsyncUtils, Demo.Anthropic.JsonResponse.Helper,
-  Demo.Anthropic.Upload;
+  Demo.Anthropic.DisplayBlocks, Demo.Anthropic.Upload, Demo.Anthropic.Finalize,
+  Demo.Anthropic.Agent.Provisioning, Demo.Anthropic.Agent.Registry,
+  Demo.Anthropic.Session.Flow;
 
 const
   ABORTED_INDICATOR = 'aborted';
+  ANTHROPIC_RESPONSE_TIMEOUT = 30 * 60 * 1000;
 
 type
-  TMessageContentBuilder = record
-    class function Aborted(const Content: string): string; static;
-  end;
-
-  TFinalizeData = record
-    Model: string;
-    Response: string;
-    Reasoning: string;
-    JsonRequest: string;
-    JsonResponse: string;
-    FileResults: TArray<string>;
-    ImageResults: TArray<string>;
-    VideoResults: TArray<string>;
-    AudioResult: TArray<string>;
-    Error: Boolean;
-    ErrorMessage: string;
-
-    class function FromState(
-      AState: TStateBuffer): TFinalizeData; overload; static;
-
-    class function FromSuccess(
-      const AValue: TEventData;
-      const AState: TStateBuffer): TFinalizeData; overload; static;
-
-    class function FromException(
-      const E: Exception;
-      const AState: TStateBuffer): TFinalizeData; overload; static;
-
-    procedure Emit(const AOnFinalize: TManagedItemFinalizeProc);
-  end;
-
-  /// <summary>
-  /// Ensures the managed finalize callback is emitted at most once.
-  /// </summary>
-  IEmitGuard = interface
-    ['{F2C0A4D7-3E15-4C9A-9D6E-2A7E4D5B8F11}']
-    procedure TryEmit(const Data: TFinalizeData);
-  end;
-
-  TEmitGuard = class(TInterfacedObject, IEmitGuard)
-  private
-    FEmitted: Boolean;
-    FOnFinalize: TManagedItemFinalizeProc;
-  public
-    constructor Create(const AOnFinalize: TManagedItemFinalizeProc);
-    procedure TryEmit(const Data: TFinalizeData);
-  end;
-
   TAnthropicServices = class(TInterfacedObject, IVendorServices)
   const
     API_KEY_NAME = 'anthropic';
@@ -73,9 +27,13 @@ type
     FBrowser: IPythiaBrowser;
     FContext: IContext;
     FClientUtils: IAnthropicClientUtils;
+    FAgentRegistry: IAgentCloudRegistry;
+    FProvisioner: IAgentProvisioner;
+    FAgentFlow: IAgentSessionFlow;
 
-    function IsEventSuitable(const Event: TChatStream): Boolean;
     procedure ChatSessionRename(ID, Value: string);
+
+    procedure AfterSessionReloaded(ChatId: string);
 
     function ToolsBuilder(
       const AState: TStateBuffer;
@@ -107,10 +65,6 @@ type
 
     function BuildPayload(
       State: TStateBuffer): TChatParamProc;
-
-    function BuildSessionCallbacks(
-      State: TStateBuffer;
-      const AOnCodeExecutionFileId: TProc<string>): TSessionCallbacksStream;
 
     function BuildAndCheckPayload(
       State: TStateBuffer;
@@ -164,6 +118,7 @@ type
       const E: Exception;
       const Value: TEventData;
       var State: TStateBuffer;
+      const Blocks: IAnthropicDisplayBlockAggregator;
       const EmitGuard: IEmitGuard);
 
     /// <summary>
@@ -173,6 +128,7 @@ type
       const E: Exception;
       const Value: TEventData;
       var State: TStateBuffer;
+      const Blocks: IAnthropicDisplayBlockAggregator;
       const EmitGuard: IEmitGuard);
 
     /// <summary>
@@ -181,6 +137,7 @@ type
     procedure HandleChatError(
       const E: Exception;
       var State: TStateBuffer;
+      const Blocks: IAnthropicDisplayBlockAggregator;
       const EmitGuard: IEmitGuard);
 
   public
@@ -204,6 +161,133 @@ var
 
 implementation
 
+{$REGION 'Dev note'}
+(*
+
+  Anthropic vendor service bridge for the pythia-anthropic VCL demo.
+
+  This unit is the IVendorServices implementation registered by the demo. It
+  owns the Anthropic client, receives Pythia turns, builds Anthropic request
+  payloads, starts streams, maps stream callbacks back into the browser UI, and
+  finalizes each turn through the managed-flow callback.
+
+  There are two execution paths:
+    - regular chat turns go through the Messages streaming API in
+      AsyncAwaitStreamChat;
+    - turns with a selected agent card are delegated to
+      Demo.Anthropic.Session.Flow, which handles Managed Agents sessions.
+
+  The service coordinates helpers rather than concentrating all policy here:
+  Demo.Anthropic.Helpers builds request settings and content blocks,
+  Demo.Anthropic.Context rebuilds historical messages, DisplayBlocks preserves
+  streamed UI blocks, AsyncUtils handles background downloads/deletes/renames,
+  and the Managed Agents units own provisioning, registry and cloud cleanup.
+
+  Stream finalization is deliberately guarded. A turn can complete through the
+  success path, a file-retrieval fallback, cancellation, or an exception; all
+  paths converge through TEmitGuard so Pythia receives exactly one final
+  result. Input files are deleted best-effort once consumed, while output file
+  ids are validated, resolved to safe local names and downloaded asynchronously.
+
+  Constructor wiring is also part of this service boundary: it refreshes the
+  API key, installs browser callbacks, creates the local Managed Agents
+  registry, starts provider-specific cleanup, and wires upload support into the
+  Pythia browser.
+
+*)
+{$ENDREGION}
+
+uses
+  System.Classes,
+  Anthropic.Chat.StreamCallbacks,
+  WVPythia.Chat.Consts, WVPythia.Strings.Escape, WVPythia.ChatSession.Controller,
+  Demo.Anthropic.Agent.Cards, Demo.Anthropic.Agent.Cleanup;
+
+type
+  TAnthropicFileIds = record
+  public
+    class function IsValid(const Value: string): Boolean; static;
+    class function Filter(const IDs: TArray<string>): TArray<string>; static;
+  end;
+
+  TAnthropicBetaTokens = record
+  public
+    class function Extract(const Headers: TNetHeaders): TArray<string>; static;
+  end;
+
+  TFileCapturingEventEngineManager = class(TInterfacedObject, IEventEngineManager)
+  private
+    FInner: IEventEngineManager;
+    FOnFileId: TProc<string>;
+    FOnToolResultDetails: TProc<string>;
+  public
+    constructor Create(
+      const AInner: IEventEngineManager;
+      const AOnFileId: TProc<string>;
+      const AOnToolResultDetails: TProc<string> = nil);
+
+    function AggregateStreamEvents(
+      const Chunk: TChatStream;
+      var Buffer: TEventData): Boolean;
+
+    function GetStreamEventDispatcher: IStreamEventDispatcher;
+  end;
+
+{ TAnthropicFileIds }
+
+class function TAnthropicFileIds.IsValid(const Value: string): Boolean;
+begin
+  Result := Value.Trim.ToLowerInvariant.StartsWith('file_');
+end;
+
+class function TAnthropicFileIds.Filter(
+  const IDs: TArray<string>): TArray<string>;
+begin
+  Result := [];
+  for var Id in IDs do
+    if IsValid(Id) then
+      Result := Result + [Id.Trim];
+end;
+
+{ TFileCapturingEventEngineManager }
+
+constructor TFileCapturingEventEngineManager.Create(
+  const AInner: IEventEngineManager;
+  const AOnFileId: TProc<string>;
+  const AOnToolResultDetails: TProc<string>);
+begin
+  inherited Create;
+  FInner := AInner;
+  FOnFileId := AOnFileId;
+  FOnToolResultDetails := AOnToolResultDetails;
+end;
+
+function TFileCapturingEventEngineManager.AggregateStreamEvents(
+  const Chunk: TChatStream;
+  var Buffer: TEventData): Boolean;
+var
+  ToolResultDetails: string;
+begin
+  TAnthropicStreamCapture.CaptureCodeExecutionFileIds(Chunk,
+    procedure (Id: string)
+    begin
+      if Assigned(FOnFileId) and TAnthropicFileIds.IsValid(Id) then
+        FOnFileId(Id.Trim);
+    end);
+
+  if Assigned(FOnToolResultDetails) and
+     TToolResultDisplayDetails.TryFromEvent(Chunk, ToolResultDetails) then
+    FOnToolResultDetails(ToolResultDetails);
+
+  Result := FInner.AggregateStreamEvents(Chunk, Buffer);
+end;
+
+function TFileCapturingEventEngineManager.GetStreamEventDispatcher:
+  IStreamEventDispatcher;
+begin
+  Result := FInner.GetStreamEventDispatcher;
+end;
+
 { TAnthropicServices }
 
 procedure TAnthropicServices.AsyncAwaitStreamChat(
@@ -213,26 +297,165 @@ var
 begin
   {--- AState belongs to the Pythia managed flow; async closures capture only State }
   var State := TStateBuffer.FromState(AState);
+
+  {--- Route managed-agent turns through the Managed Agents flow. The Messages
+       API streaming path below handles every other turn. }
+  if Length(State.Integration.Agents) > 0 then
+    begin
+      FAgentFlow.Run(State, AOnFinalize);
+      Exit;
+    end;
+
   State.Model := State.Models.Items[TEXT_GENERATION_INDEX].Model;
 
   var Payload := BuildAndCheckPayload(State, JsonPayloadAsString);
   State.JsonRequest := JsonPayloadAsString;
 
-  {--- Bridge the session callback’s copied State to the outer State used by finalizers.
-       OnProgress forwards each discovered file_id to State.OutputFileIds, deduplicated.
-  }
-  var CaptureFileId: TProc<string> :=
-    procedure (Id: string)
-    begin
-      State.AddOutputFileId(Id);
-    end;
+  {--- Display-block aggregator captured by all stream closures: it builds the
+       ordered TChatDisplayBlock list that Pythia persists on the turn for
+       later replay. }
+  var Blocks: IAnthropicDisplayBlockAggregator :=
+    TAnthropicDisplayBlockAggregator.Create;
 
-  var SessionCallbacks := BuildSessionCallbacks(State, CaptureFileId);
+  {--- Event callbacks are built inline so every streamed delta updates the
+       State captured by the finalizers, not a copied record owned by a helper. }
+  var TypedEventCallbacks := TEventEngineManagerFactory.CreateInstance(
+    function : TStreamEventCallBack
+    begin
+      Result := Default(TStreamEventCallBack);
+      Result.Sender := nil;
+
+      Result.OnAssistantTextDelta :=
+        procedure (Sender: TObject; Buffer: TEventData; Delta: string)
+        begin
+          State.AddStreamedText(Delta);
+          Blocks.AppendAssistantDelta(Delta);
+
+          FBrowser.DisplayStream(Delta, '', False);
+        end;
+
+      Result.OnReasoningDelta :=
+        procedure (Sender: TObject; Buffer: TEventData; Delta: string)
+        begin
+          State.AddStreamedThinking(Delta);
+          Blocks.AppendReasoningDelta(Delta);
+
+          FBrowser.DisplayStream('', Delta, False);
+        end;
+
+      Result.OnToolUseStop :=
+        procedure (Sender: TObject; Buffer: TEventData; Snapshot: TToolCallSnapshot)
+        var
+          Title: string;
+          Details: string;
+          Output: string;
+        begin
+          {--- The input JSON is fully assembled only at block_stop, so we
+               wait until here before emitting any UI for the tool call.
+               The title carries the resolved command (e.g. the bash line
+               or the text_editor path) rather than the raw block-type
+               identifier. }
+          Title := TToolDisplayTitle.FromInput(
+            Snapshot.BlockType,
+            Snapshot.ToolName,
+            Snapshot.InputJson);
+
+          Blocks.RegisterToolUseStop(Snapshot, Title);
+          FBrowser.DisplayToolStatus(Title, False);
+
+          if TToolUseDisplayDetails.TryFromSnapshot(Snapshot, Details) then
+            begin
+              Output := Details.Trim;
+              if not Output.IsEmpty then
+                begin
+                  Output := Output + sLineBreak;
+                  Blocks.AppendToolResultDelta(Output);
+                  FBrowser.DisplayToolOutputStream(Output, False);
+                end;
+            end;
+        end;
+
+      Result.OnToolResultDelta :=
+        procedure (Sender: TObject; Buffer: TEventData; Delta: string)
+        begin
+          if Delta.IsEmpty then
+            Exit;
+
+          {--- Stream the output into the entry opened by the matching
+               OnToolUseStop. The JS side merges consecutive tool deltas
+               under the same tool-call entry inside the collapsible
+               group. }
+          Blocks.AppendToolResultDelta(Delta);
+          FBrowser.DisplayToolOutputStream(Delta, False);
+        end;
+
+      Result.OnToolResultStop :=
+        procedure (Sender: TObject; Buffer: TEventData; Snapshot: TToolResultSnapshot)
+        var
+          ErrorTitle: string;
+        begin
+          Blocks.RegisterToolResultStop(Snapshot);
+
+          {--- Only surface the error transition when the server reports
+               it at block_stop. The live UI already streamed the text. }
+          if Snapshot.IsError then
+            begin
+              ErrorTitle := TToolDisplayTitle.FromBlockType(Snapshot.BlockType);
+              FBrowser.DisplayToolError(ErrorTitle, Snapshot.Text, False);
+            end;
+        end;
+
+      Result.OnDoCancel :=
+        function : Boolean
+        begin
+          {--- Poll browser escape state for cancellation. }
+          Result := FBrowser.Escape;
+        end;
+
+      Result.OnCancellation :=
+        procedure (Sender: TObject)
+        begin
+          {--- State is already updated by the typed delta callbacks. }
+          Blocks.CloseCurrent;
+        end;
+
+      Result.OnError :=
+        procedure (Sender: TObject; Buffer: TEventData)
+        begin
+          {--- Surface stream-level failures through the promise catch path. }
+          FBrowser.ReasoningHide;
+        end;
+    end);
+
+  var EventCallbacks: IEventEngineManager :=
+    TFileCapturingEventEngineManager.Create(TypedEventCallbacks,
+      procedure (Id: string)
+      begin
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            State.AddOutputFileId(Id);
+          end);
+      end,
+      procedure (Details: string)
+      begin
+        var Output := Details.Trim;
+        if Output.IsEmpty then
+          Exit;
+
+        Output := Output + sLineBreak;
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Blocks.AppendToolResultDelta(Output);
+            FBrowser.DisplayToolOutputStream(Output, False);
+          end);
+      end);
 
   {--- Only one completion path may finalize the turn. }
   var EmitGuard: IEmitGuard := TEmitGuard.Create(AOnFinalize);
 
-  FClient.Chat.AsyncAwaitCreateStream(Payload, SessionCallbacks)
+  FClient.Chat.AsyncAwaitCreateStream(Payload, EventCallbacks)
     .&Then(
       procedure (Value: TEventData)
       begin
@@ -244,12 +467,20 @@ begin
 
         if not TStateChecking.HasFileToDownload(State) then
           begin
-            EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State));
+            EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State, Blocks));
             Exit;
           end;
 
-        {--- IDs were collected live during streaming via the typed SDK model. }
-        var IDs := State.OutputFileIds;
+        {--- IDs were collected live from streamed tool-result blocks. Keep
+             only Anthropic Files API ids; tool-use ids start with srvtoolu_
+             and must never be sent to Files.Retrieve. }
+        var IDs := TAnthropicFileIds.Filter(State.OutputFileIds);
+        State.OutputFileIds := IDs;
+        if Length(IDs) = 0 then
+          begin
+            EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State, Blocks));
+            Exit;
+          end;
 
         FClientUtils.WhenAllRetrieve(IDs)
           .&Then(
@@ -257,24 +488,24 @@ begin
             begin
               try
                 State.FileResults := ResolveDownloadFilenames(Names, State);
-                EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State));
+                EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State, Blocks));
                 FireDownloads(IDs, State.FileResults);
               except
                 on E: Exception do
-                  HandleResolveFallback(E, Value, State, EmitGuard);
+                  HandleResolveFallback(E, Value, State, Blocks, EmitGuard);
               end;
             end)
           .&Catch(
             procedure (E: Exception)
             begin
-              HandleRetrieveFailure(E, Value, State, EmitGuard);
+              HandleRetrieveFailure(E, Value, State, Blocks, EmitGuard);
             end);
       end)
     .&Catch(
       procedure (E: Exception)
       begin
         CleanupInputFiles(State);
-        HandleChatError(E, State, EmitGuard);
+        HandleChatError(E, State, Blocks, EmitGuard);
       end);
 end;
 
@@ -342,6 +573,7 @@ procedure TAnthropicServices.HandleResolveFallback(
   const E: Exception;
   const Value: TEventData;
   var State: TStateBuffer;
+  const Blocks: IAnthropicDisplayBlockAggregator;
   const EmitGuard: IEmitGuard);
 begin
   {--- Filename resolution failed after file retrieval succeeded.
@@ -351,19 +583,20 @@ begin
     [E.Message, E.ClassName]));
 
   State.FileResults := LoadFileResult(State, LoadSkillsFiles);
-  EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State));
+  EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State, Blocks));
 end;
 
 procedure TAnthropicServices.HandleRetrieveFailure(
   const E: Exception;
   const Value: TEventData;
   var State: TStateBuffer;
+  const Blocks: IAnthropicDisplayBlockAggregator;
   const EmitGuard: IEmitGuard);
 begin
   FBrowser.DisplayError(Format('Files.Retrieve failed: %s', [E.Message]));
   try
     State.FileResults := LoadFileResult(State, LoadSkillsFiles);
-    EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State));
+    EmitGuard.TryEmit(TFinalizeData.FromSuccess(Value, State, Blocks));
   except
     on EFallback: Exception do
       begin
@@ -371,7 +604,7 @@ begin
           [EFallback.Message, EFallback.ClassName]));
         State.Error := True;
         State.ErrorMessage := EFallback.Message;
-        EmitGuard.TryEmit(TFinalizeData.FromException(EFallback, State));
+        EmitGuard.TryEmit(TFinalizeData.FromException(EFallback, State, Blocks));
       end;
   end;
 end;
@@ -379,6 +612,7 @@ end;
 procedure TAnthropicServices.HandleChatError(
   const E: Exception;
   var State: TStateBuffer;
+  const Blocks: IAnthropicDisplayBlockAggregator;
   const EmitGuard: IEmitGuard);
 begin
   {--- User cancellation is not treated as a failed turn: the partial streamed
@@ -388,32 +622,20 @@ begin
     begin
       State.Error := True;
       State.ErrorMessage := E.Message;
-      EmitGuard.TryEmit(TFinalizeData.FromException(E, State));
+      EmitGuard.TryEmit(TFinalizeData.FromException(E, State, Blocks));
 
       Exit;
     end;
 
-  var MessageContent := TMessageContentBuilder.Aborted(E.Message);
+  var MessageContent := S_ABORTED;
   State.AddStreamedText(MessageContent);
+
+  {--- Mirror the aborted note into the block stream so a later replay shows
+       the same termination indicator the live UI did. }
+  if Assigned(Blocks) then
+    Blocks.AppendAssistantText(MessageContent);
   FBrowser.Display(MessageContent, False);
-  EmitGuard.TryEmit(TFinalizeData.FromState(State));
-end;
-
-{ TEmitGuard }
-
-constructor TEmitGuard.Create(const AOnFinalize: TManagedItemFinalizeProc);
-begin
-  inherited Create;
-  FOnFinalize := AOnFinalize;
-  FEmitted := False;
-end;
-
-procedure TEmitGuard.TryEmit(const Data: TFinalizeData);
-begin
-  if FEmitted then
-    Exit;
-  FEmitted := True;
-  Data.Emit(FOnFinalize);
+  EmitGuard.TryEmit(TFinalizeData.FromState(State, Blocks));
 end;
 
 function TAnthropicServices.BuildPayload(
@@ -443,64 +665,10 @@ begin
     end;
 end;
 
-function TAnthropicServices.BuildSessionCallbacks(
-  State: TStateBuffer;
-  const AOnCodeExecutionFileId: TProc<string>): TSessionCallbacksStream;
-begin
-  Result :=
-    function : TPromiseChatStream
-    begin
-      Result.Sender := nil;
+{ TAnthropicBetaTokens }
 
-      Result.OnProgress :=
-        procedure (Sender: TObject; Event: TChatStream)
-        begin
-          {--- Capture code-execution file_ids before delta filtering: content_block_start
-               carries them but is not IsEventSuitable. The caller-provided sink forwards them
-               to the outer state, since the local State is a value-type copy.
-          }
-          TAnthropicStreamCapture.CaptureCodeExecutionFileIds(Event, AOnCodeExecutionFileId);
-
-          {--- Ignore events without usable live deltas. }
-          if not IsEventSuitable(Event) then
-            Exit;
-
-          var Delta := Event.ContentBlockDelta.Delta;
-
-          {--- Accumulate state and render deltas immediately. }
-          State.AddStreamedText(Delta.Text);
-          State.AddStreamedThinking(Delta.Thinking);
-          State.AddJsonResponse(Event.JSONResponse);
-
-          FBrowser.DisplayStream(Delta.Text, Delta.Thinking, False);
-         end;
-
-      Result.OnDoCancel :=
-        function : Boolean
-        begin
-          {--- Poll browser escape state for cancellation. }
-          Result := FBrowser.Escape;
-        end;
-
-      Result.OnCancellation :=
-        function (Sender: TObject): string
-        begin
-          Result := ABORTED_INDICATOR + #10 + State.TextBuffer;
-        end;
-
-      Result.OnError :=
-        function (Sender: TObject; Text: string): string
-        begin
-          {--- Surface stream-level errors reported through the callback layer.
-               Lower-level transport failures may bypass this callback. }
-          Result := Text;
-          FBrowser.ReasoningHide;
-          FBrowser.DisplayError(Text);
-        end;
-    end;
-end;
-
-function ExtractBetaTokens(const Headers: TNetHeaders): TArray<string>;
+class function TAnthropicBetaTokens.Extract(
+  const Headers: TNetHeaders): TArray<string>;
 begin
   {--- TBetaHeaderManager.Build returns at most one anthropic-beta header with
         comma-separated tokens. Flatten it to a string array so it can merge with
@@ -576,7 +744,7 @@ begin
        (e.g., tool_search + input_examples, all-deferred tool sets). Letting
        the exception propagate surfaces those at request build time.
   }
-  var AutoTokens := ExtractBetaTokens(
+  var AutoTokens := TAnthropicBetaTokens.Extract(
     TBetaHeaderManager.Build(MESSAGES_ENDPOINT, PayloadJson));
 
   var Merged := TArrayUtils.Merge(AutoTokens, Extras);
@@ -614,6 +782,49 @@ begin
   FClientUtils.ASyncSessionRename(ID, Value);
 end;
 
+procedure TAnthropicServices.AfterSessionReloaded(ChatId: string);
+var
+  CardName: string;
+begin
+  (*--- Fires after Pythia re-rendered a chat session (drawer click or
+       startup). Restores the managed-agent chip in the input bubble when
+       the reloaded chat carries any agent history.
+
+       NEVER clears the chip on empty history: the host policy keeps the
+       user's last selection persistent across sessions (see
+       InputBubbleTemplate.js); the JS-side single-agent invariant
+       collapses the bulk payload safely on its end.
+
+       Resolution chain:
+         - LastAgentCardId walks the chat's turns newest-first and returns
+           the first managed_agent.card_id stored by RecordTrace;
+         - TryGetCardLabel reads the human-readable name from the
+           agent-cards JSON file;
+         - setIntegrationAgents pushes {id,name} to the input bubble.
+       Any miss along the chain leaves the persisted chip untouched.
+  *)
+  if not Assigned(FContext) then
+    Exit;
+
+  var CardId := FContext.LastAgentCardId;
+  if CardId.Trim.IsEmpty then
+    Exit;
+
+  var CardsFile := FBrowser.GetAgentCardsFileName;
+  if not FileExists(CardsFile) then
+    Exit;
+
+  var CardsJson := TFileIOHelper.LoadFromFile(CardsFile);
+  if not TAgentCardReader.TryGetCardLabel(CardsJson, CardId, CardName) then
+    Exit;
+
+  FBrowser.ExecuteScript(
+    Format(CARD_CHIP_AGENT_SHOW, [
+      TEscapeHelper.EscapeJSString(CardId, False),
+      TEscapeHelper.EscapeJSString(CardName, False)
+    ]));
+end;
+
 constructor TAnthropicServices.Create(const ABrowser: IPythiaBrowser;
   const AContext: IContext);
 var
@@ -633,14 +844,30 @@ begin
 
   FClient := TAnthropicFactory.CreateInstance(Anthropic_key);
 
-  {---- Set response delay for 2 min and 30 seconds }
-  FClient.HttpClient.ResponseTimeout := 150000;
+  {---- Set response delay for 30 minutes. This shared SDK setting
+        applies to regular requests and managed-agent session streams. }
+  FClient.HttpClient.ResponseTimeout := ANTHROPIC_RESPONSE_TIMEOUT;
 
   {--- Set up the Anthropic tools for asynchronous file renaming and downloading. }
   FClientUtils := TAnthropicClientUtils.Create(FClient, FBrowser);
 
+  var CardsFile := FBrowser.GetAgentCardsFileName;
+  var RegistryFile := TPath.Combine(
+    TPath.GetDirectoryName(CardsFile),
+    'VCL_Anthropic-agent-cloud-registry.local.json');
+  FAgentRegistry := TAgentCloudRegistry.Create(RegistryFile);
+  TAnthropicAgentCloudCleanup.StartBackground(
+    FClient,
+    FAgentRegistry,
+    TAgentCloudCleanupPolicy.DemoDefaults);
+
   {--- Set up the automatic session renaming feature. }
   FBrowser.OnChatSessionAutoRename := ChatSessionRename;
+
+  {--- Restore the managed-agent chip on chat reload when the reopened
+       session has any agent history. No-op otherwise (preserves the
+       persisted UI selection). }
+  FBrowser.OnAfterSessionReloaded := AfterSessionReloaded;
 
   {--- Demo wiring: plug the Anthropic implementation of IFileUploadService
        into the browser. The service uses the browser as the JS callback
@@ -653,17 +880,11 @@ begin
        with the server-side ids when they are created.
   }
   SkillCustomRegister;
-end;
 
-function TAnthropicServices.IsEventSuitable(const Event: TChatStream): Boolean;
-begin
-  {--- Minimal structural validation for streamed events before reading nested
-       delta fields. This isolates protocol-shape checks in one place.
-  }
-  Result :=
-    Assigned(Event) and
-    Assigned(Event.ContentBlockDelta) and
-    Assigned(Event.ContentBlockDelta.Delta);
+  {--- Managed Agents flow: provisions agents / environments from agent cards
+       and drives session-based turns. Used when an agent card is selected. }
+  FProvisioner := TAgentProvisioner.Create(FClient, FAgentRegistry);
+  FAgentFlow := TAgentSessionFlow.Create(FBrowser, FContext, FClient, FProvisioner);
 end;
 
 function TAnthropicServices.LoadFileResult(
@@ -677,10 +898,17 @@ function TAnthropicServices.LoadFileResult(
 var
   DefaultExt: string;
 begin
-  {--- IDs collected live during streaming via the typed SDK model
-       (TAnthropicStreamCapture). Deduplication is handled at insertion.
-  }
-  var IDs := AState.OutputFileIds;
+  {--- IDs collected live from streamed tool-result blocks.
+       Deduplication is handled at insertion. }
+  var IDs := TAnthropicFileIds.Filter(AState.OutputFileIds);
+  AState.OutputFileIds := IDs;
+
+  if Length(IDs) = 0 then
+    begin
+      Result := [];
+      AState.FileResults := Result;
+      Exit;
+    end;
 
   if TStateChecking.HasSkills(AState) then
     begin
@@ -724,8 +952,8 @@ var
 begin
   {--- Expose only the MCP capabilities explicitly selected for this turn,
        keeping Anthropic's tool surface aligned with the visible Pythia state.
-       No beta token is returned: TBetaHeaderManager auto-adds
-       'mcp-client-2025-11-20' from the
+       No beta token is returned: TBetaHeaderManager auto-adds both
+       'mcp-client-2025-11-20' and 'advanced-tool-use-2025-11-20' from the
        mcp_servers / mcp_toolset signals injected here.
   }
   if not TStateChecking.HasMCP(AState) then
@@ -799,7 +1027,6 @@ procedure TAnthropicServices.SkillBuilder(
   const AState: TStateBuffer;
   const Params: TChatParams);
 var
-  Item: TSkillItem;
   ContainerId: string;
 begin
   {--- Bind Anthropic skills to the capabilities selected for this turn and
@@ -836,7 +1063,7 @@ begin
       var Skills := TParamsGetter.GetSkills(AState);
       var SkillList := Generation.SkillParts;
 
-      for Item in Skills do
+      for var Item in Skills do
         SkillList := SkillList.Add(
           Generation.Skill.CreateSkill(Item.SkillType)
             .SkillId(Item.ID)
@@ -941,7 +1168,7 @@ begin
   var Tools: TArray<TToolUnion> := [];
 
   if WebSearchOn then
-    Tools := Tools + [Generation.Tool.Beta.CreateWebSearchTool20260209.MaxUses(5)];
+    Tools := Tools + [Generation.Tool.CreateWebSearchTool20250305.MaxUses(5)];
 
   if CodeExecOn then
     Tools := Tools + [Generation.Tool.Beta.CreateCodeExecutionTool20260120];
@@ -968,116 +1195,5 @@ begin
   FBrowser.DisplaySuccess('Anthropic client is up to date.')
 end;
 
-{ TFinalizeData }
-
-class function TFinalizeData.FromState(
-  AState: TStateBuffer): TFinalizeData;
-begin
-  {--- Rebuilds the final payload from the local stream buffer.
-       This path is used when the request stops before a canonical success
-       object is available, such as cancellation.
-  }
-  Result.Model := AState.Model;
-  Result.Response := AState.TextBuffer;
-  Result.Reasoning := AState.ThinkingBuffer;
-  Result.JsonRequest := AState.JsonRequest;
-  Result.JsonResponse := AState.JsonResponse;
-  Result.FileResults := AState.FileResults;
-  Result.ImageResults := AState.ImageResults;
-  Result.VideoResults := AState.VideoResults;
-  Result.AudioResult := AState.AudioResults;
-  Result.Error := AState.Error;
-  Result.ErrorMessage := AState.ErrorMessage;
-end;
-
-class function TFinalizeData.FromSuccess(
-  const AValue: TEventData;
-  const AState: TStateBuffer): TFinalizeData;
-begin
-  {--- On success, text and reasoning come from the SDK terminal event, while
-       request/response JSON traces remain sourced from the local state buffer
-       accumulated during the stream.
-  }
-  Result.Model := AState.Model;
-  Result.Response := AValue.Text;
-  Result.Reasoning := AValue.Thought;
-  Result.JsonRequest := AState.JsonRequest;
-  Result.JsonResponse := AState.JsonResponse;
-  Result.FileResults := AState.FileResults;
-  Result.ImageResults := AState.ImageResults;
-  Result.VideoResults := AState.VideoResults;
-  Result.AudioResult := AState.AudioResults;
-  Result.Error := AState.Error;
-  Result.ErrorMessage := AState.ErrorMessage;
-end;
-
-class function TFinalizeData.FromException(
-  const E: Exception;
-  const AState: TStateBuffer): TFinalizeData;
-begin
-  {--- Persist the failure together with any text already streamed.
-       The live UI reports the exception through the error channel, but the chat
-       history is rebuilt later from Response only; without appending the message
-       here, reopening the session would hide why this turn stopped.
-  }
-  Result.Model := AState.Model;
-  if AState.TextBuffer.Trim.IsEmpty then
-    Result.Response := E.Message
-  else
-    Result.Response := AState.TextBuffer + '<br><br>' + E.Message;
-  Result.Reasoning := '';
-  Result.JsonRequest := AState.JsonRequest;
-  Result.JsonResponse := AState.JsonResponse;
-  Result.FileResults := AState.FileResults;
-  Result.ImageResults := AState.ImageResults;
-  Result.VideoResults := AState.VideoResults;
-  Result.AudioResult := AState.AudioResults;
-  Result.Error := AState.Error;
-  Result.ErrorMessage := AState.ErrorMessage;
-end;
-
-procedure TFinalizeData.Emit(const AOnFinalize: TManagedItemFinalizeProc);
-begin
-  {--- Converts the plain record into the managed result object expected by the
-       surrounding flow infrastructure, then dispatches it through the caller's
-       finalize callback if one was provided.
-  }
-  if not Assigned(AOnFinalize) then
-    Exit;
-
-  var ResponseFlow := TManagedItemLLMResult.New;
-  try
-    ResponseFlow
-      .UsedModel(Model)
-      .Response(Response)
-      .Reasoning(Reasoning)
-      .PromptJson(JsonRequest)
-      .ResponseJson(JsonResponse)
-      .FileResults(FileResults)
-      .ImageResults(ImageResults)
-      .VideoResults(VideoResults)
-      .AudioResults(AudioResult)
-      .Error(Error)
-      .ErrorMessage(ErrorMessage);
-
-    AOnFinalize(ResponseFlow);
-  finally
-    ResponseFlow.Free;
-  end;
-end;
-
-{ TMessageContentBuilder }
-
-class function TMessageContentBuilder.Aborted(const Content: string): string;
-var
-  Line: string;
-begin
-  var StringArray := Content.Split([#10]);
-  for var I := Low(StringArray) to High(StringArray) do
-    if I > 0 then
-      Line := Line + #10 + StringArray[I];
-
-  Result := Line + S_ABORTED;
-end;
-
 end.
+

@@ -47,6 +47,8 @@ type
     {--- GET }
     function Get(const URL: string; Response: TStringStream; const Headers: TNetHeaders): Integer; overload;
     function Get(const URL: string; const Response: TStream; const Headers: TNetHeaders): Integer; overload;
+    function Get(const URL: string; const Response: TStream;
+      const Headers: TNetHeaders; OnReceiveData: TReceiveDataCallback): Integer; overload;
 
     {--- DELETE }
     function Delete(const URL: string; Response: TStringStream; const Headers: TNetHeaders): Integer;

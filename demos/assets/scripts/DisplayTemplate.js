@@ -389,6 +389,1060 @@
     return true;
   }
 
+  const PYTHIA_DISPLAY_BLOCK_STYLE_ID = "pythia-display-block-style";
+  const PYTHIA_TOOL_KINDS = new Set(["toolStatus", "toolOutput", "toolError"]);
+
+  function isToolDisplayKind(kind) {
+    return PYTHIA_TOOL_KINDS.has(String(kind || ""));
+  }
+
+  function applyReasoningDisplayBlockClasses(container) {
+    if (!container) return container;
+
+    ensurePythiaDisplayBlockStyles();
+
+    container.classList.add("pythia-display-block", "pythia-display-block-reasoning");
+
+    const header = container.querySelector(":scope > .thought-header");
+    if (header) {
+      header.classList.add("pythia-display-block-header", "pythia-reasoning-block-header");
+    }
+
+    const content = container.querySelector(":scope > .thought-content");
+    if (content) {
+      content.classList.add("pythia-display-block-body", "pythia-reasoning-block-body");
+    }
+
+    return container;
+  }
+
+  function createReasoningDisplayBlock(title, onToggle) {
+    ensurePythiaDisplayBlockStyles();
+
+    const container = document.createElement("div");
+    container.className = "thought-container pythia-display-block pythia-display-block-reasoning";
+
+    const header = document.createElement("div");
+    header.className = "thought-header pythia-display-block-header pythia-reasoning-block-header";
+    header.textContent = title || "";
+    header.addEventListener("click", () => {
+      if (typeof onToggle === "function") {
+        onToggle(container);
+      } else {
+        container.classList.toggle("open");
+      }
+    });
+
+    const content = document.createElement("div");
+    content.className = "thought-content pythia-display-block-body pythia-reasoning-block-body";
+
+    container.appendChild(header);
+    container.appendChild(content);
+
+    return { container, header, content };
+  }
+
+  function ensurePythiaDisplayBlockStyles() {
+    if (document.getElementById(PYTHIA_DISPLAY_BLOCK_STYLE_ID)) return;
+
+    const style = document.createElement("style");
+    style.id = PYTHIA_DISPLAY_BLOCK_STYLE_ID;
+    style.textContent = `
+      .pythia-display-block-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 0;
+      }
+
+      .pythia-display-block {
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+      }
+
+      .pythia-display-block-header {
+        padding: 0;
+        margin: 0 0 4px 0;
+        font: 600 12px/1.35 Verdana, Geneva, DejaVu Sans, sans-serif;
+        color: var(--pythia-muted-text, #cbd5e1);
+        border: none;
+      }
+
+      html[data-theme="light"] .pythia-display-block-header {
+        color: #475569;
+      }
+
+      .pythia-display-block-body {
+        padding: 0;
+      }
+
+      .pythia-display-block-body:empty {
+        display: none;
+      }
+
+      .pythia-display-block-reasoning.thought-container {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        margin: 4px 0;
+        padding: 0 0 0 8px;
+        border-left: 2px solid rgba(148, 163, 184, 0.25);
+        overflow: visible;
+      }
+
+      html[data-theme="light"] .pythia-display-block-reasoning.thought-container {
+        border-left-color: rgba(100, 116, 139, 0.3);
+      }
+
+      .pythia-display-block-reasoning > .pythia-reasoning-block-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        font: 500 12px/1.35 Verdana, Geneva, DejaVu Sans, sans-serif;
+        color: var(--pythia-muted-text, #94a3b8);
+        margin: 0;
+        padding: 2px 0;
+        user-select: none;
+      }
+
+      .pythia-display-block-reasoning > .pythia-reasoning-block-header::before {
+        content: "▸";
+        display: inline-block;
+        font-size: 15px;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+
+      .pythia-display-block-reasoning.open > .pythia-reasoning-block-header::before {
+        transform: rotate(90deg);
+      }
+
+      .pythia-display-block-reasoning > .pythia-reasoning-block-body {
+        color: var(--pythia-muted-text, #94a3b8);
+        display: none;
+        font: 400 12px/1.4 Consolas, "Cascadia Code", Menlo, monospace;
+        margin-top: 4px;
+        padding: 0;
+        word-break: break-word;
+      }
+
+      .pythia-display-block-reasoning.open > .pythia-reasoning-block-body {
+        display: block;
+      }
+
+      .pythia-display-block-items {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .pythia-display-block-item {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .pythia-display-block-item-title {
+        font-weight: 600;
+      }
+
+      .pythia-display-block-item-url {
+        overflow-wrap: anywhere;
+        font-size: 12px;
+        opacity: 0.82;
+      }
+
+      .pythia-display-block-item-text {
+        opacity: 0.9;
+      }
+
+      .pythia-tool-group {
+        background: transparent;
+        border: none;
+        margin: 4px 0;
+        padding-left: 8px;
+        border-left: 2px solid rgba(148, 163, 184, 0.25);
+      }
+
+      html[data-theme="light"] .pythia-tool-group {
+        border-left-color: rgba(100, 116, 139, 0.3);
+      }
+
+      .pythia-tool-group > summary {
+        list-style: none;
+        cursor: pointer;
+        font: 500 12px/1.35 Verdana, Geneva, DejaVu Sans, sans-serif;
+        color: var(--pythia-muted-text, #94a3b8);
+        user-select: none;
+        padding: 2px 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .pythia-tool-group > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .pythia-tool-group > summary::before {
+        content: "▸";
+        display: inline-block;
+        font-size: 15px;
+        line-height: 1;
+        transition: transform 0.15s ease;
+      }
+
+      .pythia-tool-group[open] > summary::before {
+        transform: rotate(90deg);
+      }
+
+      .pythia-tool-group-body {
+        margin-top: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .pythia-tool-call {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .pythia-tool-call-title {
+        font: 500 12px/1.4 Consolas, "Cascadia Code", Menlo, monospace;
+        color: var(--pythia-muted-text, #cbd5e1);
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+
+      html[data-theme="light"] .pythia-tool-call-title {
+        color: #475569;
+      }
+
+      .pythia-tool-call-body {
+        font-family: Consolas, "Cascadia Code", Menlo, monospace !important;
+        font-size: 12px !important;
+        font-weight: 400;
+        line-height: 1.4 !important;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--pythia-muted-text, #94a3b8) !important;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+
+      .pythia-tool-call.is-error .pythia-tool-call-title,
+      .pythia-tool-call.is-error .pythia-tool-call-body {
+        color: #f87171;
+      }
+
+      .pythia-response-section {
+        display: block;
+      }
+
+      .pythia-response-section + .pythia-response-section {
+        margin-top: 0.85em;
+      }
+
+      .pythia-response-section > .pythia-tool-group {
+        margin-top: 6px;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function normalizeDisplayBlockKind(kind) {
+    const value = String(kind == null ? "" : kind).trim();
+    return value || "status";
+  }
+
+  function normalizeDisplayBlockPayload(payload) {
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      return payload;
+    }
+
+    const source = String(payload == null ? "" : payload);
+    if (!source.trim()) return {};
+
+    try {
+      const parsed = JSON.parse(source);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {}
+
+    return { text: source };
+  }
+
+  function normalizeDisplayBlocks(blocks) {
+    if (Array.isArray(blocks)) return blocks;
+
+    if (typeof blocks === "string") {
+      try {
+        const parsed = JSON.parse(blocks);
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && typeof parsed === "object") blocks = parsed;
+      } catch {}
+    }
+
+    const payload = normalizeDisplayBlockPayload(blocks);
+    if (Array.isArray(payload.blocks)) return payload.blocks;
+    if (Array.isArray(payload.DisplayBlocks)) return payload.DisplayBlocks;
+    if (Array.isArray(payload.items)) return payload.items;
+
+    return [];
+  }
+
+  function escapeDisplayBlockHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderDisplayBlockMarkdown(value) {
+    const source = String(value == null ? "" : value);
+    if (!source) return "";
+
+    if (window.marked && typeof window.marked.parse === "function") {
+      try {
+        return window.marked.parse(source);
+      } catch {}
+    }
+
+    return escapeDisplayBlockHtml(source).replace(/\r?\n/g, "<br>");
+  }
+
+  function enhanceDisplayBlockContent(root) {
+    if (!root) return;
+
+    if (window.renderMathInElement && window.katex) {
+      try {
+        window.renderMathInElement(root, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\[", right: "\\]", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "option"],
+          throwOnError: false,
+          strict: "ignore"
+        });
+      } catch {}
+    }
+
+    if (window.hljs && typeof window.hljs.highlightElement === "function") {
+      root.querySelectorAll("pre code").forEach((codeEl) => {
+        try {
+          window.hljs.highlightElement(codeEl);
+        } catch {}
+      });
+    }
+  }
+
+  function getDisplayBlockText(payload) {
+    if (!payload || typeof payload !== "object") return "";
+
+    return String(
+      payload.text == null
+        ? payload.Text == null
+          ? ""
+          : payload.Text
+        : payload.text
+    );
+  }
+
+  function getDisplayBlockTitle(payload) {
+    if (!payload || typeof payload !== "object") return "";
+
+    return String(
+      payload.title == null
+        ? payload.Title == null
+          ? ""
+          : payload.Title
+        : payload.title
+    );
+  }
+
+  function getDisplayBlockUrl(payload) {
+    if (!payload || typeof payload !== "object") return "";
+
+    return String(
+      payload.url == null
+        ? payload.Url == null
+          ? ""
+          : payload.Url
+        : payload.url
+    );
+  }
+
+  function getDisplayBlockItems(payload) {
+    if (!payload || typeof payload !== "object") return [];
+
+    if (Array.isArray(payload.items)) return payload.items;
+    if (Array.isArray(payload.Items)) return payload.Items;
+
+    return [];
+  }
+
+  function ensureDisplayBlockResponse(pairIdClean) {
+    let mount;
+    let block;
+
+    if (
+      window.ResponseRenderBatch &&
+      typeof window.ResponseRenderBatch.ensureActiveResponse === "function"
+    ) {
+      const ensured = window.ResponseRenderBatch.ensureActiveResponse(
+        pairIdClean,
+        "assistant-message display-block"
+      );
+      mount = ensured.mount;
+      block = ensured.block;
+    } else {
+      mount = document.getElementById("ResponseContent");
+      if (!mount) {
+        mount = document.createElement("div");
+        mount.id = "ResponseContent";
+        document.body.appendChild(mount);
+      }
+
+      block = null;
+
+      for (const node of mount.children) {
+        if (node.nodeType !== 1 || node.id !== "assistant-stream-block") continue;
+
+        if (!node.dataset || (node.dataset.pairId || "") === pairIdClean) {
+          block = node;
+          break;
+        }
+
+        node.removeAttribute("id");
+      }
+
+      if (!block) {
+        block = document.createElement("div");
+        block.className = "assistant-message display-block";
+        block.id = "assistant-stream-block";
+        mount.appendChild(block);
+      }
+    }
+
+    block.classList.add("assistant-message", "display-block");
+    block.dataset.pairId = pairIdClean;
+
+    let response = block.querySelector(":scope > .assistant-response");
+    if (!response) {
+      response = document.createElement("div");
+      response.className = "assistant-response";
+      block.appendChild(response);
+    }
+
+    let host = response.querySelector(":scope > .pythia-display-block-list");
+    if (!host) {
+      host = document.createElement("div");
+      host.className = "pythia-display-block-list";
+      response.appendChild(host);
+    }
+
+    return { mount, block, response, host };
+  }
+
+  function findLastResponseSection(response) {
+    if (!response) return null;
+    const sections = response.querySelectorAll(":scope > .pythia-response-section");
+    return sections.length ? sections[sections.length - 1] : null;
+  }
+
+  function createResponseSection(response) {
+    ensurePythiaDisplayBlockStyles();
+
+    const section = document.createElement("div");
+    section.className = "pythia-response-section";
+
+    const host = response.querySelector(":scope > .pythia-display-block-list");
+    if (host) {
+      response.insertBefore(section, host);
+    } else {
+      response.appendChild(section);
+    }
+
+    return section;
+  }
+
+  function ensureActiveStreamSection(response) {
+    const last = findLastResponseSection(response);
+    if (last && last.dataset.textClosed !== "true") {
+      return last;
+    }
+    return createResponseSection(response);
+  }
+
+  function ensureStreamSectionContent(section) {
+    let content = section.querySelector(":scope > .assistant-response-stream-content");
+    if (!content) {
+      content = document.createElement("div");
+      content.className = "assistant-response-stream-content";
+      section.prepend(content);
+    }
+    return content;
+  }
+
+  function ensureActiveToolSection(response) {
+    let last = findLastResponseSection(response);
+    if (!last || last.dataset.toolClosed === "true") {
+      last = createResponseSection(response);
+    }
+    return last;
+  }
+
+  function ensureSectionToolGroup(section) {
+    let group = section.querySelector(":scope > .pythia-tool-group");
+    if (!group) {
+      group = createToolGroupElement();
+      section.appendChild(group);
+    }
+    return group;
+  }
+
+  function markSectionToolBoundary(section) {
+    if (section) section.dataset.textClosed = "true";
+  }
+
+  window.DisplayTemplate = window.DisplayTemplate || {};
+  window.DisplayTemplate.__resolveStreamSection = function(response) {
+    const section = ensureActiveStreamSection(response);
+    return {
+      section: section,
+      content: ensureStreamSectionContent(section)
+    };
+  };
+
+  function renderDisplayBlockItems(target, items) {
+    if (!Array.isArray(items) || !items.length) return;
+
+    const list = document.createElement("ul");
+    list.className = "pythia-display-block-items";
+
+    items.forEach((item) => {
+      const payload = normalizeDisplayBlockPayload(item);
+      const title = getDisplayBlockTitle(payload);
+      const url = getDisplayBlockUrl(payload);
+      const text = getDisplayBlockText(payload);
+
+      const row = document.createElement("li");
+      row.className = "pythia-display-block-item";
+
+      if (title) {
+        const titleNode = document.createElement(url ? "a" : "div");
+        titleNode.className = "pythia-display-block-item-title";
+        titleNode.textContent = title;
+        if (url) {
+          titleNode.href = url;
+          titleNode.target = "_blank";
+          titleNode.rel = "noreferrer";
+        }
+        row.appendChild(titleNode);
+      }
+
+      if (url) {
+        const urlNode = document.createElement("a");
+        urlNode.className = "pythia-display-block-item-url";
+        urlNode.href = url;
+        urlNode.target = "_blank";
+        urlNode.rel = "noreferrer";
+        urlNode.textContent = url;
+        row.appendChild(urlNode);
+      }
+
+      if (text) {
+        const textNode = document.createElement("div");
+        textNode.className = "pythia-display-block-item-text";
+        textNode.innerHTML = renderDisplayBlockMarkdown(text);
+        enhanceDisplayBlockContent(textNode);
+        row.appendChild(textNode);
+      }
+
+      list.appendChild(row);
+    });
+
+    target.appendChild(list);
+  }
+
+  function getPythiaReasoningTitle() {
+    if (window.AppI18n && typeof window.AppI18n.t === "function") {
+      return window.AppI18n.t("display.reasoning.title", "Reasoning");
+    }
+    return "Reasoning";
+  }
+
+  function renderAssistantBlockElement(element) {
+    const text = String(element.__pythiaDisplayText || "");
+    element.replaceChildren();
+
+    if (!text) return;
+
+    const response = document.createElement("div");
+    response.className = "assistant-response";
+    response.innerHTML = renderDisplayBlockMarkdown(text);
+    enhanceDisplayBlockContent(response);
+    element.appendChild(response);
+  }
+
+  function renderReasoningBlockElement(element) {
+    const text = String(element.__pythiaDisplayText || "");
+    element.replaceChildren();
+
+    if (!text) return;
+
+    const reasoningBlock = createReasoningDisplayBlock(getPythiaReasoningTitle());
+    const container = reasoningBlock.container;
+    const content = reasoningBlock.content;
+    content.innerHTML = renderDisplayBlockMarkdown(text);
+    enhanceDisplayBlockContent(content);
+
+    element.appendChild(container);
+  }
+
+  function renderDisplayBlockElement(element) {
+    const kind = element.dataset ? element.dataset.displayKind || "" : "";
+
+    if (kind === "assistant") {
+      renderAssistantBlockElement(element);
+      return;
+    }
+
+    if (kind === "reasoning") {
+      renderReasoningBlockElement(element);
+      return;
+    }
+
+    const payload = element.__pythiaDisplayPayload || {};
+    const title = getDisplayBlockTitle(payload);
+    const url = getDisplayBlockUrl(payload);
+    const text = String(element.__pythiaDisplayText || "");
+    const items = getDisplayBlockItems(payload);
+
+    element.replaceChildren();
+
+    if (title) {
+      const header = document.createElement("div");
+      header.className = "pythia-display-block-header";
+      header.textContent = title;
+      element.appendChild(header);
+    }
+
+    const body = document.createElement("div");
+    body.className = "pythia-display-block-body";
+
+    if (url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = url;
+      body.appendChild(link);
+    }
+
+    if (text) {
+      const textNode = document.createElement("div");
+      textNode.innerHTML = renderDisplayBlockMarkdown(text);
+      enhanceDisplayBlockContent(textNode);
+      body.appendChild(textNode);
+    }
+
+    renderDisplayBlockItems(body, items);
+    element.appendChild(body);
+  }
+
+  function createDisplayBlockElement(kind, payload) {
+    const kindClean = normalizeDisplayBlockKind(kind);
+    const data = normalizeDisplayBlockPayload(payload);
+    const element = document.createElement("div");
+
+    element.className = "pythia-display-block pythia-display-block-" +
+      kindClean.replace(/[^a-z0-9_-]/gi, "-").toLowerCase();
+    element.dataset.displayKind = kindClean;
+    element.__pythiaDisplayPayload = data;
+    element.__pythiaDisplayText = getDisplayBlockText(data);
+
+    renderDisplayBlockElement(element);
+    return element;
+  }
+
+  function getToolGroupLabel() {
+    if (window.AppI18n && typeof window.AppI18n.t === "function") {
+      return window.AppI18n.t("display.toolGroup.label", "Tools used");
+    }
+    return "Tools used";
+  }
+
+  function getToolGroupEntryCount(group) {
+    if (!group || typeof group.querySelector !== "function") return 0;
+
+    const body = group.querySelector(":scope > .pythia-tool-group-body");
+    if (!body || typeof body.querySelectorAll !== "function") return 0;
+
+    return body.querySelectorAll(":scope > .pythia-tool-call").length;
+  }
+
+  function getToolGroupSummaryLabel(group) {
+    const label = getToolGroupLabel();
+    const count = getToolGroupEntryCount(group);
+
+    return count > 0 ? label + " (" + count + ")" : label;
+  }
+
+  function updateToolGroupSummary(group) {
+    if (!group || typeof group.querySelector !== "function") return;
+
+    const summary = group.querySelector(":scope > .pythia-tool-group-summary");
+    if (!summary) return;
+
+    summary.textContent = getToolGroupSummaryLabel(group);
+  }
+
+  function createToolGroupElement() {
+    const details = document.createElement("details");
+    details.className = "pythia-tool-group";
+
+    const summary = document.createElement("summary");
+    summary.className = "pythia-tool-group-summary";
+    summary.textContent = getToolGroupSummaryLabel(details);
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "pythia-tool-group-body";
+    details.appendChild(body);
+
+    return details;
+  }
+
+  function getToolGroupBody(group) {
+    let body = group.querySelector(":scope > .pythia-tool-group-body");
+    if (!body) {
+      body = document.createElement("div");
+      body.className = "pythia-tool-group-body";
+      group.appendChild(body);
+    }
+    return body;
+  }
+
+  function getOrCreateToolGroup(host) {
+    const last = host.lastElementChild;
+
+    if (
+      last &&
+      last.classList &&
+      last.classList.contains("pythia-tool-group") &&
+      last.dataset &&
+      last.dataset.streamClosed !== "true"
+    ) {
+      return last;
+    }
+
+    if (
+      last &&
+      last.dataset &&
+      last.dataset.displayKind === "assistant" &&
+      last.dataset.streamClosed !== "true"
+    ) {
+      let group = last.querySelector(":scope > .pythia-tool-group");
+      if (group && group.dataset && group.dataset.streamClosed !== "true") {
+        return group;
+      }
+
+      group = createToolGroupElement();
+      last.appendChild(group);
+
+      last.dataset.streamClosed = "true";
+      return group;
+    }
+
+    const group = createToolGroupElement();
+    host.appendChild(group);
+    return group;
+  }
+
+  function closeOpenToolGroups(host) {
+    host.querySelectorAll(".pythia-tool-group").forEach((group) => {
+      group.dataset.streamClosed = "true";
+    });
+  }
+
+  function renderToolCallEntry(entry) {
+    const payload = entry.__pythiaDisplayPayload || {};
+    const title = getDisplayBlockTitle(payload);
+    const text = String(entry.__pythiaDisplayText || "");
+
+    entry.replaceChildren();
+
+    if (title) {
+      const titleNode = document.createElement("div");
+      titleNode.className = "pythia-tool-call-title";
+      titleNode.textContent = title;
+      entry.appendChild(titleNode);
+    }
+
+    if (text) {
+      const bodyNode = document.createElement("pre");
+      bodyNode.className = "pythia-tool-call-body";
+      bodyNode.textContent = text;
+      entry.appendChild(bodyNode);
+    }
+  }
+
+  function createToolCallEntry(kind, payload) {
+    const data = normalizeDisplayBlockPayload(payload);
+    const entry = document.createElement("div");
+    entry.className = "pythia-tool-call pythia-tool-call-" +
+      String(kind).replace(/[^a-z0-9_-]/gi, "-");
+    entry.dataset.displayKind = String(kind);
+    entry.__pythiaDisplayPayload = data;
+    entry.__pythiaDisplayText = getDisplayBlockText(data);
+
+    if (String(kind) === "toolError") {
+      entry.classList.add("is-error");
+    }
+
+    renderToolCallEntry(entry);
+    return entry;
+  }
+
+  function getLastToolCallEntry(group) {
+    const body = getToolGroupBody(group);
+    const entries = body.querySelectorAll(":scope > .pythia-tool-call");
+    return entries.length ? entries[entries.length - 1] : null;
+  }
+
+  function appendToolEntry(host, kind, payload) {
+    const group = getOrCreateToolGroup(host);
+    const entry = createToolCallEntry(kind, payload);
+    getToolGroupBody(group).appendChild(entry);
+    updateToolGroupSummary(group);
+    return entry;
+  }
+
+  function getLastChildOpenBlockOfKind(host, kind) {
+    const last = host.lastElementChild;
+    if (!last) return null;
+    if (!last.dataset) return null;
+    if (last.dataset.displayKind !== kind) return null;
+    if (last.dataset.streamClosed === "true") return null;
+    return last;
+  }
+
+  function appendStandaloneBlock(host, kind, payload) {
+
+    if (kind === "assistant" || kind === "reasoning") {
+      closeOpenToolGroups(host);
+    }
+
+    const block = createDisplayBlockElement(kind, payload);
+    host.appendChild(block);
+    return block;
+  }
+
+  function appendToolEntryToSection(section, kind, payload) {
+    const group = ensureSectionToolGroup(section);
+    const entry = createToolCallEntry(kind, payload);
+    getToolGroupBody(group).appendChild(entry);
+    updateToolGroupSummary(group);
+    markSectionToolBoundary(section);
+    return entry;
+  }
+
+  function displayBlock(pairId, kind, payload) {
+    ensurePythiaDisplayBlockStyles();
+
+    const pairIdClean = cleanDisplayTemplatePairId(pairId);
+    if (!pairIdClean) return false;
+
+    const kindClean = normalizeDisplayBlockKind(kind);
+    const data = normalizeDisplayBlockPayload(payload);
+
+    if (kindClean === "assistant") {
+      return display(false, pairIdClean, "", getDisplayBlockText(data));
+    }
+
+    if (kindClean === "reasoning") {
+      return display(false, pairIdClean, getDisplayBlockText(data), "");
+    }
+
+    if (isToolDisplayKind(kindClean)) {
+      runAfterDisplayStreams(() => {
+        const target = ensureDisplayBlockResponse(pairIdClean);
+        const section = ensureActiveToolSection(target.response);
+        appendToolEntryToSection(section, kindClean, payload);
+      }, pairIdClean);
+      return true;
+    }
+
+    const target = ensureDisplayBlockResponse(pairIdClean);
+    appendStandaloneBlock(target.host, kindClean, payload);
+    return true;
+  }
+
+  function displayBlockStream(pairId, kind, delta, payload) {
+    ensurePythiaDisplayBlockStyles();
+
+    const pairIdClean = cleanDisplayTemplatePairId(pairId);
+    if (!pairIdClean) return false;
+
+    const kindClean = normalizeDisplayBlockKind(kind);
+    const deltaText = String(delta == null ? "" : delta);
+
+    if (kindClean === "assistant") {
+      return displayStream(true, pairIdClean, "", deltaText);
+    }
+
+    if (kindClean === "reasoning") {
+      return displayStream(true, pairIdClean, deltaText, "");
+    }
+
+    if (isToolDisplayKind(kindClean)) {
+      runAfterDisplayStreams(() => {
+        const target = ensureDisplayBlockResponse(pairIdClean);
+
+        const section = ensureActiveToolSection(target.response);
+        const group = ensureSectionToolGroup(section);
+
+        if (kindClean === "toolStatus") {
+          const entry = createToolCallEntry(kindClean, payload);
+          if (deltaText) {
+            entry.__pythiaDisplayText =
+              String(entry.__pythiaDisplayText || "") + deltaText;
+            renderToolCallEntry(entry);
+          }
+          getToolGroupBody(group).appendChild(entry);
+          updateToolGroupSummary(group);
+          markSectionToolBoundary(section);
+          return;
+        }
+
+        let entry = getLastToolCallEntry(group);
+        if (!entry) {
+
+          entry = createToolCallEntry("toolStatus", {});
+          getToolGroupBody(group).appendChild(entry);
+          updateToolGroupSummary(group);
+          markSectionToolBoundary(section);
+        }
+
+        if (kindClean === "toolError") {
+          entry.classList.add("is-error");
+          entry.dataset.displayKind = "toolError";
+        }
+
+        if (payload != null && String(payload).trim()) {
+          const nextPayload = normalizeDisplayBlockPayload(payload);
+          entry.__pythiaDisplayPayload = Object.assign(
+            {},
+            entry.__pythiaDisplayPayload || {},
+            nextPayload
+          );
+        }
+
+        entry.__pythiaDisplayText =
+          String(entry.__pythiaDisplayText || "") + deltaText;
+        renderToolCallEntry(entry);
+      }, pairIdClean);
+      return true;
+    }
+
+    const target = ensureDisplayBlockResponse(pairIdClean);
+
+    let block = getLastChildOpenBlockOfKind(target.host, kindClean);
+
+    if (!block) {
+      block = appendStandaloneBlock(target.host, kindClean, payload);
+    } else if (payload != null && String(payload).trim()) {
+      const nextPayload = normalizeDisplayBlockPayload(payload);
+      block.__pythiaDisplayPayload = Object.assign(
+        {},
+        block.__pythiaDisplayPayload || {},
+        nextPayload
+      );
+    }
+
+    block.__pythiaDisplayText =
+      String(block.__pythiaDisplayText || "") + deltaText;
+
+    renderDisplayBlockElement(block);
+    return true;
+  }
+
+  function displayBlocks(pairId, blocksJson) {
+    ensurePythiaDisplayBlockStyles();
+
+    const pairIdClean = cleanDisplayTemplatePairId(pairId);
+    if (!pairIdClean) return false;
+
+    const blocks = normalizeDisplayBlocks(blocksJson);
+    renderDisplay(true, pairIdClean, "", "", {
+      fromStreamQueue: true,
+      resetResponse: true
+    });
+
+    blocks.forEach((item) => {
+      const payload = normalizeDisplayBlockPayload(item);
+      const kind = normalizeDisplayBlockKind(
+        payload.kind == null
+          ? payload.Kind == null
+            ? "status"
+            : payload.Kind
+          : payload.kind
+      );
+
+      if (kind === "reasoning") {
+        const text = getDisplayBlockText(payload);
+        if (text) {
+          renderDisplay(true, pairIdClean, text, "", {
+            fromStreamQueue: true
+          });
+        }
+        return;
+      }
+
+      if (kind === "assistant") {
+        const text = getDisplayBlockText(payload);
+        if (text) {
+          renderDisplay(true, pairIdClean, "", text, {
+            fromStreamQueue: true
+          });
+        }
+        return;
+      }
+
+      const target = ensureDisplayBlockResponse(pairIdClean);
+
+      if (isToolDisplayKind(kind)) {
+        const section = ensureActiveToolSection(target.response);
+        appendToolEntryToSection(section, kind, payload);
+        return;
+      }
+
+      appendStandaloneBlock(target.host, kind, payload);
+    });
+
+    const target = ensureDisplayBlockResponse(pairIdClean);
+    target.block.dataset.streaming = "false";
+
+    return true;
+  }
+
   function display(streamed, pairId, reasoning, md) {
     cancelDisplayStreamQueue(pairId);
     return renderDisplay(false, pairId, reasoning, md);
@@ -411,6 +1465,7 @@
   if (!pairIdClean) return;
 
   const fromStreamQueue = !!(options && options.fromStreamQueue);
+  const resetResponse = !!(options && options.resetResponse);
 
   const reasoningClean = fromStreamQueue
     ? String(reasoning || "")
@@ -468,6 +1523,10 @@
 
     rootNode.querySelectorAll(".thought-container > .thought-header").forEach((header) => {
       header.textContent = getDisplayReasoningTitle();
+    });
+
+    rootNode.querySelectorAll(".pythia-tool-group > .pythia-tool-group-summary").forEach((summary) => {
+      updateToolGroupSummary(summary.parentElement);
     });
 
     rootNode
@@ -1638,7 +2697,7 @@
   };
 
   const wasStreaming = block.dataset.streaming === "true";
-  const isStartingStream = isStreamCall && (!wasStreaming || isNewBlock);
+  const isStartingStream = isStreamCall && (resetResponse || !wasStreaming || isNewBlock);
 
   if (isStartingStream) {
     block.__mdSource = "";
@@ -1650,24 +2709,15 @@
   const ensureThought = (targetBlock) => {
     let thought = targetBlock.querySelector(".thought-container");
 
-    if (thought) return thought;
+    if (thought) return applyReasoningDisplayBlockClasses(thought);
 
-    thought = document.createElement("div");
-    thought.className = "thought-container";
-
-    const header = document.createElement("div");
-    header.className = "thought-header";
-    header.textContent = getDisplayReasoningTitle();
-
-    const content = document.createElement("div");
-    content.className = "thought-content";
-
-    header.onclick = () => {
-      toggleThought(thought);
-    };
-
-    thought.appendChild(header);
-    thought.appendChild(content);
+    const reasoningBlock = createReasoningDisplayBlock(
+      getDisplayReasoningTitle(),
+      (node) => {
+        toggleThought(node);
+      }
+    );
+    thought = reasoningBlock.container;
 
     targetBlock.prepend(thought);
 
@@ -1700,16 +2750,34 @@
     return response;
   };
 
-  const ensureStreamResponseContent = (targetResponse) => {
-    let content = targetResponse.querySelector(":scope > .assistant-response-stream-content");
+  const hasPythiaStructuredResponseContent = (targetResponse) => {
+    if (!targetResponse || typeof targetResponse.querySelector !== "function") {
+      return false;
+    }
 
+    return !!targetResponse.querySelector(
+      ":scope > .pythia-response-section, :scope > .pythia-display-block-list"
+    );
+  };
+
+  const resolveStreamSection =
+    window.DisplayTemplate && typeof window.DisplayTemplate.__resolveStreamSection === "function"
+      ? window.DisplayTemplate.__resolveStreamSection
+      : null;
+
+  const ensureStreamResponseContent = (targetResponse) => {
+
+    if (resolveStreamSection) {
+      return resolveStreamSection(targetResponse);
+    }
+
+    let content = targetResponse.querySelector(":scope > .assistant-response-stream-content");
     if (!content) {
       content = document.createElement("div");
       content.className = "assistant-response-stream-content";
       targetResponse.prepend(content);
     }
-
-    return content;
+    return { section: null, content: content };
   };
 
   if (isStreamCall) {
@@ -1723,14 +2791,22 @@
   let response = ensureResponse(block);
 
   if (isStreamCall) {
-    if (isStartingStream) {
+    if (
+      resetResponse ||
+      (isStartingStream && !hasPythiaStructuredResponseContent(response))
+    ) {
       response.replaceChildren();
     }
 
-    const streamContent = ensureStreamResponseContent(response);
+    const resolved = ensureStreamResponseContent(response);
+    const streamContent = resolved.content;
+    const sectionEl = resolved.section;
+
+    const accumulatorOwner = sectionEl || block;
+    accumulatorOwner.__mdSource = (accumulatorOwner.__mdSource || "") + mdClean;
+    replaceRenderedHtml(streamContent, buildHtml(accumulatorOwner.__mdSource));
 
     block.__mdSource = (block.__mdSource || "") + mdClean;
-    replaceRenderedHtml(streamContent, buildHtml(block.__mdSource));
   } else {
     block.__mdSource = mdClean;
 
@@ -2830,9 +3906,15 @@
   window.DisplayTemplate = window.DisplayTemplate || {};
   window.DisplayTemplate.display = display;
   window.DisplayTemplate.displayStream = displayStream;
+  window.DisplayTemplate.displayBlock = displayBlock;
+  window.DisplayTemplate.displayBlockStream = displayBlockStream;
+  window.DisplayTemplate.displayBlocks = displayBlocks;
   window.DisplayTemplate.runAfterStreams = runAfterDisplayStreams;
   window.DisplayTemplate.cancelStreams = cancelAllDisplayStreamQueues;
   window.display = display;
   window.displayStream = displayStream;
+  window.displayBlock = displayBlock;
+  window.displayBlockStream = displayBlockStream;
+  window.displayBlocks = displayBlocks;
 
 })();

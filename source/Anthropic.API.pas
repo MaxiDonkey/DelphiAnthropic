@@ -427,6 +427,18 @@ type
       const Path: string;
       const Response: TStream): Integer;
 
+    function GetStream(
+      const Path: string;
+      const Response: TStream;
+      Event: TReceiveDataCallback = nil): Integer; overload;
+
+    function GetStream(
+      const Path: string;
+      const Response: TStream;
+      const BetaValues: TArray<string>;
+      const Accept: string;
+      Event: TReceiveDataCallback = nil): Integer; overload;
+
     function GetMedia<TResult: class, constructor>(const Endpoint: string;
       const JSONFieldName: string):TResult;
 
@@ -810,13 +822,30 @@ function TAnthropicAPI.GetFile(
   const Path: string;
   const Response: TStream): Integer;
 begin
+  Result := GetStream(Path, Response, [], 'application/octet-stream');
+end;
+
+function TAnthropicAPI.GetStream(const Path: string; const Response: TStream;
+  Event: TReceiveDataCallback): Integer;
+begin
+  Result := GetStream(Path, Response, [], 'text/event-stream', Event);
+end;
+
+function TAnthropicAPI.GetStream(
+  const Path: string;
+  const Response: TStream;
+  const BetaValues: TArray<string>;
+  const Accept: string;
+  Event: TReceiveDataCallback): Integer;
+begin
   Monitoring.Inc;
   try
     var Http := NewHttpClient;
     Result := Http.Get(
       GetRequestURL(Path),
       Response,
-      GetHeaders(Path, nil, [], '', 'application/octet-stream')
+      GetHeaders(Path, nil, BetaValues, '', Accept),
+      Event
     );
 
     case Result of

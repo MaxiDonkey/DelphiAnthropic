@@ -36,7 +36,8 @@ type
     fMediaTextToSpeech,
     fCustom,
     fSystemPrompt,
-    fModel
+    fModel,
+    fProject
   );
 
   ICapabilities = interface
@@ -77,6 +78,7 @@ type
 
     function SystemPrompt(const Value: Boolean): ICapabilities;
     function Model(const Value: Boolean): ICapabilities;
+    function Project(const Value: Boolean): ICapabilities;
 
     procedure Reset;
     function ToJSON: string;
@@ -131,6 +133,7 @@ type
 
     function SystemPrompt(const Value: Boolean): ICapabilities;
     function Model(const Value: Boolean): ICapabilities;
+    function Project(const Value: Boolean): ICapabilities;
 
     function ToJSON: string;
     function Value(const Kind: TFunctionsType): string;
@@ -190,7 +193,8 @@ const
       '"custom":%s,' +
 
       '"systemPrompt":%s,' +
-      '"model":%s' +
+      '"model":%s,' +
+      '"project":%s' +
     '}';
 
 { TCapabilities }
@@ -322,6 +326,7 @@ begin
 
   FValues[fSystemPrompt] := True;
   FValues[fModel] := True;
+  FValues[fProject] := True;
 end;
 
 function TCapabilities.Integration(const Value: Boolean): ICapabilities;
@@ -401,6 +406,7 @@ begin
   Custom(Reader.AsBoolean('custom'));
   SystemPrompt(Reader.AsBoolean('systemPrompt'));
   Model(Reader.AsBoolean('model'));
+  Project(Reader.AsBoolean('project', True));
 end;
 
 function TCapabilities.Media(const Value: Boolean): ICapabilities;
@@ -442,6 +448,12 @@ end;
 function TCapabilities.Model(const Value: Boolean): ICapabilities;
 begin
   FValues[fModel] := Value;
+  Result := Self;
+end;
+
+function TCapabilities.Project(const Value: Boolean): ICapabilities;
+begin
+  FValues[fProject] := Value;
   Result := Self;
 end;
 
@@ -534,7 +546,8 @@ begin
         Value(fCustom),
 
         Value(fSystemPrompt),
-        Value(fModel)
+        Value(fModel),
+        Value(fProject)
       ]
     );
 end;

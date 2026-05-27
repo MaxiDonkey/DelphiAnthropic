@@ -16,7 +16,8 @@
       "media": "Media",
       "custom": "Aangepast",
       "settings": "Instellingen",
-      "model": "Model"
+      "model": "Model",
+      "project": "Project"
     },
     "thinking": {
       "low": "Laag",
@@ -52,6 +53,12 @@
       "createAudio": "Audio maken",
       "speechToText": "Spraak naar tekst",
       "textToSpeech": "Tekst naar spraak"
+    },
+    "project": {
+      "add": "Project toevoegen",
+      "none": "geen",
+      "noneUsed": "Geen project gebruikt",
+      "delete": "Verwijderen"
     },
     "chips": {
       "endpoint": "Eindpunt: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Annuleren"
   },
+  "webDecisionDlg": {
+    "title": "Bevestiging",
+    "message": "Bevestig dit.",
+    "ok": "OK",
+    "cancel": "Annuleren",
+    "close": "Sluiten"
+  },
   "displayFile": {
     "fallbackName": "Bestand {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Redenering"
+    },
+    "toolGroup": {
+      "label": "Gebruikte tools"
     },
     "code": {
       "copy": "Kopiëren",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-sleutel bestaat",
     "api_key_modified": "%s: API-sleutel is gewijzigd.",
     "api_key_inserted": "%s: API-sleutel is ingevoegd",
+    "web_decision_dlg_title": "Bevestiging",
+    "web_decision_dlg_message": "Bevestig dit.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Annuleren",
+    "web_decision_dlg_close": "Sluiten",
+    "demo_anthropic_tool_confirmation_title": "Bevestiging",
+    "demo_anthropic_tool_allow": "Toestaan",
+    "demo_anthropic_tool_deny": "Weigeren",
+    "demo_anthropic_tool_allow_call": "Deze tool-aanroep toestaan?",
+    "demo_anthropic_interrupted_by_user": "Onderbroken door de gebruiker.",
     "command_plugin_not_be_null": "Plug-in mag niet null zijn",
     "command_unknown": "Onbekend commando: /%s",
     "command_action_unknown": "Onbekende actie: /%s %s",

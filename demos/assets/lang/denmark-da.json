@@ -16,7 +16,8 @@
       "media": "Medie",
       "custom": "Brugerdefineret",
       "settings": "Indstillinger",
-      "model": "Model"
+      "model": "Model",
+      "project": "Projekt"
     },
     "thinking": {
       "low": "Lav",
@@ -52,6 +53,12 @@
       "createAudio": "Opret lyd",
       "speechToText": "Tale til tekst",
       "textToSpeech": "Tekst til tale"
+    },
+    "project": {
+      "add": "Tilføj projekt",
+      "none": "ingen",
+      "noneUsed": "Intet projekt brugt",
+      "delete": "Slet"
     },
     "chips": {
       "endpoint": "Slutpunkt: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Annullér"
   },
+  "webDecisionDlg": {
+    "title": "Bekræftelse",
+    "message": "Bekræft venligst.",
+    "ok": "OK",
+    "cancel": "Annullér",
+    "close": "Luk"
+  },
   "displayFile": {
     "fallbackName": "Fil {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Ræsonnement"
+    },
+    "toolGroup": {
+      "label": "Anvendte værktøjer"
     },
     "code": {
       "copy": "Kopiér",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-nøgle findes",
     "api_key_modified": "%s: API-nøgle er blevet ændret.",
     "api_key_inserted": "%s: API-nøgle er blevet indsat",
+    "web_decision_dlg_title": "Bekræftelse",
+    "web_decision_dlg_message": "Bekræft venligst.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Annullér",
+    "web_decision_dlg_close": "Luk",
+    "demo_anthropic_tool_confirmation_title": "Bekræftelse",
+    "demo_anthropic_tool_allow": "Tillad",
+    "demo_anthropic_tool_deny": "Afvis",
+    "demo_anthropic_tool_allow_call": "Tillad dette værktøjskald?",
+    "demo_anthropic_interrupted_by_user": "Afbrudt af brugeren.",
     "command_plugin_not_be_null": "Plugin må ikke være nul",
     "command_unknown": "Ukendt kommando: /%s",
     "command_action_unknown": "Ukendt handling: /%s %s",

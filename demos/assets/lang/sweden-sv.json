@@ -16,7 +16,8 @@
       "media": "Media",
       "custom": "Anpassad",
       "settings": "Inställningar",
-      "model": "Modell"
+      "model": "Modell",
+      "project": "Projekt"
     },
     "thinking": {
       "low": "Låg",
@@ -52,6 +53,12 @@
       "createAudio": "Skapa ljud",
       "speechToText": "Tal till text",
       "textToSpeech": "Text till tal"
+    },
+    "project": {
+      "add": "Lägg till projekt",
+      "none": "inget",
+      "noneUsed": "Inget projekt används",
+      "delete": "Ta bort"
     },
     "chips": {
       "endpoint": "Slutpunkt: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Avbryt"
   },
+  "webDecisionDlg": {
+    "title": "Bekräftelse",
+    "message": "Bekräfta.",
+    "ok": "OK",
+    "cancel": "Avbryt",
+    "close": "Stäng"
+  },
   "displayFile": {
     "fallbackName": "Fil {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Resonemang"
+    },
+    "toolGroup": {
+      "label": "Använda verktyg"
     },
     "code": {
       "copy": "Kopiera",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-nyckeln finns",
     "api_key_modified": "%s: API-nyckeln har ändrats.",
     "api_key_inserted": "%s: API-nyckeln har infogats",
+    "web_decision_dlg_title": "Bekräftelse",
+    "web_decision_dlg_message": "Bekräfta.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Avbryt",
+    "web_decision_dlg_close": "Stäng",
+    "demo_anthropic_tool_confirmation_title": "Bekräftelse",
+    "demo_anthropic_tool_allow": "Tillåt",
+    "demo_anthropic_tool_deny": "Neka",
+    "demo_anthropic_tool_allow_call": "Tillåt detta verktygsanrop?",
+    "demo_anthropic_interrupted_by_user": "Avbrutet av användaren.",
     "command_plugin_not_be_null": "Plugin får inte vara null",
     "command_unknown": "Okänt kommando: /%s",
     "command_action_unknown": "Okänd åtgärd: /%s %s",

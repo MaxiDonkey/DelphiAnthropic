@@ -21,6 +21,24 @@ type
 
 implementation
 
+{$REGION 'Dev note'}
+(*
+
+  Persisted JSON response normalization for the pythia-anthropic VCL demo.
+
+  Streaming responses may be persisted as line-separated JSON fragments, and
+  older traces can contain events split across line breaks. This helper
+  rebuilds valid JSON objects incrementally, then emits one compact JSON event
+  per line so reload/replay code can parse the history consistently.
+
+  The parser is intentionally forgiving: empty leading lines are ignored, and
+  incomplete fragments are buffered until they form valid JSON. The unit does
+  not interpret Anthropic event semantics; it only normalizes the persisted
+  text representation.
+
+*)
+{$ENDREGION}
+
 { TAnthropicJsonResponseHelper }
 
 class procedure TAnthropicJsonResponseHelper.AppendNormalisedJson(

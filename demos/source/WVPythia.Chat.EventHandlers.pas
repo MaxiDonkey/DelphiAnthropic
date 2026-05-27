@@ -26,6 +26,7 @@ type
 
     procedure UpdatePromptUI(const State: TInputPromptState);
     procedure UpdateMessageUI(const State: TManagedItemLLMResult);
+    procedure ReleaseTurnLock;
 
     function JsonIsValid(const Reader: TJsonReader; const KeyName: string): Boolean;
     function StructuredOutputIsValid(const Payload: string): Boolean;
@@ -160,6 +161,8 @@ type
     function FileRemovedEvent: Boolean;
 
     function OpenFileDialogEvent: Boolean;
+    function FolderSelectionEvent: Boolean;
+    function FolderStateEvent: Boolean;
     function OpenFunctionDialogEvent: Boolean;
     function OpenMCPDialogEvent: Boolean;
     function OpenSkillsDialogEvent: Boolean;
@@ -195,6 +198,7 @@ type
 
     function AudioInputEvent: Boolean;
     function InputString: Boolean;
+    function WebDecisionDlgResponseEvent: Boolean;
 
     function CustomEvent: Boolean;
     function FileDropInEvent: Boolean;
@@ -517,6 +521,13 @@ begin
   Result := True;
 end;
 
+function TBrowserEventHandlers.WebDecisionDlgResponseEvent: Boolean;
+begin
+  Result :=
+    Assigned(FBrowser) and
+    FBrowser.ResolveWebDecisionDlgResponse(FReader.ToJson);
+end;
+
 function TBrowserEventHandlers.InputSubmitEvent: Boolean;
 begin
   Result := True;
@@ -580,6 +591,36 @@ end;
 function TBrowserEventHandlers.OpenFileDialogEvent: Boolean;
 begin
   Result := OpenFileDialog;
+end;
+
+function TBrowserEventHandlers.FolderSelectionEvent: Boolean;
+var
+  FolderPath: string;
+begin
+  Result := False;
+
+  if not Assigned(FOpenDialog) or not Assigned(FBrowser) then
+    Exit;
+
+  if not FOpenDialog.ExecuteFolder(FolderPath) then
+    Exit;
+
+  Result := FBrowser.PostWebMessageAsJson(
+    Format(FOLDER_SELECTED_TEMPLATE, [
+      TEscapeHelper.EscapeJSString(FolderPath, False)
+    ])
+  );
+end;
+
+function TBrowserEventHandlers.FolderStateEvent: Boolean;
+begin
+  if not Assigned(FBrowser) then
+    Exit(False);
+
+  if not FReader.IsArrayNode(PROP_STATE) then
+    Exit(False);
+
+  Result := FBrowser.ProjectsStateUpdate(FReader.ArrayText(PROP_STATE));
 end;
 
 function TBrowserEventHandlers.OpenFunctionDialogEvent: Boolean;
@@ -757,7 +798,7 @@ end;
 procedure TOrchestratorEventHandler.CompleteTurn(const Turn: TChatTurn;
   const AResult: TManagedItemLLMResult);
 begin
-    if not Assigned(Turn) or not Assigned(AResult) then
+  if not Assigned(Turn) or not Assigned(AResult) then
     Exit;
 
   Turn.Model := AResult.Model;
@@ -769,6 +810,7 @@ begin
   Turn.ReponseImages := AResult.ImageList;
   Turn.ReponseAudio := AResult.AudioList;
   Turn.ReponseVideo := AResult.VideoList;
+  Turn.DisplayBlocks := CloneChatDisplayBlocks(AResult.DisplayBlocks);
 
   if Assigned(FPersistentChat) then
     FPersistentChat.SaveToFile();
@@ -814,7 +856,7 @@ begin
   FBrowser.ReasoningHide;
   FBrowser.Display(ErrorMessage);
   FBrowser.DisplayError(ErrorMessage);
-  FBrowser.Locked := False;
+  ReleaseTurnLock;
 end;
 
 function TOrchestratorEventHandler.TryHandleAsCommand(
@@ -909,18 +951,25 @@ begin
         begin
           {--- Reconcile the managed result with the persisted session turn. }
           try
-            CompleteTurn(LocalTurn, AResult);
-            UpdateMessageUI(AResult);
+            try
+              CompleteTurn(LocalTurn, AResult);
+              UpdateMessageUI(AResult);
 
-            if AResult.HasError then
-              FBrowser.DisplayError(AResult.AcquireError);
-          except
-            {--- Finalization barrier.
-                 The managed result may come from success, error, or controlled
-                 cancellation normalized through the promise rejection path.
-                 Never raise from this post-settlement UI/session fold-back. }
+              if AResult.HasError then
+                FBrowser.DisplayError(AResult.AcquireError);
+            except
+              {--- Finalization barrier.
+                   The managed result may come from success, error, or controlled
+                   cancellation normalized through the promise rejection path.
+                   Never raise from this post-settlement UI/session fold-back. }
+            end;
+          finally
+            ReleaseTurnLock;
           end;
         end);
+
+      if not Result then
+        ReleaseTurnLock;
     finally
       FreeAndNil(State);
     end;
@@ -944,7 +993,7 @@ begin
     on E: Exception do
       begin
         FreeAndNil(State);
-        FBrowser.Locked := False;
+        ReleaseTurnLock;
         FBrowser.DisplayError(
           Format(S_DESERIALIZATION_ERROR_FMT, [#10 + E.Message])
         );
@@ -962,9 +1011,13 @@ begin
   FBrowser.DisplayMedia(dkAudio, State.AudioList, False);
   FBrowser.DisplayFooter(State.Model);
   FBrowser.DisplaySpacer();
+end;
 
+procedure TOrchestratorEventHandler.ReleaseTurnLock;
+begin
   FBrowser.Escape := False;
-  FBrowser.Locked := False;
+  if FBrowser.Locked then
+    FBrowser.Locked := False;
 end;
 
 procedure TOrchestratorEventHandler.UpdatePromptUI(

@@ -16,7 +16,8 @@
       "media": "媒體",
       "custom": "自訂",
       "settings": "設定",
-      "model": "模型"
+      "model": "模型",
+      "project": "專案"
     },
     "thinking": {
       "low": "低",
@@ -52,6 +53,12 @@
       "createAudio": "建立音訊",
       "speechToText": "語音轉文字",
       "textToSpeech": "文字轉語音"
+    },
+    "project": {
+      "add": "新增專案",
+      "none": "無",
+      "noneUsed": "未使用專案",
+      "delete": "刪除"
     },
     "chips": {
       "endpoint": "端點:{title}",
@@ -218,6 +225,13 @@
     "ok": "確定",
     "cancel": "取消"
   },
+  "webDecisionDlg": {
+    "title": "確認",
+    "message": "請確認。",
+    "ok": "確定",
+    "cancel": "取消",
+    "close": "關閉"
+  },
   "displayFile": {
     "fallbackName": "檔案 {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "推理"
+    },
+    "toolGroup": {
+      "label": "使用的工具"
     },
     "code": {
       "copy": "複製",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s:API 金鑰已存在",
     "api_key_modified": "%s:API 金鑰已修改。",
     "api_key_inserted": "%s:API 金鑰已插入",
+    "web_decision_dlg_title": "確認",
+    "web_decision_dlg_message": "請確認。",
+    "web_decision_dlg_ok": "確定",
+    "web_decision_dlg_cancel": "取消",
+    "web_decision_dlg_close": "關閉",
+    "demo_anthropic_tool_confirmation_title": "確認",
+    "demo_anthropic_tool_allow": "允許",
+    "demo_anthropic_tool_deny": "拒絕",
+    "demo_anthropic_tool_allow_call": "允許此工具呼叫嗎?",
+    "demo_anthropic_interrupted_by_user": "已由使用者中斷。",
     "command_plugin_not_be_null": "外掛程式不可為空",
     "command_unknown": "未知的指令:/%s",
     "command_action_unknown": "未知的動作:/%s %s",

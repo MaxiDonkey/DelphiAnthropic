@@ -41,6 +41,7 @@
   const ACTIVITY_FALLBACK_BOTTOM_PX = 16;
   const ACTIVITY_Z_INDEX = 2147483646;
   const ACTIVITY_DURATION_MS = 1250;
+  const ACTIVITY_ELAPSED_TICK_MS = 250;
 
   /*
     Sélecteurs d'ancrage.
@@ -84,6 +85,8 @@
     anchorSelectors: ACTIVITY_ANCHOR_SELECTORS.slice(),
     positionFrame: 0,
     hideTimer: 0,
+    elapsedTimer: 0,
+    elapsedStartedAt: 0,
     listenersAttached: false,
     mutationObserver: null
   };
@@ -220,7 +223,10 @@
         position: fixed;
         left: 0;
         top: 0;
-        width: var(--activity-logo-size, 24px);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--activity-logo-elapsed-gap, 6px);
+        width: auto;
         height: var(--activity-logo-size, 24px);
         z-index: var(--activity-logo-z-index, 2147483646);
         pointer-events: none;
@@ -245,9 +251,23 @@
 
       #${ACTIVITY_ID} svg {
         display: block;
-        width: 100%;
-        height: 100%;
+        flex: 0 0 var(--activity-logo-size, 24px);
+        width: var(--activity-logo-size, 24px);
+        height: var(--activity-logo-size, 24px);
         overflow: visible;
+      }
+
+      #${ACTIVITY_ID} .${ACTIVITY_ID}_elapsed {
+        flex: 0 0 auto;
+        min-width: 4ch;
+        color: rgb(50%, 50%, 50%);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
       }
 
       #${ACTIVITY_ID} .${ACTIVITY_ID}_path {
@@ -370,6 +390,10 @@
     `;
   }
 
+  function createElapsedMarkup() {
+    return '<span class="' + ACTIVITY_ID + '_elapsed" aria-hidden="true">0:00</span>';
+  }
+
   function ensureHost() {
     ensureStyles();
 
@@ -383,8 +407,10 @@
       host.setAttribute("aria-live", "polite");
       host.setAttribute("aria-label", "Traitement en cours");
       host.setAttribute("aria-hidden", "true");
-      host.innerHTML = createSvgMarkup();
+      host.innerHTML = createSvgMarkup() + createElapsedMarkup();
       document.body.appendChild(host);
+    } else if (!host.querySelector("." + ACTIVITY_ID + "_elapsed")) {
+      host.insertAdjacentHTML("beforeend", createElapsedMarkup());
     }
 
     applyRuntimeStyle(host);
@@ -401,6 +427,55 @@
     target.style.setProperty("--activity-logo-duration", Math.round(state.durationMs) + "ms");
     target.style.setProperty("--activity-logo-glow-size", Math.max(1, state.size / 16).toFixed(2) + "px");
     target.style.setProperty("--activity-logo-dot-glow-size", Math.max(1.1, state.size / 13.5).toFixed(2) + "px");
+    target.style.setProperty("--activity-logo-elapsed-gap", Math.max(4, state.size / 4).toFixed(2) + "px");
+  }
+
+  function getNowMs() {
+    return window.performance && typeof window.performance.now === "function"
+      ? window.performance.now()
+      : Date.now();
+  }
+
+  function formatElapsedTime(totalSeconds) {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+    const seconds = safeSeconds % 60;
+    const totalMinutes = Math.floor(safeSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
+    const paddedSeconds = seconds < 10 ? "0" + seconds : String(seconds);
+
+    if (hours > 0) {
+      const paddedMinutes = minutes < 10 ? "0" + minutes : String(minutes);
+      return hours + ":" + paddedMinutes + ":" + paddedSeconds;
+    }
+
+    return totalMinutes + ":" + paddedSeconds;
+  }
+
+  function updateElapsedTime(host) {
+    const target = host || document.getElementById(ACTIVITY_ID);
+    if (!target) return;
+
+    const elapsedNode = target.querySelector("." + ACTIVITY_ID + "_elapsed");
+    if (!elapsedNode) return;
+
+    elapsedNode.textContent = formatElapsedTime((getNowMs() - state.elapsedStartedAt) / 1000);
+  }
+
+  function stopElapsedTimer() {
+    if (state.elapsedTimer) {
+      window.clearInterval(state.elapsedTimer);
+      state.elapsedTimer = 0;
+    }
+  }
+
+  function startElapsedTimer(host) {
+    stopElapsedTimer();
+    state.elapsedStartedAt = getNowMs();
+    updateElapsedTime(host);
+    state.elapsedTimer = window.setInterval(function () {
+      updateElapsedTime(host);
+    }, ACTIVITY_ELAPSED_TICK_MS);
   }
 
   function getCandidateAnchorElements() {
@@ -603,6 +678,7 @@
     state.visible = true;
     host.hidden = false;
     host.setAttribute("aria-hidden", "false");
+    startElapsedTimer(host);
 
     restartAnimation(host);
 
@@ -618,6 +694,7 @@
     const host = document.getElementById(ACTIVITY_ID);
 
     state.visible = false;
+    stopElapsedTimer();
 
     if (!host) {
       detachRuntimeListeners();

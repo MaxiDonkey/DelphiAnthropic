@@ -3,7 +3,8 @@
 interface
 
 uses
-  System.SysUtils, WVPythia.Types, WVPythia.ChatSession.Controller, WVPythia.Command.Parser;
+  System.SysUtils, WVPythia.Types, WVPythia.Chat.DecisionDlg,
+  WVPythia.ChatSession.Controller, WVPythia.Command.Parser;
 
 type
   TClipboardTextKind = (
@@ -35,6 +36,7 @@ type
   IOpenDialog = interface
     ['{4ABD78A5-4281-4930-B55A-BF6A259E914C}']
     function Execute(const Filter: string; const index: Integer; out FileName: string): Boolean;
+    function ExecuteFolder(out FolderPath: string): Boolean;
   end;
 
   IProcessExecute = interface
@@ -196,6 +198,38 @@ type
       read GetOnPendingChanged write SetOnPendingChanged;
   end;
 
+  {--- Vendor-neutral snapshot of streamed display blocks. Implementations can
+       keep their own live aggregation strategy, but must expose cloned Pythia
+       blocks for persistence/replay at turn finalization time. }
+  IPythiaDisplayBlockSnapshot = interface
+    ['{D2711A7D-857C-4FA8-9A52-7E99D5DBEBD1}']
+    function CloneDisplayBlocks: TArray<TChatDisplayBlock>;
+  end;
+
+  {--- Vendor-provided display bridge for a streamed LLM or agent turn.
+       Pythia owns the browser/display vocabulary; each vendor maps its own
+       stream events to these operations. }
+  IPythiaTurnDisplay = interface(IPythiaDisplayBlockSnapshot)
+    ['{5D8E95B7-7D9E-4E78-BB95-D48F062F2913}']
+    procedure AssistantDelta(const AText: string);
+    procedure AssistantText(const AText: string;
+      const CloseBlock: Boolean = False); overload;
+    procedure AssistantText(const ABlockText, ABrowserText: string;
+      const CloseBlock: Boolean = False); overload;
+    procedure BrowserError(const AMessage: string);
+    procedure ErrorStatus(const ATitle, ADetail: string);
+    procedure ReasoningDelta(const AText: string);
+    procedure Status(const ATitle: string); overload;
+    procedure Status(const ATitle, ADetail: string); overload;
+    procedure ToolResult(const AKey, ATitle, AOutput: string;
+      const IsError: Boolean);
+    procedure ToolResultStatus(const AKey, ATitle, AOutput: string);
+    procedure ToolStatus(const ATitle: string); overload;
+    procedure ToolStatus(const ATitle, ADetail: string); overload;
+    procedure ToolUse(const AKey, ATitle: string;
+      const NotifyBrowser: Boolean = True);
+  end;
+
   IPythiaBrowser = interface
     ['{B6D390AF-CEFB-436A-9560-6BACCC390F25}']
 
@@ -220,6 +254,9 @@ type
     function GetOnChatSessionAutoRename: TProc<string, string>;
     procedure SetOnChatSessionAutoRename(const Value: TProc<string, string>);
 
+    function GetOnAfterSessionReloaded: TProc<string>;
+    procedure SetOnAfterSessionReloaded(const Value: TProc<string>);
+
     function GetPersistentChat: IPersistentChat;
     procedure SetPersistentChat(const Value: IPersistentChat);
     function GetApiKeySecretStore: ISecretStore;
@@ -239,12 +276,18 @@ type
 
     procedure SetTheme(const Value: string);
     function CapabilitiesInitialization: Boolean;
+    function ProjectsInitialization: Boolean;
+    function ProjectsStateUpdate(const JsonAsString: string): Boolean;
 
     function ChatSessionDrawerOpen: Boolean;
     function ChatSessionDrawerClose: Boolean;
     function ChatSessionDrawerClear: Boolean;
 
     function Confirmation(const Value, Goal, Tag: string; const Index: Integer): Boolean;
+    function WebDecisionDlg(
+      const ARequest: TWebDecisionDlgRequest;
+      const ATimeoutMS: Cardinal = WEB_DECISION_DLG_INFINITE): TWebDecisionDlgResult;
+    function ResolveWebDecisionDlgResponse(const AJson: string): Boolean;
     function ChatSessionAdd(const ID: string; const Text: string): Boolean;
     function ChatSessionRemove(const Id: string): Boolean;
     function ChatSessionRename(const Id: string; const ATitle: string): Boolean;
@@ -317,6 +360,7 @@ type
     function GetSkillCardsFileName: string;
     function GetAgentCardsFileName: string;
     function GetCustomCardsFileName: string;
+    function GetProjectsFileName: string;
     function GetExchangeDebugFileName: string;
     function GetAPIKeyNamesFileName: string;
     function GetCustomJSFileName: string;
@@ -385,6 +429,95 @@ type
       const AThink: string;
       Scroll: Boolean = True): Boolean; overload;
 
+    function DisplayBlock(
+      const Kind: string;
+      const PayloadJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayBlockStream(
+      const Kind: string;
+      const Delta: string;
+      const PayloadJson: string = '';
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayBlocks(
+      const BlocksJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayAssistant(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayAssistantStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayReasoning(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayReasoningStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutput(
+      const ATitle: string;
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutputStart(
+      const ATitle: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutputStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolError(
+      const ATitle: string;
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolErrorStart(
+      const ATitle: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolErrorStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceList(
+      const ATitle: string;
+      const SourcesJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceDocument(
+      const ATitle: string;
+      const AUrl: string;
+      const AText: string = '';
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayCitationList(
+      const CitationsJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayArtifactList(
+      const ATitle: string;
+      const ArtifactsJson: string;
+      Scroll: Boolean = True): Boolean;
+
     function DisplayMedia(Kind: TDisplayKind;
       const Value: TArray<string>;
       Scroll: Boolean = True): Boolean; overload;
@@ -426,6 +559,7 @@ type
     property CustomPanels: TCustomPanels read GetCustomPanels write SetCustomPanels;
     property EnabledButtons: TEnabledButtons read GetEnabledButtons write SetEnabledButtons;
     property OnChatSessionAutoRename: TProc<string, string> read GetOnChatSessionAutoRename write SetOnChatSessionAutoRename;
+    property OnAfterSessionReloaded: TProc<string> read GetOnAfterSessionReloaded write SetOnAfterSessionReloaded;
     property PersistentChat: IPersistentChat read GetPersistentChat write SetPersistentChat;
     property ApiKeySecretStore: ISecretStore read GetApiKeySecretStore write SetApiKeySecretStore;
     property CommandLine: ICommandRegistry read GetCommandLine write SetCommandLine;

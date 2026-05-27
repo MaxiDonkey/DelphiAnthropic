@@ -16,7 +16,8 @@
       "media": "Medier",
       "custom": "Tilpasset",
       "settings": "Innstillinger",
-      "model": "Modell"
+      "model": "Modell",
+      "project": "Prosjekt"
     },
     "thinking": {
       "low": "Lav",
@@ -52,6 +53,12 @@
       "createAudio": "Lag lyd",
       "speechToText": "Tale til tekst",
       "textToSpeech": "Tekst til tale"
+    },
+    "project": {
+      "add": "Legg til prosjekt",
+      "none": "ingen",
+      "noneUsed": "Ingen prosjekter brukt",
+      "delete": "Slett"
     },
     "chips": {
       "endpoint": "Endepunkt: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Avbryt"
   },
+  "webDecisionDlg": {
+    "title": "Bekreftelse",
+    "message": "Vennligst bekreft.",
+    "ok": "OK",
+    "cancel": "Avbryt",
+    "close": "Lukk"
+  },
   "displayFile": {
     "fallbackName": "Fil {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Resonnement"
+    },
+    "toolGroup": {
+      "label": "Brukte verktøy"
     },
     "code": {
       "copy": "Kopier",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-nøkkelen finnes",
     "api_key_modified": "%s: API-nøkkelen er endret.",
     "api_key_inserted": "%s: API-nøkkelen er satt inn",
+    "web_decision_dlg_title": "Bekreftelse",
+    "web_decision_dlg_message": "Vennligst bekreft.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Avbryt",
+    "web_decision_dlg_close": "Lukk",
+    "demo_anthropic_tool_confirmation_title": "Bekreftelse",
+    "demo_anthropic_tool_allow": "Tillat",
+    "demo_anthropic_tool_deny": "Avvis",
+    "demo_anthropic_tool_allow_call": "Tillat dette verktøykallet?",
+    "demo_anthropic_interrupted_by_user": "Avbrutt av brukeren.",
     "command_plugin_not_be_null": "Programtillegg kan ikke være null",
     "command_unknown": "Ukjent kommando: /%s",
     "command_action_unknown": "Ukjent handling: /%s %s",

@@ -16,7 +16,8 @@
       "media": "Multimedia",
       "custom": "Niestandardowy",
       "settings": "Ustawienia",
-      "model": "Model"
+      "model": "Model",
+      "project": "Projekt"
     },
     "thinking": {
       "low": "Niski",
@@ -52,6 +53,12 @@
       "createAudio": "Utwórz audio",
       "speechToText": "Mowa na tekst",
       "textToSpeech": "Tekst na mowę"
+    },
+    "project": {
+      "add": "Dodaj projekt",
+      "none": "brak",
+      "noneUsed": "Nie użyto projektu",
+      "delete": "Usuń"
     },
     "chips": {
       "endpoint": "Punkt końcowy: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Anuluj"
   },
+  "webDecisionDlg": {
+    "title": "Potwierdzenie",
+    "message": "Proszę potwierdzić.",
+    "ok": "OK",
+    "cancel": "Anuluj",
+    "close": "Zamknij"
+  },
   "displayFile": {
     "fallbackName": "Plik {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Rozumowanie"
+    },
+    "toolGroup": {
+      "label": "Użyte narzędzia"
     },
     "code": {
       "copy": "Kopiuj",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: klucz API istnieje",
     "api_key_modified": "%s: klucz API został zmodyfikowany.",
     "api_key_inserted": "%s: klucz API został wstawiony",
+    "web_decision_dlg_title": "Potwierdzenie",
+    "web_decision_dlg_message": "Proszę potwierdzić.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Anuluj",
+    "web_decision_dlg_close": "Zamknij",
+    "demo_anthropic_tool_confirmation_title": "Potwierdzenie",
+    "demo_anthropic_tool_allow": "Zezwól",
+    "demo_anthropic_tool_deny": "Odmów",
+    "demo_anthropic_tool_allow_call": "Zezwolić na to wywołanie narzędzia?",
+    "demo_anthropic_interrupted_by_user": "Przerwane przez użytkownika.",
     "command_plugin_not_be_null": "Wtyczka nie może być pusta",
     "command_unknown": "Nieznane polecenie: /%s",
     "command_action_unknown": "Nieznana akcja: /%s %s",

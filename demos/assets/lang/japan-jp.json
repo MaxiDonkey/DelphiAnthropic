@@ -16,7 +16,8 @@
       "media": "メディア",
       "custom": "カスタム",
       "settings": "設定",
-      "model": "モデル"
+      "model": "モデル",
+      "project": "プロジェクト"
     },
     "thinking": {
       "low": "低",
@@ -52,6 +53,12 @@
       "createAudio": "音声を作成",
       "speechToText": "音声をテキストに変換",
       "textToSpeech": "テキストを音声に変換"
+    },
+    "project": {
+      "add": "プロジェクトを追加",
+      "none": "なし",
+      "noneUsed": "使用中のプロジェクトなし",
+      "delete": "削除"
     },
     "chips": {
       "endpoint": "エンドポイント:{title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "キャンセル"
   },
+  "webDecisionDlg": {
+    "title": "確認",
+    "message": "確認してください。",
+    "ok": "OK",
+    "cancel": "キャンセル",
+    "close": "閉じる"
+  },
   "displayFile": {
     "fallbackName": "ファイル {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "推論"
+    },
+    "toolGroup": {
+      "label": "使用したツール"
     },
     "code": {
       "copy": "コピー",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s:API キーは既に存在します",
     "api_key_modified": "%s:API キーを変更しました。",
     "api_key_inserted": "%s:API キーを挿入しました",
+    "web_decision_dlg_title": "確認",
+    "web_decision_dlg_message": "確認してください。",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "キャンセル",
+    "web_decision_dlg_close": "閉じる",
+    "demo_anthropic_tool_confirmation_title": "確認",
+    "demo_anthropic_tool_allow": "許可",
+    "demo_anthropic_tool_deny": "拒否",
+    "demo_anthropic_tool_allow_call": "このツール呼び出しを許可しますか?",
+    "demo_anthropic_interrupted_by_user": "ユーザーによって中断されました。",
     "command_plugin_not_be_null": "プラグインを null にすることはできません",
     "command_unknown": "不明なコマンド:/%s",
     "command_action_unknown": "不明なアクション:/%s %s",

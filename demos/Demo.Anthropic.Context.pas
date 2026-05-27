@@ -144,6 +144,46 @@ interface
   before assembling the request and merges it into TContainerParams.Id
   alongside the skills selection of the current turn.
 
+  Managed-agent turn replay
+  -------------------------
+  Turns produced through the Managed Agents flow (Demo.Anthropic.Session.Flow)
+  persist with two shapes that are intentionally incompatible with the
+  Messages API replay paths above:
+
+    - JsonPrompt is a synthetic envelope rooted on a "managed_agent" object
+      ({"managed_agent":{"session_id","agent_id","environment_id","card_id"},
+        "user_message":"..."}), with no top-level "messages" array, so
+      BuildHistoricalUserContent finds nothing and AppendTurn falls back
+      to TChatTurn.Prompt for the user side.
+
+    - JsonResponse is the JSONL trace of raw Sessions.Events.Stream events
+      (agent.assistant_text, agent.tool_use, agent.tool_result, agent.thinking,
+      session.thread_*, span.model_request_*, ...). Their wire "type" strings
+      are dotted/namespaced and never match content_block_start /
+      content_block_delta, so TJsonResponseParser returns an empty snapshot
+      list and BuildAssistantContent yields no blocks.
+
+  This is by design. Managed-agent tools (read, glob, grep, MCP custom
+  servers, sub-agent task_handoff, ...) are NOT registered as Messages
+  API server_tool_use kinds; forging server_tool_use blocks from agent
+  events on replay would trigger the same 400 documented above ("tool
+  use with id ... was found without a corresponding tool definition")
+  on the next Messages request.
+
+  IsAgentTurn detects the envelope through the "managed_agent" key;
+  BuildAgentAssistantText then enriches the plain-text fallback by
+  appending a "Tools invoked: ..." note mined from sekToolUse events of
+  JsonResponse. The next Messages API turn therefore quotes the agent
+  turn as: user question (Prompt) + visible assistant answer (Response)
+  + tool footer.
+
+  Continuity ACROSS managed-agent turns themselves is handled server
+  side: LastAgentSessionId returns the prior session_id from JsonPrompt,
+  the agent flow reuses it via Sessions.Events.Send, and the Anthropic
+  backend keeps the conversation state intact. The Messages-API replay
+  path is only consulted when a later turn switches BACK to the Messages
+  API and needs to quote the agent turn in plain text.
+
 *)
 
 {$ENDREGION}
@@ -160,6 +200,8 @@ type
     function HasHistory: Boolean;
     function GetHistory: TArray<TMessageParam>;
     function LastContainerId: string;
+    function LastAgentSessionId: string;
+    function LastAgentCardId: string;
     function BetaExtract: TArray<string>;
     function HasHistoricalCodeExecution: Boolean;
 
@@ -235,6 +277,16 @@ type
     function ExtractContainerIdFromJsonResponse(
       const AJsonResponse: string): string;
 
+    function ExtractAgentSessionId(
+      const AJsonPrompt: string): string;
+
+    function ExtractAgentCardId(
+      const AJsonPrompt: string): string;
+
+    function IsAgentTurn(const ATurn: TChatTurn): Boolean;
+
+    function BuildAgentAssistantText(const ATurn: TChatTurn): string;
+
     function BuildContentBlockFromJson(
       const ASource: TJSONObject): TContentBlockParam;
 
@@ -299,6 +351,22 @@ type
     function LastContainerId: string;
 
     /// <summary>
+    /// Returns the most recent Managed Agents session id recorded by the
+    /// agent flow in a completed turn's persisted prompt JSON. Empty when
+    /// the current chat has no prior agent turn, so the flow opens a fresh
+    /// session.
+    /// </summary>
+    function LastAgentSessionId: string;
+
+    /// <summary>
+    /// Returns the most recent agent card id recorded by the agent flow in
+    /// a completed turn's persisted prompt JSON. Used by the demo on chat
+    /// reload to restore the managed-agent chip in the input bubble; empty
+    /// when the current chat carries no prior agent turn.
+    /// </summary>
+    function LastAgentCardId: string;
+
+    /// <summary>
     /// Extracts the unique beta feature flags used by previous turns in the
     /// current session. Each completed turn's persisted JSON prompt is parsed,
     /// its top-level beta array is read when present, and values are returned
@@ -330,6 +398,9 @@ type
   end;
 
 implementation
+
+uses
+  Demo.Anthropic.Session.Events;
 
 { TJsonResponseParser }
 
@@ -563,10 +634,11 @@ function TAnthropicContext.HistoryTurns(
 begin
   {--- Selects the turns that already carry both a prompt and a response.
 
-       The very last entry of TChatSession.Data is the in-flight prompt
-       allocated by TPersistentChat.AddPrompt right before streaming starts;
-       its Response is still empty at request build time, so it is excluded
-       from history replay.
+       During a live request, TPersistentChat.AddPrompt has already appended
+       the in-flight user turn, but its Response is still empty, so the filter
+       below naturally excludes it. On chat reload there is no in-flight turn:
+       the last item may be a completed managed-agent turn and must remain
+       visible to LastAgentCardId / LastAgentSessionId so chips can be restored.
   }
   Result := [];
   if not Assigned(AChat) then
@@ -577,7 +649,7 @@ begin
   if TurnHigh < 0 then
     Exit;
 
-  for var I := 0 to TurnHigh - 1 do
+  for var I := 0 to TurnHigh do
     begin
       var Turn := Turns[I];
       if not Assigned(Turn) then
@@ -1038,6 +1110,80 @@ begin
   end;
 end;
 
+function TAnthropicContext.IsAgentTurn(const ATurn: TChatTurn): Boolean;
+begin
+  {--- A managed-agent turn is recorded by TAgentTurn.RecordTrace with a
+       synthetic JsonPrompt rooted on a "managed_agent" object instead of
+       the Messages API "messages" array. The presence of that key is the
+       authoritative marker (same signal used by ExtractAgentSessionId).
+  }
+  Result := False;
+  if ATurn.JsonPrompt.Trim.IsEmpty then
+    Exit;
+
+  var Reader := TJsonReader.Parse(ATurn.JsonPrompt);
+  if not Reader.IsValid then
+    Exit;
+
+  Result := Reader.IsObjectNode('managed_agent');
+end;
+
+function TAnthropicContext.BuildAgentAssistantText(
+  const ATurn: TChatTurn): string;
+begin
+  {--- Enriches the plain-text replay of a managed-agent turn with the
+       names of the tools the agent actually invoked, mined from the JSONL
+       stream of session events persisted in JsonResponse.
+
+       The result remains a single Messages API assistant text block, so
+       the constraint enforced by BuildAssistantContent (no server_tool_use
+       blocks for unregistered agent tools) is respected by construction.
+
+       Empty JsonResponse, parse failure, or zero tool_use events all leave
+       ATurn.Response untouched.
+  }
+  Result := ATurn.Response;
+  if ATurn.JsonResponse.Trim.IsEmpty then
+    Exit;
+
+  var Tools: TArray<string> := [];
+  var Seen := TDictionary<string, Boolean>.Create;
+  try
+    for var Line in ATurn.JsonResponse.Split([sLineBreak]) do
+      begin
+        if Line.Trim.IsEmpty then
+          Continue;
+
+        var Ev := TSessionEventParser.Parse(Line);
+        if Ev.Kind <> sekToolUse then
+          Continue;
+
+        var ToolName := Ev.ToolName.Trim;
+        if ToolName.IsEmpty then
+          Continue;
+
+        if not Ev.MCPServerName.Trim.IsEmpty then
+          ToolName := Ev.MCPServerName.Trim + ':' + ToolName;
+
+        if Seen.ContainsKey(ToolName) then
+          Continue;
+
+        Seen.Add(ToolName, True);
+        Tools := Tools + [ToolName];
+      end;
+  finally
+    Seen.Free;
+  end;
+
+  if Length(Tools) = 0 then
+    Exit;
+
+  Result := Result + sLineBreak + sLineBreak +
+    Format('(Replay note: the previous answer was produced by a managed ' +
+           'agent. Tools invoked during that turn: %s.)',
+           [string.Join(', ', Tools)]);
+end;
+
 procedure TAnthropicContext.AppendTurn(
   var AMessages: TMessages;
   const ATurn: TChatTurn);
@@ -1053,6 +1199,11 @@ begin
        The assistant side is rebuilt from the streamed JsonResponse when
        possible, and falls back to the aggregated Response text otherwise:
        for example when the JSON buffer is empty or fully redacted.
+
+       Managed-agent turns always take the fallback path (their JsonResponse
+       is JSONL of session events, not Messages API content_block_*), and
+       are routed through BuildAgentAssistantText which appends a tool
+       summary to the visible answer.
   }
   var UserContent := BuildHistoricalUserContent(ATurn);
   if Length(UserContent) > 0 then
@@ -1061,10 +1212,16 @@ begin
     AMessages := AMessages.User(ATurn.Prompt);
 
   var Content := BuildAssistantContent(ATurn);
-  if Length(Content) = 0 then
-    AMessages := AMessages.Assistant(ATurn.Response)
+  if Length(Content) > 0 then
+    begin
+      AMessages := AMessages.Assistant(Content);
+      Exit;
+    end;
+
+  if IsAgentTurn(ATurn) then
+    AMessages := AMessages.Assistant(BuildAgentAssistantText(ATurn))
   else
-    AMessages := AMessages.Assistant(Content);
+    AMessages := AMessages.Assistant(ATurn.Response);
 end;
 
 function TAnthropicContext.HasHistory: Boolean;
@@ -1134,6 +1291,74 @@ begin
   for var I := High(Turns) downto Low(Turns) do
     begin
       var Id := ExtractContainerIdFromJsonResponse(Turns[I].JsonResponse);
+      if not Id.IsEmpty then
+        Exit(Id);
+    end;
+end;
+
+function TAnthropicContext.ExtractAgentSessionId(
+  const AJsonPrompt: string): string;
+begin
+  {--- The agent flow records the live Managed Agents session id in the turn's
+       persisted prompt JSON under managed_agent.session_id. }
+  Result := '';
+  if AJsonPrompt.Trim.IsEmpty then
+    Exit;
+
+  var Reader := TJsonReader.Parse(AJsonPrompt);
+  if not Reader.IsValid then
+    Exit;
+
+  Result := Reader.AsString('managed_agent.session_id');
+end;
+
+function TAnthropicContext.ExtractAgentCardId(
+  const AJsonPrompt: string): string;
+begin
+  {--- The agent flow records the originating agent card id in the turn's
+       persisted prompt JSON under managed_agent.card_id (see
+       TAgentTurn.RecordTrace). Stored unmodified: ApplyUiModel only mutates
+       Def.CardId for the provisioner cache key, not the trace. }
+  Result := '';
+  if AJsonPrompt.Trim.IsEmpty then
+    Exit;
+
+  var Reader := TJsonReader.Parse(AJsonPrompt);
+  if not Reader.IsValid then
+    Exit;
+
+  Result := Reader.AsString('managed_agent.card_id');
+end;
+
+function TAnthropicContext.LastAgentSessionId: string;
+begin
+  {--- Scans completed turns newest-first and returns the first session id
+       found, mirroring LastContainerId. Empty result => no prior agent turn
+       in this chat, so the flow opens a new session. }
+  Result := '';
+
+  var Turns := HistoryTurns(CurrentSession);
+  for var I := High(Turns) downto Low(Turns) do
+    begin
+      var Id := ExtractAgentSessionId(Turns[I].JsonPrompt);
+      if not Id.IsEmpty then
+        Exit(Id);
+    end;
+end;
+
+function TAnthropicContext.LastAgentCardId: string;
+begin
+  {--- Scans completed turns newest-first and returns the first card id
+       found, mirroring LastAgentSessionId. Used by the demo to restore the
+       managed-agent chip in the input bubble when reopening a chat that
+       previously used an agent. Empty => no agent turn in this chat, so
+       the caller leaves the persisted UI selection untouched. }
+  Result := '';
+
+  var Turns := HistoryTurns(CurrentSession);
+  for var I := High(Turns) downto Low(Turns) do
+    begin
+      var Id := ExtractAgentCardId(Turns[I].JsonPrompt);
       if not Id.IsEmpty then
         Exit(Id);
     end;

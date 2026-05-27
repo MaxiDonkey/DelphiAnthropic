@@ -17,7 +17,7 @@
     "integrationFunction": false,
     "integrationMcp": true,
     "integrationSkills": true,
-    "integrationAgents": false,
+    "integrationAgents": true,
     "thinkingLow": true,
     "thinkingMedium": true,
     "thinkingHigh": true,
@@ -29,5 +29,6 @@
     "mediaTextToSpeech": true,
     "custom": true,
     "systemPrompt": true,
-    "model": true
+    "model": true,
+    "project": true
 }

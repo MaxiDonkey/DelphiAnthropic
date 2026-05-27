@@ -10,10 +10,10 @@ unit Anthropic.Sessions;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON,
+  System.SysUtils, System.Classes, System.JSON, System.Net.HttpClient, System.Threading,
   REST.Json.Types,
   Anthropic.API.Params, Anthropic.API, Anthropic.Types,
-  Anthropic.Async.Support, Anthropic.Async.Promise;
+  Anthropic.Async.Support, Anthropic.Async.Params, Anthropic.Async.Promise;
 
 type
   TSessionAgentParams = class(TJSONParam)
@@ -406,6 +406,7 @@ type
   TSessionSendEventsParamProc = TProc<TSessionSendEventsParams>;
   TSessionResourceAddParamProc = TProc<TSessionFileResourceParams>;
   TSessionResourceUpdateParamProc = TProc<TSessionResourceUpdateParams>;
+  TSessionStreamEvent = reference to procedure(const Data: string; var Abort: Boolean);
 
   TSessionModelConfig = class(TJSONFingerprint)
   private
@@ -825,6 +826,22 @@ type
     destructor Destroy; override;
   end;
 
+  TSessionStreamStatus = class(TJSONFingerprint)
+  private
+    FStatusCode: Integer;
+    FContentLength: Int64;
+    FReadCount: Int64;
+    FDone: Boolean;
+  public
+    class function New(const AStatusCode: Integer; const AContentLength,
+      AReadCount: Int64; const ADone: Boolean): TSessionStreamStatus; static;
+
+    property StatusCode: Integer read FStatusCode write FStatusCode;
+    property ContentLength: Int64 read FContentLength write FContentLength;
+    property ReadCount: Int64 read FReadCount write FReadCount;
+    property Done: Boolean read FDone write FDone;
+  end;
+
   TSessionStream = class(TJSONFingerprint)
   private
     FData: string;
@@ -861,6 +878,8 @@ type
   TPromiseSessionThreadList = TPromiseCallback<TSessionThreadList>;
   TAsynSessionStream = TAsynCallBack<TSessionStream>;
   TPromiseSessionStream = TPromiseCallback<TSessionStream>;
+  TAsynSessionStreamStatus = TAsynStreamCallBack<TSessionStreamStatus>;
+  TPromiseSessionStreamStatus = TPromiseStreamCallBack<TSessionStreamStatus>;
 
   TSessionEventsRoute = class;
   TSessionResourcesRoute = class;
@@ -933,6 +952,10 @@ type
     function List(const SessionId: string; const ParamProc: TSessionEventListParamProc): TSessionEventList; overload; virtual; abstract;
     function Send(const SessionId: string; const ParamProc: TSessionSendEventsParamProc): TSessionSendEventsResponse; overload; virtual; abstract;
     function StreamRaw(const SessionId: string): TSessionStream; overload; virtual; abstract;
+    function StreamRaw(const SessionId: string; const Response: TStream;
+      Event: TReceiveDataCallback): Integer; overload; virtual; abstract;
+    function StreamEvents(const SessionId: string; const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback): Integer; overload; virtual; abstract;
   end;
 
   TSessionEventsAsynchronousSupport = class(TSessionEventsAbstractSupport)
@@ -941,6 +964,10 @@ type
     procedure AsynList(const SessionId: string; const ParamProc: TSessionEventListParamProc; const CallBacks: TFunc<TAsynSessionEventList>); overload;
     procedure AsynSend(const SessionId: string; const ParamProc: TSessionSendEventsParamProc; const CallBacks: TFunc<TAsynSessionSendEventsResponse>); overload;
     procedure AsynStreamRaw(const SessionId: string; const CallBacks: TFunc<TAsynSessionStream>); overload;
+    procedure AsynStreamRaw(const SessionId: string; const Response: TStream;
+      Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
+    procedure AsynStreamEvents(const SessionId: string; const Event: TSessionStreamEvent;
+      const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
   end;
 
   TSessionEventsRoute = class(TSessionEventsAsynchronousSupport)
@@ -949,11 +976,20 @@ type
     function List(const SessionId: string; const ParamProc: TSessionEventListParamProc): TSessionEventList; overload; override;
     function Send(const SessionId: string; const ParamProc: TSessionSendEventsParamProc): TSessionSendEventsResponse; overload; override;
     function StreamRaw(const SessionId: string): TSessionStream; overload; override;
+    function StreamRaw(const SessionId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil): Integer; overload; override;
+    function StreamEvents(const SessionId: string; const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback = nil): Integer; overload; override;
 
     function AsyncAwaitList(const SessionId: string; const Callbacks: TFunc<TPromiseSessionEventList> = nil): TPromise<TSessionEventList>; overload;
     function AsyncAwaitList(const SessionId: string; const ParamProc: TSessionEventListParamProc; const Callbacks: TFunc<TPromiseSessionEventList> = nil): TPromise<TSessionEventList>; overload;
     function AsyncAwaitSend(const SessionId: string; const ParamProc: TSessionSendEventsParamProc; const Callbacks: TFunc<TPromiseSessionSendEventsResponse> = nil): TPromise<TSessionSendEventsResponse>; overload;
     function AsyncAwaitStreamRaw(const SessionId: string; const Callbacks: TFunc<TPromiseSessionStream> = nil): TPromise<TSessionStream>; overload;
+    function AsyncAwaitStreamRaw(const SessionId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
+    function AsyncAwaitStreamEvents(const SessionId: string; const Event: TSessionStreamEvent;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
   end;
 
   TSessionResourcesAbstractSupport = class(TAnthropicAPIRoute)
@@ -999,6 +1035,11 @@ type
     function List(const SessionId: string; const ParamProc: TSessionSimpleListParamProc): TSessionThreadList; overload; virtual; abstract;
     function Retrieve(const SessionId, ThreadId: string): TSessionThread; overload; virtual; abstract;
     function StreamRaw(const SessionId, ThreadId: string): TSessionStream; overload; virtual; abstract;
+    function StreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback): Integer; overload; virtual; abstract;
+    function StreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback): Integer; overload; virtual; abstract;
   end;
 
   TSessionThreadsAsynchronousSupport = class(TSessionThreadsAbstractSupport)
@@ -1007,6 +1048,11 @@ type
     procedure AsynList(const SessionId: string; const ParamProc: TSessionSimpleListParamProc; const CallBacks: TFunc<TAsynSessionThreadList>); overload;
     procedure AsynRetrieve(const SessionId, ThreadId: string; const CallBacks: TFunc<TAsynSessionThread>); overload;
     procedure AsynStreamRaw(const SessionId, ThreadId: string; const CallBacks: TFunc<TAsynSessionStream>); overload;
+    procedure AsynStreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
+    procedure AsynStreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
   end;
 
   TSessionThreadsRoute = class(TSessionThreadsAsynchronousSupport)
@@ -1021,11 +1067,22 @@ type
     function List(const SessionId: string; const ParamProc: TSessionSimpleListParamProc): TSessionThreadList; overload; override;
     function Retrieve(const SessionId, ThreadId: string): TSessionThread; overload; override;
     function StreamRaw(const SessionId, ThreadId: string): TSessionStream; overload; override;
+    function StreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil): Integer; overload; override;
+    function StreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback = nil): Integer; overload; override;
 
     function AsyncAwaitList(const SessionId: string; const Callbacks: TFunc<TPromiseSessionThreadList> = nil): TPromise<TSessionThreadList>; overload;
     function AsyncAwaitList(const SessionId: string; const ParamProc: TSessionSimpleListParamProc; const Callbacks: TFunc<TPromiseSessionThreadList> = nil): TPromise<TSessionThreadList>; overload;
     function AsyncAwaitRetrieve(const SessionId, ThreadId: string; const Callbacks: TFunc<TPromiseSessionThread> = nil): TPromise<TSessionThread>; overload;
     function AsyncAwaitStreamRaw(const SessionId, ThreadId: string; const Callbacks: TFunc<TPromiseSessionStream> = nil): TPromise<TSessionStream>; overload;
+    function AsyncAwaitStreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
+    function AsyncAwaitStreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
 
     constructor CreateRoute(AAPI: TAnthropicAPI); reintroduce;
     destructor Destroy; override;
@@ -1036,6 +1093,11 @@ type
     function List(const SessionId, ThreadId: string): TSessionEventList; overload; virtual; abstract;
     function List(const SessionId, ThreadId: string; const ParamProc: TSessionSimpleListParamProc): TSessionEventList; overload; virtual; abstract;
     function StreamRaw(const SessionId, ThreadId: string): TSessionStream; overload; virtual; abstract;
+    function StreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback): Integer; overload; virtual; abstract;
+    function StreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback): Integer; overload; virtual; abstract;
   end;
 
   TSessionThreadEventsAsynchronousSupport = class(TSessionThreadEventsAbstractSupport)
@@ -1043,6 +1105,11 @@ type
     procedure AsynList(const SessionId, ThreadId: string; const CallBacks: TFunc<TAsynSessionEventList>); overload;
     procedure AsynList(const SessionId, ThreadId: string; const ParamProc: TSessionSimpleListParamProc; const CallBacks: TFunc<TAsynSessionEventList>); overload;
     procedure AsynStreamRaw(const SessionId, ThreadId: string; const CallBacks: TFunc<TAsynSessionStream>); overload;
+    procedure AsynStreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
+    procedure AsynStreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      const CallBacks: TFunc<TAsynSessionStreamStatus>); overload;
   end;
 
   TSessionThreadEventsRoute = class(TSessionThreadEventsAsynchronousSupport)
@@ -1050,18 +1117,77 @@ type
     function List(const SessionId, ThreadId: string): TSessionEventList; overload; override;
     function List(const SessionId, ThreadId: string; const ParamProc: TSessionSimpleListParamProc): TSessionEventList; overload; override;
     function StreamRaw(const SessionId, ThreadId: string): TSessionStream; overload; override;
+    function StreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil): Integer; overload; override;
+    function StreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback = nil): Integer; overload; override;
 
     function AsyncAwaitList(const SessionId, ThreadId: string; const Callbacks: TFunc<TPromiseSessionEventList> = nil): TPromise<TSessionEventList>; overload;
     function AsyncAwaitList(const SessionId, ThreadId: string; const ParamProc: TSessionSimpleListParamProc; const Callbacks: TFunc<TPromiseSessionEventList> = nil): TPromise<TSessionEventList>; overload;
     function AsyncAwaitStreamRaw(const SessionId, ThreadId: string; const Callbacks: TFunc<TPromiseSessionStream> = nil): TPromise<TSessionStream>; overload;
+    function AsyncAwaitStreamRaw(const SessionId, ThreadId: string; const Response: TStream;
+      Event: TReceiveDataCallback = nil;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
+    function AsyncAwaitStreamEvents(const SessionId, ThreadId: string;
+      const Event: TSessionStreamEvent;
+      const Callbacks: TFunc<TPromiseSessionStreamStatus> = nil): TPromise<TSessionStreamStatus>; overload;
   end;
 
 implementation
 
 uses
-  Anthropic.API.JsonSafeReader;
+  Anthropic.API.JsonSafeReader, Anthropic.API.SSEDecoder;
 
 type
+  ESessionStreamAborted = class(Exception);
+
+  TSessionSSEFeedStream = class(TStream)
+  private
+    FPosition: Int64;
+    FOnBytes: TFunc<TBytes, Boolean>;
+  public
+    constructor Create(const AOnBytes: TFunc<TBytes, Boolean>);
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Write(const Buffer; Count: Longint): Longint; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+  end;
+
+  TSessionStreamEventAdapter = class
+  private
+    type
+      TExecuteProc = reference to function(
+        const Response: TStream;
+        Event: TReceiveDataCallback): Integer;
+  public
+    class function Run(const Event: TSessionStreamEvent;
+      ReceiveData: TReceiveDataCallback;
+      const Execute: TExecuteProc): Integer; static;
+  end;
+
+  TSessionStreamRawAsyncSupport = class
+  private
+    type
+      TExecuteProc = reference to function(
+        const Event: TReceiveDataCallback): Integer;
+      TPromiseInvokeProc = reference to procedure(
+        const CallBacks: TFunc<TAsynSessionStreamStatus>);
+
+    class function CopyStatus(
+      const Value: TSessionStreamStatus): TSessionStreamStatus; static;
+    class procedure DispatchProgress(const Sender: TObject;
+      const OnProgress: TProc<TObject, TSessionStreamStatus>;
+      const Status: TSessionStreamStatus); static;
+  public
+    class procedure Run(const Owner: TObject;
+      const CallBacks: TFunc<TAsynSessionStreamStatus>;
+      const Event: TReceiveDataCallback;
+      const Execute: TExecuteProc); static;
+    class function CreatePromise(
+      const Callbacks: TFunc<TPromiseSessionStreamStatus>;
+      const Invoke: TPromiseInvokeProc): TPromise<TSessionStreamStatus>; static;
+  end;
+
   TSessionResponseHydrator = class
   public
     class procedure HydrateAgent(const Agent: TSessionAgent); static;
@@ -1075,6 +1201,353 @@ type
     class procedure HydrateThread(const Thread: TSessionThread); static;
     class procedure HydrateThreadList(const List: TSessionThreadList); static;
   end;
+
+{ TSessionSSEFeedStream }
+
+constructor TSessionSSEFeedStream.Create(const AOnBytes: TFunc<TBytes, Boolean>);
+begin
+  inherited Create;
+  FOnBytes := AOnBytes;
+  FPosition := 0;
+end;
+
+function TSessionSSEFeedStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  Result := 0;
+end;
+
+function TSessionSSEFeedStream.Write(const Buffer; Count: Longint): Longint;
+var
+  Chunk: TBytes;
+begin
+  Result := Count;
+  if Count <= 0 then
+    Exit;
+
+  SetLength(Chunk, Count);
+  Move(Buffer, Chunk[0], Count);
+  Inc(FPosition, Count);
+
+  if Assigned(FOnBytes) and FOnBytes(Chunk) then
+    raise ESessionStreamAborted.Create('Session stream aborted.');
+end;
+
+function TSessionSSEFeedStream.Seek(const Offset: Int64;
+  Origin: TSeekOrigin): Int64;
+begin
+  case Origin of
+    soBeginning: FPosition := Offset;
+    soCurrent: FPosition := FPosition + Offset;
+    soEnd: ;
+  end;
+  Result := FPosition;
+end;
+
+{ TSessionStreamEventAdapter }
+
+class function TSessionStreamEventAdapter.Run(
+  const Event: TSessionStreamEvent; ReceiveData: TReceiveDataCallback;
+  const Execute: TExecuteProc): Integer;
+var
+  Aborted: Boolean;
+  Decoder: TSSEDecoder;
+  Feed: TSessionSSEFeedStream;
+begin
+  Aborted := False;
+  Decoder := TSSEDecoder.Create(
+    procedure(const Data: string; var Abort: Boolean)
+    begin
+      if Aborted then
+        begin
+          Abort := True;
+          Exit;
+        end;
+
+      if Assigned(Event) then
+        Event(Data, Abort);
+
+      if Abort then
+        Aborted := True;
+    end);
+  try
+    Feed := TSessionSSEFeedStream.Create(
+      function(Bytes: TBytes): Boolean
+      begin
+        Result := Aborted;
+        if Result then
+          Exit;
+
+        Decoder.Feed(Bytes, Aborted);
+        Result := Aborted;
+      end);
+    try
+      try
+        Result := Execute(Feed,
+          procedure(const Sender: TObject; AContentLength,
+            AReadCount: Int64; var AAbort: Boolean)
+          begin
+            if Assigned(ReceiveData) then
+              ReceiveData(Sender, AContentLength, AReadCount, AAbort);
+
+            if Aborted then
+              AAbort := True;
+
+            if AAbort then
+              Aborted := True;
+          end);
+
+        if not Aborted then
+          Decoder.Flush(Aborted);
+      except
+        on E: ESessionStreamAborted do
+          Result := 0;
+      end;
+    finally
+      Feed.Free;
+    end;
+  finally
+    Decoder.Free;
+  end;
+end;
+
+class function TSessionStreamRawAsyncSupport.CopyStatus(
+  const Value: TSessionStreamStatus): TSessionStreamStatus;
+begin
+  if not Assigned(Value) then
+    Exit(nil);
+
+  Result := TSessionStreamStatus.New(Value.StatusCode, Value.ContentLength,
+    Value.ReadCount, Value.Done);
+end;
+
+class procedure TSessionStreamRawAsyncSupport.DispatchProgress(const Sender: TObject;
+  const OnProgress: TProc<TObject, TSessionStreamStatus>;
+  const Status: TSessionStreamStatus);
+begin
+  if Assigned(OnProgress) then
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        try
+          OnProgress(Sender, Status);
+        finally
+          Status.Free;
+        end;
+      end)
+  else
+    Status.Free;
+end;
+
+class procedure TSessionStreamRawAsyncSupport.Run(const Owner: TObject;
+  const CallBacks: TFunc<TAsynSessionStreamStatus>;
+  const Event: TReceiveDataCallback;
+  const Execute: TExecuteProc);
+var
+  Sender: TObject;
+  OnStart: TProc<TObject>;
+  OnSuccess: TProc<TObject>;
+  OnProgress: TProc<TObject, TSessionStreamStatus>;
+  OnError: TProc<TObject, string>;
+  OnCancellation: TProc<TObject>;
+  OnDoCancel: TFunc<Boolean>;
+begin
+  var CallBackParams := TUseParamsFactory<TAsynSessionStreamStatus>.CreateInstance(CallBacks);
+
+  Sender := CallBackParams.Param.Sender;
+  OnStart := CallBackParams.Param.OnStart;
+  OnSuccess := CallBackParams.Param.OnSuccess;
+  OnProgress := CallBackParams.Param.OnProgress;
+  OnError := CallBackParams.Param.OnError;
+  OnCancellation := CallBackParams.Param.OnCancellation;
+  OnDoCancel := CallBackParams.Param.OnDoCancel;
+
+  var Task: ITask := TTask.Create(
+    procedure()
+    var
+      Stop: Boolean;
+      CancelTag: Integer;
+      LastContentLength: Int64;
+      LastReadCount: Int64;
+      StatusCode: Integer;
+      StreamEvent: TReceiveDataCallback;
+    begin
+      if not Assigned(Sender) then
+        Sender := Owner;
+
+      if Assigned(OnStart) then
+        TThread.Queue(nil,
+          procedure
+          begin
+            OnStart(Sender);
+          end);
+
+      Stop := False;
+      CancelTag := 0;
+      LastContentLength := 0;
+      LastReadCount := 0;
+
+      StreamEvent :=
+        procedure(const HttpSender: TObject; AContentLength, AReadCount: Int64;
+          var AAbort: Boolean)
+        begin
+          LastContentLength := AContentLength;
+          LastReadCount := AReadCount;
+
+          if Assigned(Event) then
+            Event(HttpSender, AContentLength, AReadCount, AAbort);
+
+          if AAbort then
+            Stop := True;
+
+          if Assigned(OnDoCancel) then
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                Stop := Stop or OnDoCancel();
+              end);
+
+          if Stop then
+            begin
+              AAbort := True;
+              if (CancelTag = 0) and Assigned(OnCancellation) then
+                TThread.Queue(nil,
+                  procedure
+                  begin
+                    OnCancellation(Sender);
+                  end);
+              Inc(CancelTag);
+              Exit;
+            end;
+
+          DispatchProgress(Sender, OnProgress,
+            TSessionStreamStatus.New(0, AContentLength, AReadCount, False));
+        end;
+
+      try
+        StatusCode := Execute(StreamEvent);
+
+        if not Stop then
+          begin
+            DispatchProgress(Sender, OnProgress,
+              TSessionStreamStatus.New(StatusCode, LastContentLength,
+                LastReadCount, True));
+
+            if Assigned(OnSuccess) then
+              TThread.Queue(nil,
+                procedure
+                begin
+                  OnSuccess(Sender);
+                end);
+          end;
+      except
+        on E: Exception do
+          begin
+            var Error := AcquireExceptionObject;
+            try
+              var ErrorMsg := (Error as Exception).Message;
+              if Assigned(OnError) then
+                TThread.Queue(nil,
+                  procedure
+                  begin
+                    OnError(Sender, ErrorMsg);
+                  end);
+            finally
+              Error.Free;
+            end;
+          end;
+      end;
+    end);
+  Task.Start;
+end;
+
+class function TSessionStreamRawAsyncSupport.CreatePromise(
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>;
+  const Invoke: TPromiseInvokeProc): TPromise<TSessionStreamStatus>;
+begin
+  Result := TPromise<TSessionStreamStatus>.Create(
+    procedure(Resolve: TProc<TSessionStreamStatus>; Reject: TProc<Exception>)
+    begin
+      var PromiseCallbacks := Default(TPromiseSessionStreamStatus);
+      var HasCallbacks := Assigned(Callbacks);
+      var FinalStatus: TSessionStreamStatus := nil;
+
+      if HasCallbacks then
+        PromiseCallbacks := Callbacks();
+
+      Invoke(
+        function: TAsynSessionStreamStatus
+        begin
+          Result := Default(TAsynSessionStreamStatus);
+
+          if HasCallbacks then
+            begin
+              Result.Sender := PromiseCallbacks.Sender;
+              Result.OnStart := PromiseCallbacks.OnStart;
+            end;
+
+          Result.OnProgress :=
+            procedure(Sender: TObject; Status: TSessionStreamStatus)
+            begin
+              if Assigned(Status) and Status.Done then
+                begin
+                  FinalStatus.Free;
+                  FinalStatus := CopyStatus(Status);
+                end;
+
+              if HasCallbacks and Assigned(PromiseCallbacks.OnProgress) then
+                PromiseCallbacks.OnProgress(Sender, Status);
+            end;
+
+          Result.OnSuccess :=
+            procedure(Sender: TObject)
+            begin
+              if not Assigned(FinalStatus) then
+                FinalStatus := TSessionStreamStatus.New(0, 0, 0, True);
+
+              Resolve(FinalStatus);
+              FinalStatus := nil;
+            end;
+
+          Result.OnError :=
+            procedure(Sender: TObject; Error: string)
+            begin
+              FinalStatus.Free;
+              FinalStatus := nil;
+
+              if HasCallbacks and Assigned(PromiseCallbacks.OnError) then
+                Error := PromiseCallbacks.OnError(Sender, Error);
+              Reject(Exception.Create(Error));
+            end;
+
+          Result.OnDoCancel :=
+            function: Boolean
+            begin
+              if HasCallbacks and Assigned(PromiseCallbacks.OnDoCancel) then
+                Result := PromiseCallbacks.OnDoCancel()
+              else
+                Result := False;
+            end;
+
+          Result.OnCancellation :=
+            procedure(Sender: TObject)
+            begin
+              var Error := 'aborted';
+
+              FinalStatus.Free;
+              FinalStatus := nil;
+
+              if HasCallbacks and Assigned(PromiseCallbacks.OnCancellation) then
+                begin
+                  var CallbackError := PromiseCallbacks.OnCancellation(Sender);
+                  if not CallbackError.IsEmpty then
+                    Error := CallbackError;
+                end;
+
+              Reject(Exception.Create(Error));
+            end;
+        end);
+    end);
+end;
 
 { TSessionResponseHydrator }
 
@@ -2301,6 +2774,19 @@ begin
   inherited;
 end;
 
+{ TSessionStreamStatus }
+
+class function TSessionStreamStatus.New(const AStatusCode: Integer;
+  const AContentLength, AReadCount: Int64;
+  const ADone: Boolean): TSessionStreamStatus;
+begin
+  Result := TSessionStreamStatus.Create;
+  Result.StatusCode := AStatusCode;
+  Result.ContentLength := AContentLength;
+  Result.ReadCount := AReadCount;
+  Result.Done := ADone;
+end;
+
 { TSessionStream }
 
 constructor TSessionStream.Create;
@@ -2618,6 +3104,25 @@ begin
   Result := TSessionStream.Create(API.Get('sessions/' + SessionId + '/events/stream'));
 end;
 
+function TSessionEventsRoute.StreamRaw(const SessionId: string;
+  const Response: TStream; Event: TReceiveDataCallback): Integer;
+begin
+  Result := API.GetStream('sessions/' + SessionId + '/events/stream',
+    Response, [], 'text/event-stream', Event);
+end;
+
+function TSessionEventsRoute.StreamEvents(const SessionId: string;
+  const Event: TSessionStreamEvent;
+  ReceiveData: TReceiveDataCallback): Integer;
+begin
+  Result := TSessionStreamEventAdapter.Run(Event, ReceiveData,
+    function(const Response: TStream;
+      StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, Response, StreamEvent);
+    end);
+end;
+
 function TSessionEventsRoute.AsyncAwaitList(const SessionId: string;
   const Callbacks: TFunc<TPromiseSessionEventList>): TPromise<TSessionEventList>;
 begin
@@ -2662,6 +3167,28 @@ begin
       Self.AsynStreamRaw(SessionId, CallbackParams);
     end,
     Callbacks);
+end;
+
+function TSessionEventsRoute.AsyncAwaitStreamRaw(const SessionId: string;
+  const Response: TStream; Event: TReceiveDataCallback;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamRaw(SessionId, Response, Event, CallbackParams);
+    end);
+end;
+
+function TSessionEventsRoute.AsyncAwaitStreamEvents(const SessionId: string;
+  const Event: TSessionStreamEvent;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamEvents(SessionId, Event, CallbackParams);
+    end);
 end;
 
 { TSessionEventsAsynchronousSupport }
@@ -2742,6 +3269,28 @@ begin
   finally
     Free;
   end;
+end;
+
+procedure TSessionEventsAsynchronousSupport.AsynStreamRaw(
+  const SessionId: string; const Response: TStream;
+  Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, Event,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, Response, StreamEvent);
+    end);
+end;
+
+procedure TSessionEventsAsynchronousSupport.AsynStreamEvents(
+  const SessionId: string; const Event: TSessionStreamEvent;
+  const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, nil,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamEvents(SessionId, Event, StreamEvent);
+    end);
 end;
 
 { TSessionResourcesRoute }
@@ -3004,6 +3553,25 @@ begin
   Result := TSessionStream.Create(API.Get('sessions/' + SessionId + '/threads/' + ThreadId + '/stream'));
 end;
 
+function TSessionThreadsRoute.StreamRaw(const SessionId, ThreadId: string;
+  const Response: TStream; Event: TReceiveDataCallback): Integer;
+begin
+  Result := API.GetStream('sessions/' + SessionId + '/threads/' + ThreadId + '/stream',
+    Response, [], 'text/event-stream', Event);
+end;
+
+function TSessionThreadsRoute.StreamEvents(const SessionId, ThreadId: string;
+  const Event: TSessionStreamEvent;
+  ReceiveData: TReceiveDataCallback): Integer;
+begin
+  Result := TSessionStreamEventAdapter.Run(Event, ReceiveData,
+    function(const Response: TStream;
+      StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, ThreadId, Response, StreamEvent);
+    end);
+end;
+
 function TSessionThreadsRoute.AsyncAwaitList(const SessionId: string;
   const Callbacks: TFunc<TPromiseSessionThreadList>): TPromise<TSessionThreadList>;
 begin
@@ -3047,6 +3615,28 @@ begin
       Self.AsynStreamRaw(SessionId, ThreadId, CallbackParams);
     end,
     Callbacks);
+end;
+
+function TSessionThreadsRoute.AsyncAwaitStreamRaw(const SessionId, ThreadId: string;
+  const Response: TStream; Event: TReceiveDataCallback;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamRaw(SessionId, ThreadId, Response, Event, CallbackParams);
+    end);
+end;
+
+function TSessionThreadsRoute.AsyncAwaitStreamEvents(const SessionId,
+  ThreadId: string; const Event: TSessionStreamEvent;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamEvents(SessionId, ThreadId, Event, CallbackParams);
+    end);
 end;
 
 { TSessionThreadsAsynchronousSupport }
@@ -3127,6 +3717,28 @@ begin
   end;
 end;
 
+procedure TSessionThreadsAsynchronousSupport.AsynStreamRaw(
+  const SessionId, ThreadId: string; const Response: TStream;
+  Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, Event,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, ThreadId, Response, StreamEvent);
+    end);
+end;
+
+procedure TSessionThreadsAsynchronousSupport.AsynStreamEvents(
+  const SessionId, ThreadId: string; const Event: TSessionStreamEvent;
+  const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, nil,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamEvents(SessionId, ThreadId, Event, StreamEvent);
+    end);
+end;
+
 { TSessionThreadEventsRoute }
 
 function TSessionThreadEventsRoute.List(const SessionId, ThreadId: string): TSessionEventList;
@@ -3143,6 +3755,25 @@ end;
 function TSessionThreadEventsRoute.StreamRaw(const SessionId, ThreadId: string): TSessionStream;
 begin
   Result := TSessionStream.Create(API.Get('sessions/' + SessionId + '/threads/' + ThreadId + '/events/stream'));
+end;
+
+function TSessionThreadEventsRoute.StreamRaw(const SessionId, ThreadId: string;
+  const Response: TStream; Event: TReceiveDataCallback): Integer;
+begin
+  Result := API.GetStream('sessions/' + SessionId + '/threads/' + ThreadId + '/events/stream',
+    Response, [], 'text/event-stream', Event);
+end;
+
+function TSessionThreadEventsRoute.StreamEvents(const SessionId,
+  ThreadId: string; const Event: TSessionStreamEvent;
+  ReceiveData: TReceiveDataCallback): Integer;
+begin
+  Result := TSessionStreamEventAdapter.Run(Event, ReceiveData,
+    function(const Response: TStream;
+      StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, ThreadId, Response, StreamEvent);
+    end);
 end;
 
 function TSessionThreadEventsRoute.AsyncAwaitList(const SessionId, ThreadId: string;
@@ -3177,6 +3808,28 @@ begin
       Self.AsynStreamRaw(SessionId, ThreadId, CallbackParams);
     end,
     Callbacks);
+end;
+
+function TSessionThreadEventsRoute.AsyncAwaitStreamRaw(const SessionId, ThreadId: string;
+  const Response: TStream; Event: TReceiveDataCallback;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamRaw(SessionId, ThreadId, Response, Event, CallbackParams);
+    end);
+end;
+
+function TSessionThreadEventsRoute.AsyncAwaitStreamEvents(const SessionId,
+  ThreadId: string; const Event: TSessionStreamEvent;
+  const Callbacks: TFunc<TPromiseSessionStreamStatus>): TPromise<TSessionStreamStatus>;
+begin
+  Result := TSessionStreamRawAsyncSupport.CreatePromise(Callbacks,
+    procedure(const CallbackParams: TFunc<TAsynSessionStreamStatus>)
+    begin
+      Self.AsynStreamEvents(SessionId, ThreadId, Event, CallbackParams);
+    end);
 end;
 
 { TSessionThreadEventsAsynchronousSupport }
@@ -3236,6 +3889,28 @@ begin
   finally
     Free;
   end;
+end;
+
+procedure TSessionThreadEventsAsynchronousSupport.AsynStreamRaw(
+  const SessionId, ThreadId: string; const Response: TStream;
+  Event: TReceiveDataCallback; const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, Event,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamRaw(SessionId, ThreadId, Response, StreamEvent);
+    end);
+end;
+
+procedure TSessionThreadEventsAsynchronousSupport.AsynStreamEvents(
+  const SessionId, ThreadId: string; const Event: TSessionStreamEvent;
+  const CallBacks: TFunc<TAsynSessionStreamStatus>);
+begin
+  TSessionStreamRawAsyncSupport.Run(Self, CallBacks, nil,
+    function(const StreamEvent: TReceiveDataCallback): Integer
+    begin
+      Result := Self.StreamEvents(SessionId, ThreadId, Event, StreamEvent);
+    end);
 end;
 
 end.

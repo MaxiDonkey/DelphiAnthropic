@@ -16,7 +16,8 @@
       "media": "Πολυμέσα",
       "custom": "Προσαρμοσμένο",
       "settings": "Ρυθμίσεις",
-      "model": "Μοντέλο"
+      "model": "Μοντέλο",
+      "project": "Έργο"
     },
     "thinking": {
       "low": "Χαμηλός",
@@ -52,6 +53,12 @@
       "createAudio": "Δημιουργία ήχου",
       "speechToText": "Ομιλία σε κείμενο",
       "textToSpeech": "Κείμενο σε ομιλία"
+    },
+    "project": {
+      "add": "Προσθήκη έργου",
+      "none": "κανένα",
+      "noneUsed": "Δεν χρησιμοποιείται κανένα έργο",
+      "delete": "Διαγραφή"
     },
     "chips": {
       "endpoint": "Τελικό σημείο: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Ακύρωση"
   },
+  "webDecisionDlg": {
+    "title": "Επιβεβαίωση",
+    "message": "Παρακαλώ επιβεβαιώστε.",
+    "ok": "OK",
+    "cancel": "Ακύρωση",
+    "close": "Κλείσιμο"
+  },
   "displayFile": {
     "fallbackName": "Αρχείο {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Συλλογισμός"
+    },
+    "toolGroup": {
+      "label": "Εργαλεία που χρησιμοποιήθηκαν"
     },
     "code": {
       "copy": "Αντιγραφή",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: Το κλειδί API υπάρχει",
     "api_key_modified": "%s: Το κλειδί API τροποποιήθηκε.",
     "api_key_inserted": "%s: Το κλειδί API εισήχθη",
+    "web_decision_dlg_title": "Επιβεβαίωση",
+    "web_decision_dlg_message": "Παρακαλώ επιβεβαιώστε.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Ακύρωση",
+    "web_decision_dlg_close": "Κλείσιμο",
+    "demo_anthropic_tool_confirmation_title": "Επιβεβαίωση",
+    "demo_anthropic_tool_allow": "Επιτρέψτε",
+    "demo_anthropic_tool_deny": "Απόρριψη",
+    "demo_anthropic_tool_allow_call": "Να επιτραπεί αυτή η κλήση εργαλείου;",
+    "demo_anthropic_interrupted_by_user": "Διακόπηκε από τον χρήστη.",
     "command_plugin_not_be_null": "Το πρόσθετο δεν μπορεί να είναι κενό",
     "command_unknown": "Άγνωστη εντολή: /%s",
     "command_action_unknown": "Άγνωστη ενέργεια: /%s %s",

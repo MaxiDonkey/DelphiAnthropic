@@ -16,7 +16,8 @@
       "media": "媒体",
       "custom": "自定义",
       "settings": "设置",
-      "model": "模型"
+      "model": "模型",
+      "project": "项目"
     },
     "thinking": {
       "low": "低",
@@ -52,6 +53,12 @@
       "createAudio": "创建音频",
       "speechToText": "语音转文本",
       "textToSpeech": "文本转语音"
+    },
+    "project": {
+      "add": "添加项目",
+      "none": "无",
+      "noneUsed": "未使用项目",
+      "delete": "删除"
     },
     "chips": {
       "endpoint": "端点:{title}",
@@ -218,6 +225,13 @@
     "ok": "确定",
     "cancel": "取消"
   },
+  "webDecisionDlg": {
+    "title": "确认",
+    "message": "请确认。",
+    "ok": "确定",
+    "cancel": "取消",
+    "close": "关闭"
+  },
   "displayFile": {
     "fallbackName": "文件 {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "推理"
+    },
+    "toolGroup": {
+      "label": "使用的工具"
     },
     "code": {
       "copy": "复制",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s:API 密钥已存在",
     "api_key_modified": "%s:API 密钥已修改。",
     "api_key_inserted": "%s:API 密钥已插入",
+    "web_decision_dlg_title": "确认",
+    "web_decision_dlg_message": "请确认。",
+    "web_decision_dlg_ok": "确定",
+    "web_decision_dlg_cancel": "取消",
+    "web_decision_dlg_close": "关闭",
+    "demo_anthropic_tool_confirmation_title": "确认",
+    "demo_anthropic_tool_allow": "允许",
+    "demo_anthropic_tool_deny": "拒绝",
+    "demo_anthropic_tool_allow_call": "允许此工具调用吗？",
+    "demo_anthropic_interrupted_by_user": "已被用户中断。",
     "command_plugin_not_be_null": "插件不能为空",
     "command_unknown": "未知命令:/%s",
     "command_action_unknown": "未知操作:/%s %s",

@@ -348,9 +348,12 @@ begin
   FDispatch[TBrowserChatEvent.CardSelectionDialogSettings] := CardSelectionDialogSettingsEvent;
   FDispatch[TBrowserChatEvent.AudioInput] := AudioInputEvent;
   FDispatch[TBrowserChatEvent.InputString] := InputString;
+  FDispatch[TBrowserChatEvent.WebDecisionDlgResponse] := WebDecisionDlgResponseEvent;
   FDispatch[TBrowserChatEvent.CustomEvent] := CustomEvent;
   FDispatch[TBrowserChatEvent.FileDropIn] := FileDropInEvent;
   FDispatch[TBrowserChatEvent.PasteFromClipboard] := PasteFromClipboardEvent;
+  FDispatch[TBrowserChatEvent.FolderSelection] := FolderSelectionEvent;
+  FDispatch[TBrowserChatEvent.FolderState] := FolderStateEvent;
 end;
 
 procedure TBrowserEventManager.SetBrowser(const Value: IPythiaBrowser);

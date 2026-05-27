@@ -3,7 +3,8 @@ unit WVPythia.Chat.ManagedFlow;
 interface
 
 uses
-  System.SysUtils, REST.Json.Types;
+  System.SysUtils, REST.Json.Types,
+  WVPythia.ChatSession.Controller;
 
 type
   {--- Classes pour la désérialisation JSON renvoyé par le panneau de configuration }
@@ -188,6 +189,15 @@ type
     property FileId: string read FFileId write FFileId;
   end;
 
+  TProjectState = class
+  private
+    FDisplayName: string;
+    FFullPath: string;
+  public
+    property DisplayName: string read FDisplayName write FDisplayName;
+    property FullPath: string read FFullPath write FFullPath;
+  end;
+
   TIntegration = class
   private
     FFunction: TArray<TListItems>;
@@ -229,6 +239,7 @@ type
     FThinking: string;
     FDeepResearch: Boolean;
     FWebSearch: Boolean;
+    FProject: TProjectState;
     FFiles: TArray<TMediaItem>;
     FImages: TArray<TMediaItem>;
     FKnowledgeSearch: TArray<TMediaItem>;
@@ -248,6 +259,7 @@ type
     property Thinking: string read FThinking write FThinking;
     property DeepResearch: Boolean read FDeepResearch write FDeepResearch;
     property WebSearch: Boolean read FWebSearch write FWebSearch;
+    property Project: TProjectState read FProject write FProject;
     property Files: TArray<TMediaItem> read FFiles write FFiles;
     property Images: TArray<TMediaItem> read FImages write FImages;
     property KnowledgeSearch: TArray<TMediaItem> read FKnowledgeSearch write FKnowledgeSearch;
@@ -280,10 +292,12 @@ type
     FImages: TArray<string>;
     FAudios: TArray<string>;
     FVideos: TArray<string>;
+    FDisplayBlocks: TArray<TChatDisplayBlock>;
     FError: Boolean;
     FErrorMessage: string;
   private
     class function Normalize(const AValues: TArray<string>): TArray<string>; static;
+    procedure SetDisplayBlocks(const Value: TArray<TChatDisplayBlock>);
     procedure SetModel(const Value: string);
   public
     class function New: TManagedItemLLMResult; static;
@@ -300,6 +314,8 @@ type
     function ImageResults(const AValues: TArray<string>): TManagedItemLLMResult;
     function AudioResults(const AValues: TArray<string>): TManagedItemLLMResult;
     function VideoResults(const AValues: TArray<string>): TManagedItemLLMResult;
+    function DisplayBlockResults(
+      const AValues: TArray<TChatDisplayBlock>): TManagedItemLLMResult;
 
     function IsEmpty: Boolean;
     procedure Clear;
@@ -313,9 +329,12 @@ type
     property ImageList: TArray<string> read FImages;
     property AudioList: TArray<string> read FAudios;
     property VideoList: TArray<string> read FVideos;
+    property DisplayBlocks: TArray<TChatDisplayBlock>
+      read FDisplayBlocks write SetDisplayBlocks;
 
     function HasError: Boolean;
     function AcquireError: string;
+    destructor Destroy; override;
   end;
 
   TManagedItemFinalizeProc = reference to procedure(
@@ -328,6 +347,12 @@ uses
 
 { TManagedItemLLMResult }
 
+destructor TManagedItemLLMResult.Destroy;
+begin
+  Clear;
+  inherited;
+end;
+
 procedure TManagedItemLLMResult.Clear;
 begin
   FResponse := '';
@@ -336,6 +361,14 @@ begin
   FImages := nil;
   FAudios := nil;
   FVideos := nil;
+  FreeChatDisplayBlocks(FDisplayBlocks);
+end;
+
+function TManagedItemLLMResult.DisplayBlockResults(
+  const AValues: TArray<TChatDisplayBlock>): TManagedItemLLMResult;
+begin
+  SetDisplayBlocks(AValues);
+  Result := Self;
 end;
 
 function TManagedItemLLMResult.Error(
@@ -419,7 +452,15 @@ begin
     (Length(FFiles) = 0) and
     (Length(FImages) = 0) and
     (Length(FAudios) = 0) and
-    (Length(FVideos) = 0);
+    (Length(FVideos) = 0) and
+    (Length(FDisplayBlocks) = 0);
+end;
+
+procedure TManagedItemLLMResult.SetDisplayBlocks(
+  const Value: TArray<TChatDisplayBlock>);
+begin
+  FreeChatDisplayBlocks(FDisplayBlocks);
+  FDisplayBlocks := CloneChatDisplayBlocks(Value);
 end;
 
 procedure TManagedItemLLMResult.SetModel(
@@ -475,6 +516,8 @@ begin
     Item.Free;
   for var Item in FKnowledgeSearch do
     Item.Free;
+  if Assigned(FProject) then
+    FProject.Free;
   if Assigned(FIntegration) then
     FIntegration.Free;
   for var Item in FCustom do

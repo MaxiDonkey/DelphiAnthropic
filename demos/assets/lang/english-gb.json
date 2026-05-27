@@ -16,7 +16,8 @@
       "media": "Media",
       "custom": "Custom",
       "settings": "Settings",
-      "model": "Model"
+      "model": "Model",
+      "project": "Project"
     },
     "thinking": {
       "low": "Low",
@@ -52,6 +53,12 @@
       "createAudio": "Create audio",
       "speechToText": "Speech to text",
       "textToSpeech": "Text to speech"
+    },
+    "project": {
+      "add": "Add project",
+      "none": "none",
+      "noneUsed": "No project used",
+      "delete": "Delete"
     },
     "chips": {
       "endpoint": "Endpoint: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Cancel"
   },
+  "webDecisionDlg": {
+    "title": "Confirmation",
+    "message": "Please confirm.",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
   "displayFile": {
     "fallbackName": "File {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Reasoning"
+    },
+    "toolGroup": {
+      "label": "Tools used"
     },
     "code": {
       "copy": "Copy",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API key exists",
     "api_key_modified": "%s: API key has been modified.",
     "api_key_inserted": "%s: API key has been inserted",
+    "web_decision_dlg_title": "Confirmation",
+    "web_decision_dlg_message": "Please confirm.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Cancel",
+    "web_decision_dlg_close": "Close",
+    "demo_anthropic_tool_confirmation_title": "Confirmation",
+    "demo_anthropic_tool_allow": "Allow",
+    "demo_anthropic_tool_deny": "Deny",
+    "demo_anthropic_tool_allow_call": "Allow this tool call?",
+    "demo_anthropic_interrupted_by_user": "Interrupted by the user.",
     "command_plugin_not_be_null": "Plugin cannot be nil",
     "command_unknown": "Unknown command: /%s",
     "command_action_unknown": "Action unknown: /%s %s",

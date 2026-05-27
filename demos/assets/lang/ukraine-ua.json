@@ -16,7 +16,8 @@
       "media": "Медіа",
       "custom": "Користувацький",
       "settings": "Налаштування",
-      "model": "Модель"
+      "model": "Модель",
+      "project": "Проєкт"
     },
     "thinking": {
       "low": "Низький",
@@ -52,6 +53,12 @@
       "createAudio": "Створити аудіо",
       "speechToText": "Мовлення в текст",
       "textToSpeech": "Текст у мовлення"
+    },
+    "project": {
+      "add": "Додати проєкт",
+      "none": "немає",
+      "noneUsed": "Проєкт не використовується",
+      "delete": "Видалити"
     },
     "chips": {
       "endpoint": "Кінцева точка: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Скасувати"
   },
+  "webDecisionDlg": {
+    "title": "Підтвердження",
+    "message": "Будь ласка, підтвердьте.",
+    "ok": "OK",
+    "cancel": "Скасувати",
+    "close": "Закрити"
+  },
   "displayFile": {
     "fallbackName": "Файл {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Міркування"
+    },
+    "toolGroup": {
+      "label": "Використані інструменти"
     },
     "code": {
       "copy": "Копіювати",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: ключ API існує",
     "api_key_modified": "%s: ключ API змінено.",
     "api_key_inserted": "%s: ключ API вставлено",
+    "web_decision_dlg_title": "Підтвердження",
+    "web_decision_dlg_message": "Будь ласка, підтвердьте.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Скасувати",
+    "web_decision_dlg_close": "Закрити",
+    "demo_anthropic_tool_confirmation_title": "Підтвердження",
+    "demo_anthropic_tool_allow": "Дозволити",
+    "demo_anthropic_tool_deny": "Заборонити",
+    "demo_anthropic_tool_allow_call": "Дозволити цей виклик інструмента?",
+    "demo_anthropic_interrupted_by_user": "Перервано користувачем.",
     "command_plugin_not_be_null": "Плагін не може бути порожнім",
     "command_unknown": "Невідома команда: /%s",
     "command_action_unknown": "Невідома дія: /%s %s",

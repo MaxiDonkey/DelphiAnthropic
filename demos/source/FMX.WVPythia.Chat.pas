@@ -12,7 +12,7 @@ uses
   FMX.StdCtrls, FMX.Objects, FMX.Layouts, FMX.Platform.Win,
 
   WVPythia.Template.Manager, WVPythia.Capabilities.Manager, WVPythia.Strings.Escape,
-  WVPythia.Chat.EventManager, WVPythia.Chat.Interfaces, WVPythia.Chat.Consts,
+  WVPythia.Chat.DecisionDlg, WVPythia.Chat.EventManager, WVPythia.Chat.Interfaces, WVPythia.Chat.Consts,
   WVPythia.TextFile.Helper, WVPythia.Types, WVPythia.Types.EnumWire, WVPythia.Adapter,
   WVPythia.ChatSession.Controller, WVPythia.Strs, WVPythia.Command.Registry,
   WVPythia.Command.Plugin, WVPythia.ApiKey.Service.Intf, WVPythia.Command.Plugin.ApiKey,
@@ -50,6 +50,7 @@ type
   public
     constructor Create;
     function Execute(const Filter: string; const index: Integer; out FileName: string): Boolean;
+    function ExecuteFolder(out FolderPath: string): Boolean;
   end;
 
   TCastHelp = record
@@ -62,6 +63,7 @@ type
     function IsJSScriptInjected: Boolean; virtual; abstract;
     function ExecuteScript(const Script: string): Boolean; virtual; abstract;
     function PostWebMessageAsJson(const Script: string): Boolean; overload; virtual; abstract;
+    function PostWebMessageAsJson(const Script: string; const ExpectedType: string): Boolean; overload; virtual; abstract;
     procedure UpdateEnabledButtons; virtual; abstract;
     procedure Initialize; virtual; abstract;
     procedure BridgeInitialize; virtual; abstract;
@@ -102,6 +104,7 @@ type
     function GetCustomCardsFileName: string;
 
     function GetCapabilitiesFileName: string;
+    function GetProjectsFileName: string;
     function GetExchangeDebugFileName: string;
     function GetAPIKeyNamesFileName: string;
     function GetCustomJSFileName: string;
@@ -156,7 +159,19 @@ type
     property Capabilities: ICapabilities read FCapabilities write FCapabilities;
   end;
 
-  TFMXPythiaJSTemplatesManager = class(TFMXPythiaCapabilitiesManager)
+  TFMXPythiaProjectsManager = class(TFMXPythiaCapabilitiesManager)
+  private
+    function NormalizeProjectsJson(const JsonAsString: string;
+      out NormalizedJson: string): Boolean;
+    procedure SaveDefaultProjectsFile;
+  protected
+    function ProjectsInitialization: Boolean;
+    function ProjectsStateUpdate(const JsonAsString: string): Boolean;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+  TFMXPythiaJSTemplatesManager = class(TFMXPythiaProjectsManager)
   private
     FTemplateProvider: ITemplateProvider;
   protected
@@ -276,7 +291,7 @@ type
     function IsJSScriptInjected: Boolean; override;
     function ExecuteScript(const Script: string): Boolean; override;
     function PostWebMessageAsJson(const Script: string): Boolean; overload; override;
-    function PostWebMessageAsJson(const Script: string; const ExpectedType: string): Boolean; overload;
+    function PostWebMessageAsJson(const Script: string; const ExpectedType: string): Boolean; overload; override;
 
     procedure LockNavigation;
     procedure BridgeInitialize; override;
@@ -414,8 +429,12 @@ type
     procedure SetPersistentChat(const Value: IPersistentChat);
   protected
     FOnChatSessionAutoRename: TProc<string, string>;
+    FOnAfterSessionReloaded: TProc<string>;
     function GetOnChatSessionAutoRename: TProc<string, string>;
     procedure SetOnChatSessionAutoRename(const Value: TProc<string, string>);
+
+    function GetOnAfterSessionReloaded: TProc<string>;
+    procedure SetOnAfterSessionReloaded(const Value: TProc<string>);
 
     function ChatSessionDrawerOpen: Boolean;
     function ChatSessionDrawerClose: Boolean;
@@ -532,6 +551,7 @@ type
     FStreamContent: string;
     FStreamThink: string;
     FFirstChunkContent: Boolean;
+    FWebDecisionDlgBroker: TWebDecisionDlgBroker;
 
     function ClearBrowserDisplay: Boolean;
     procedure ClearCurrentChatSession;
@@ -569,6 +589,12 @@ type
 
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    function WebDecisionDlg(
+      const ARequest: TWebDecisionDlgRequest;
+      const ATimeoutMS: Cardinal = WEB_DECISION_DLG_INFINITE): TWebDecisionDlgResult;
+    function ResolveWebDecisionDlgResponse(const AJson: string): Boolean;
 
     procedure Clear;
     procedure SetFocus;
@@ -600,6 +626,95 @@ type
     function DisplayStream(const AText: string;
       const AThink: string;
       Scroll: Boolean = True): Boolean; overload;
+
+    function DisplayBlock(
+      const Kind: string;
+      const PayloadJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayBlockStream(
+      const Kind: string;
+      const Delta: string;
+      const PayloadJson: string = '';
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayBlocks(
+      const BlocksJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayAssistant(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayAssistantStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayReasoning(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayReasoningStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutput(
+      const ATitle: string;
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutputStart(
+      const ATitle: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolOutputStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolError(
+      const ATitle: string;
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolErrorStart(
+      const ATitle: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayToolErrorStream(
+      const ADelta: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceStatus(
+      const AText: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceList(
+      const ATitle: string;
+      const SourcesJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplaySourceDocument(
+      const ATitle: string;
+      const AUrl: string;
+      const AText: string = '';
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayCitationList(
+      const CitationsJson: string;
+      Scroll: Boolean = True): Boolean;
+
+    function DisplayArtifactList(
+      const ATitle: string;
+      const ArtifactsJson: string;
+      Scroll: Boolean = True): Boolean;
 
     function DisplayMedia(Kind: TDisplayKind;
       const Value: TArray<string>;
@@ -643,6 +758,10 @@ type
 
     /// <summary>Occurs when a chat session requests automatic title generation.</summary>
     property OnChatSessionAutoRename: TProc<string, string> read GetOnChatSessionAutoRename write SetOnChatSessionAutoRename;
+
+    /// <summary>Occurs after a chat session has been re-displayed, carrying the active chat ID.
+    /// Use it to restore any session-derived UI state (e.g. managed-agent chip).</summary>
+    property OnAfterSessionReloaded: TProc<string> read GetOnAfterSessionReloaded write SetOnAfterSessionReloaded;
 
     /// <summary>Allows the host to register custom command plugins during browser initialization.</summary>
     property OnRegisterCommandPlugins: TProc read FOnRegisterCommandPlugins write FOnRegisterCommandPlugins;
@@ -946,6 +1065,39 @@ uses
 
 {$ENDREGION}
 
+function BuildDisplayBlockPayload(
+  const ATitle: string;
+  const AText: string = '';
+  const AUrl: string = '';
+  const AItemsJson: string = ''): string;
+var
+  Obj: TJSONObject;
+  Items: TJSONValue;
+begin
+  Obj := TJSONObject.Create;
+  try
+    if not ATitle.IsEmpty then
+      Obj.AddPair('title', ATitle);
+
+    if not AText.IsEmpty then
+      Obj.AddPair('text', AText);
+
+    if not AUrl.IsEmpty then
+      Obj.AddPair('url', AUrl);
+
+    if not AItemsJson.Trim.IsEmpty then
+      begin
+        Items := TJSONObject.ParseJSONValue(AItemsJson);
+        if Assigned(Items) then
+          Obj.AddPair('items', Items);
+      end;
+
+    Result := Obj.ToJSON;
+  finally
+    Obj.Free;
+  end;
+end;
+
 { TInterfacedFMXPythia }
 
 procedure TInterfacedFMXPythia.BeginUpdate;
@@ -1015,6 +1167,7 @@ begin
   FStreamContent := '';
   FStreamThink := '';
   FReasoningVisible := False;
+  FWebDecisionDlgBroker := TWebDecisionDlgBroker.Create;
 
   {--- Complete event manager dependency injection only after the concrete
        browser instance and all inherited services are fully initialized. }
@@ -1028,6 +1181,45 @@ begin
      must provide its own IChatManagedItemDialogService implementation via
      the public property `ServiceAdapter`. Its setter forwards to
      FEventManager.SetServiceAdapter once the value is supplied. }
+end;
+
+destructor TInterfacedFMXPythia.Destroy;
+begin
+  FWebDecisionDlgBroker.Free;
+  inherited Destroy;
+end;
+
+function TInterfacedFMXPythia.ResolveWebDecisionDlgResponse(
+  const AJson: string): Boolean;
+begin
+  Result :=
+    Assigned(FWebDecisionDlgBroker) and
+    FWebDecisionDlgBroker.ResolveResponse(AJson);
+end;
+
+function TInterfacedFMXPythia.WebDecisionDlg(
+  const ARequest: TWebDecisionDlgRequest;
+  const ATimeoutMS: Cardinal): TWebDecisionDlgResult;
+begin
+  if GetCurrentThreadId = MainThreadID then
+    raise EFMXPythiaException.Create(
+      'WebDecisionDlg cannot be called synchronously from the UI thread.');
+
+  Result := FWebDecisionDlgBroker.ExecuteSync(
+    ARequest,
+    function(Json: string): Boolean
+    var
+      Posted: Boolean;
+    begin
+      Posted := False;
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          Posted := PostWebMessageAsJson(Json, WEB_DECISION_DLG_REQUEST_TYPE);
+        end);
+      Result := Posted;
+    end,
+    ATimeoutMS);
 end;
 
 function TInterfacedFMXPythia.DeferAfterDisplayStream(
@@ -1082,6 +1274,253 @@ begin
     ScrollToAfterEnd(GetHeightAfter(0), False);
 end;
 
+function TInterfacedFMXPythia.DisplayBlock(
+  const Kind, PayloadJson: string;
+  Scroll: Boolean): Boolean;
+var
+  Script: string;
+  IsToolKind: Boolean;
+begin
+  if not IsBrowserReady then
+    Exit(False);
+
+  Script := Format(DISPLAY_BLOCK_TEMPLATE, [
+    TEscapeHelper.EscapeJSString(FPromptCount.ToString),
+    TEscapeHelper.EscapeJSString(Kind),
+    TEscapeHelper.EscapeJSString(PayloadJson)
+  ]);
+
+  {--- Mirror VCL.WVPythia.Chat: tool-related blocks must skip the
+       runAfterStreams gate so their DOM insertion order matches the
+       order of the underlying stream events. Otherwise toolOutput
+       deltas (non-deferred) race ahead of their toolStatus parent
+       (deferred) and the entire group ends up at the very end of the
+       message with broken titles. }
+  IsToolKind :=
+    SameText(Kind, DISPLAY_BLOCK_KIND_TOOL_STATUS) or
+    SameText(Kind, DISPLAY_BLOCK_KIND_TOOL_OUTPUT) or
+    SameText(Kind, DISPLAY_BLOCK_KIND_TOOL_ERROR);
+
+  if IsToolKind then
+    Result := ExecuteScript(Script)
+  else
+    Result := ExecuteScript(
+      DeferAfterDisplayStream(Script, FPromptCount)
+    );
+
+  if Scroll and Result then
+    ScrollToAfterEnd(GetHeightAfter(0), False);
+end;
+
+function TInterfacedFMXPythia.DisplayBlocks(
+  const BlocksJson: string;
+  Scroll: Boolean): Boolean;
+begin
+  if not IsBrowserReady then
+    Exit(False);
+
+  Result := ExecuteScript(
+    Format(DISPLAY_BLOCKS_TEMPLATE, [
+      TEscapeHelper.EscapeJSString(FPromptCount.ToString),
+      TEscapeHelper.EscapeJSString(BlocksJson)
+    ])
+  );
+
+  if Scroll and Result then
+    ScrollToAfterEnd(GetHeightAfter(0), False);
+end;
+
+function TInterfacedFMXPythia.DisplayBlockStream(
+  const Kind, Delta, PayloadJson: string;
+  Scroll: Boolean): Boolean;
+begin
+  if not IsBrowserReady then
+    Exit(False);
+
+  Result := ExecuteScript(
+    Format(DISPLAY_BLOCK_STREAM_TEMPLATE, [
+      TEscapeHelper.EscapeJSString(FPromptCount.ToString),
+      TEscapeHelper.EscapeJSString(Kind),
+      TEscapeHelper.EscapeJSString(Delta),
+      TEscapeHelper.EscapeJSString(PayloadJson)
+    ])
+  );
+
+  if Scroll and Result then
+    ScrollToAfterEnd(GetHeightAfter(0), True);
+end;
+
+function TInterfacedFMXPythia.DisplayAssistant(
+  const AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_ASSISTANT,
+    BuildDisplayBlockPayload('', AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayAssistantStream(
+  const ADelta: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlockStream(DISPLAY_BLOCK_KIND_ASSISTANT, ADelta, '', Scroll);
+end;
+
+function TInterfacedFMXPythia.DisplayArtifactList(
+  const ATitle, ArtifactsJson: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_ARTIFACT_LIST,
+    BuildDisplayBlockPayload(ATitle, '', '', ArtifactsJson),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayCitationList(
+  const CitationsJson: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_CITATION_LIST,
+    BuildDisplayBlockPayload('', '', '', CitationsJson),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayReasoning(
+  const AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_REASONING,
+    BuildDisplayBlockPayload('', AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayReasoningStream(
+  const ADelta: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlockStream(DISPLAY_BLOCK_KIND_REASONING, ADelta, '', Scroll);
+end;
+
+function TInterfacedFMXPythia.DisplaySourceDocument(
+  const ATitle, AUrl, AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_SOURCE_DOCUMENT,
+    BuildDisplayBlockPayload(ATitle, AText, AUrl),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplaySourceList(
+  const ATitle, SourcesJson: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_SOURCE_LIST,
+    BuildDisplayBlockPayload(ATitle, '', '', SourcesJson),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplaySourceStatus(
+  const AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_SOURCE_STATUS,
+    BuildDisplayBlockPayload('', AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayStatus(
+  const AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_STATUS,
+    BuildDisplayBlockPayload('', AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayToolError(
+  const ATitle, AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_TOOL_ERROR,
+    BuildDisplayBlockPayload(ATitle, AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayToolErrorStart(
+  const ATitle: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_TOOL_ERROR,
+    BuildDisplayBlockPayload(ATitle),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayToolErrorStream(
+  const ADelta: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlockStream(DISPLAY_BLOCK_KIND_TOOL_ERROR, ADelta, '', Scroll);
+end;
+
+function TInterfacedFMXPythia.DisplayToolOutput(
+  const ATitle, AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_TOOL_OUTPUT,
+    BuildDisplayBlockPayload(ATitle, AText),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayToolOutputStart(
+  const ATitle: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_TOOL_OUTPUT,
+    BuildDisplayBlockPayload(ATitle),
+    Scroll
+  );
+end;
+
+function TInterfacedFMXPythia.DisplayToolOutputStream(
+  const ADelta: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlockStream(DISPLAY_BLOCK_KIND_TOOL_OUTPUT, ADelta, '', Scroll);
+end;
+
+function TInterfacedFMXPythia.DisplayToolStatus(
+  const AText: string;
+  Scroll: Boolean): Boolean;
+begin
+  Result := DisplayBlock(
+    DISPLAY_BLOCK_KIND_TOOL_STATUS,
+    BuildDisplayBlockPayload('', AText),
+    Scroll
+  );
+end;
+
 function TInterfacedFMXPythia.DisplayError(const Value: string): Boolean;
 begin
   Result := PostWebMessageAsJson(
@@ -1128,6 +1567,15 @@ end;
 function TInterfacedFMXPythia.DisplayChatSession: Boolean;
 begin
   Result := InternalDisplaySession;
+
+  {--- Notify the host AFTER the full re-render so any session-derived UI
+       state (e.g. managed-agent chip restoration) can be re-applied atop
+       the freshly rebuilt content. Fires regardless of which renderer
+       path InternalDisplaySession took (default or OnRenderChatContent). }
+  if Assigned(FOnAfterSessionReloaded) and
+     Assigned(FPersistentChat) and
+     Assigned(FPersistentChat.CurrentChat) then
+    FOnAfterSessionReloaded(FPersistentChat.CurrentChat.Id);
 end;
 
 function TInterfacedFMXPythia.DisplaySpacer(const AHeight: Integer): Boolean;
@@ -1304,7 +1752,11 @@ begin
         PromptMedia(dkFile, Turn.PromptKnowledgeSearch, False);
         Prompt(Turn.Prompt);
 
-        Display(Turn.Response, Turn.Reasoning, False);
+        if Length(Turn.DisplayBlocks) > 0 then
+          DisplayBlocks(ChatDisplayBlocksToJson(Turn.DisplayBlocks), False)
+        else
+          Display(Turn.Response, Turn.Reasoning, False);
+
         DisplayMedia(dkimages, Turn.ReponseImages, False);
         DisplayMedia(dkAudio, Turn.ReponseAudio, False);
         DisplayMedia(dkVideo, Turn.ReponseVideo, False);
@@ -1346,7 +1798,7 @@ begin
     ])
   );
 
-  ReasoningShow;
+//  ReasoningShow;
 end;
 
 function TInterfacedFMXPythia.PromptMedia(Kind: TDisplayKind;
@@ -1627,6 +2079,7 @@ begin
   ExecuteScript(TemplateProvider.ChatFooterTemplate);
   ExecuteScript(TemplateProvider.CardSelectorTemplate);
   ExecuteScript(TemplateProvider.ActivityLogoTemplate);
+  ExecuteScript(TemplateProvider.WebDecisionTemplate);
   ExecuteScript(TemplateProvider.InputDialogTemplate);
 
   {--- Load and inject custom the JS templates }
@@ -1846,6 +2299,61 @@ begin
   Result := PostWebMessageAsJson(Capabilities.ToJSON);
 end;
 
+{ TFMXPythiaProjectsManager }
+
+constructor TFMXPythiaProjectsManager.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  SaveDefaultProjectsFile;
+end;
+
+function TFMXPythiaProjectsManager.ProjectsInitialization: Boolean;
+begin
+  var Filename := GetProjectsFileName;
+  if not FileExists(Filename) then
+    Exit(False);
+
+  var RawProjectsJsonString := TFileIOHelper.LoadFromFile(Filename);
+  var ProjectsJsonString := '';
+  if not NormalizeProjectsJson(RawProjectsJsonString, ProjectsJsonString) then
+    TFileIOHelper.SaveToFile(Filename, ProjectsJsonString);
+
+  Result := PostWebMessageAsJson(
+    Format(FOLDER_STATE_TEMPLATE, [ProjectsJsonString]),
+    'folder-state'
+  );
+end;
+
+function TFMXPythiaProjectsManager.NormalizeProjectsJson(
+  const JsonAsString: string; out NormalizedJson: string): Boolean;
+begin
+  NormalizedJson := JSON_PROJECTS_DEFAULT;
+
+  var JsonValue := TJSONObject.ParseJSONValue(JsonAsString);
+  try
+    Result := JsonValue is TJSONArray;
+    if Result then
+      NormalizedJson := JsonValue.Format(4);
+  finally
+    JsonValue.Free;
+  end;
+end;
+
+procedure TFMXPythiaProjectsManager.SaveDefaultProjectsFile;
+begin
+  if not FileExists(GetProjectsFileName) then
+    TFileIOHelper.SaveToFile(GetProjectsFileName, JSON_PROJECTS_DEFAULT);
+end;
+
+function TFMXPythiaProjectsManager.ProjectsStateUpdate(
+  const JsonAsString: string): Boolean;
+begin
+  var ProjectsJsonString := '';
+  Result := NormalizeProjectsJson(JsonAsString, ProjectsJsonString);
+  if Result then
+    TFileIOHelper.SaveToFile(GetProjectsFileName, ProjectsJsonString);
+end;
+
 { TFMXPythiaJSTemplatesManager }
 
 constructor TFMXPythiaJSTemplatesManager.Create(AOwner: TComponent);
@@ -1925,6 +2433,13 @@ begin
     .Filter(Filter)
     .FilterIndex(Index)
     .Execute(FileName, True);
+end;
+
+function TFMXOpenDialog.ExecuteFolder(out FolderPath: string): Boolean;
+begin
+  Result := TFolderDialogHelper
+    .Use(nil)
+    .Execute(FolderPath);
 end;
 
 { TFMXPythiaRunProcessManager }
@@ -2062,6 +2577,11 @@ begin
   Result := FOnChatSessionAutoRename;
 end;
 
+function TFMXPythiaChatSessionManager.GetOnAfterSessionReloaded: TProc<string>;
+begin
+  Result := FOnAfterSessionReloaded;
+end;
+
 function TFMXPythiaChatSessionManager.GetPersistentChat: IPersistentChat;
 begin
   Result := FPersistentChat;
@@ -2079,6 +2599,12 @@ procedure TFMXPythiaChatSessionManager.SetOnChatSessionAutoRename(
   const Value: TProc<string, string>);
 begin
   FOnChatSessionAutoRename := Value;
+end;
+
+procedure TFMXPythiaChatSessionManager.SetOnAfterSessionReloaded(
+  const Value: TProc<string>);
+begin
+  FOnAfterSessionReloaded := Value;
 end;
 
 procedure TFMXPythiaChatSessionManager.SetPersistentChat(
@@ -2239,6 +2765,9 @@ begin
   {--- Load the capabilities descriptor from disk (create it with defaults
        if missing) and synchronize backend / frontend capability state. }
   CapabilitiesInitialization;
+
+  {--- Restore the persisted project list into the input project menu. }
+  ProjectsInitialization;
 
   {--- Reload or create general application settings (look & feel, language...)
        and push them into the settings panel UI. }
@@ -3049,6 +3578,11 @@ end;
 function TFMXPythiaPath.GetParamsMainValuesFileName: string;
 begin
   Result := GetRawName + '-request-params-main-values.json';
+end;
+
+function TFMXPythiaPath.GetProjectsFileName: string;
+begin
+  Result := GetSupportRawName + '-projects.json';
 end;
 
 function TFMXPythiaPath.GetRawName: string;

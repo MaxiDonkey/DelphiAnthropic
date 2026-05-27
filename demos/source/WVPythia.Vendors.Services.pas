@@ -89,6 +89,15 @@ type
     class operator Implicit(const AValue: TMediaItem): TMediaItemData;
   end;
 
+  TProjectData = record
+  public
+    DisplayName: string;
+    FullPath: string;
+
+    class function FromClass(const AValue: TProjectState): TProjectData; static;
+    class operator Implicit(const AValue: TProjectState): TProjectData;
+  end;
+
   TIntegrationData = record
   public
     &Function: TArray<TListItemData>;
@@ -154,6 +163,7 @@ type
     Thinking: string;
     DeepResearch: Boolean;
     WebSearch: Boolean;
+    Project: TProjectData;
 
     Files: TArray<TMediaItemData>;
     Images: TArray<TMediaItemData>;
@@ -362,6 +372,21 @@ begin
   Result := FromClass(AValue);
 end;
 
+class function TProjectData.FromClass(const AValue: TProjectState): TProjectData;
+begin
+  Result := Default(TProjectData);
+  if AValue = nil then
+    Exit;
+
+  Result.DisplayName := AValue.DisplayName;
+  Result.FullPath := AValue.FullPath;
+end;
+
+class operator TProjectData.Implicit(const AValue: TProjectState): TProjectData;
+begin
+  Result := FromClass(AValue);
+end;
+
 class function TIntegrationData.FromClass(const AValue: TIntegration): TIntegrationData;
 begin
   Result := Default(TIntegrationData);
@@ -486,6 +511,7 @@ begin
   Result.Thinking := AState.Thinking;
   Result.DeepResearch := AState.DeepResearch;
   Result.WebSearch := AState.WebSearch;
+  Result.Project := TProjectData.FromClass(AState.Project);
 
   Result.Files := TMediaItemData.FromArray(AState.Files);
   Result.Images := TMediaItemData.FromArray(AState.Images);

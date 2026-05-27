@@ -16,7 +16,8 @@
       "media": "Medien",
       "custom": "Benutzerdefiniert",
       "settings": "Einstellungen",
-      "model": "Modell"
+      "model": "Modell",
+      "project": "Projekt"
     },
     "thinking": {
       "low": "Niedrig",
@@ -52,6 +53,12 @@
       "createAudio": "Audio erstellen",
       "speechToText": "Sprache zu Text",
       "textToSpeech": "Text zu Sprache"
+    },
+    "project": {
+      "add": "Projekt hinzufügen",
+      "none": "keines",
+      "noneUsed": "Kein Projekt verwendet",
+      "delete": "Löschen"
     },
     "chips": {
       "endpoint": "Endpunkt: {title}",
@@ -218,6 +225,13 @@
     "ok": "OK",
     "cancel": "Abbrechen"
   },
+  "webDecisionDlg": {
+    "title": "Bestätigung",
+    "message": "Bitte bestätigen.",
+    "ok": "OK",
+    "cancel": "Abbrechen",
+    "close": "Schließen"
+  },
   "displayFile": {
     "fallbackName": "Datei {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Argumentation"
+    },
+    "toolGroup": {
+      "label": "Verwendete Tools"
     },
     "code": {
       "copy": "Kopieren",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API-Schlüssel existiert",
     "api_key_modified": "%s: API-Schlüssel wurde geändert.",
     "api_key_inserted": "%s: API-Schlüssel wurde eingefügt",
+    "web_decision_dlg_title": "Bestätigung",
+    "web_decision_dlg_message": "Bitte bestätigen.",
+    "web_decision_dlg_ok": "OK",
+    "web_decision_dlg_cancel": "Abbrechen",
+    "web_decision_dlg_close": "Schließen",
+    "demo_anthropic_tool_confirmation_title": "Bestätigung",
+    "demo_anthropic_tool_allow": "Zulassen",
+    "demo_anthropic_tool_deny": "Ablehnen",
+    "demo_anthropic_tool_allow_call": "Diesen Tool-Aufruf zulassen?",
+    "demo_anthropic_interrupted_by_user": "Vom Benutzer unterbrochen.",
     "command_plugin_not_be_null": "Plug-in darf nicht null sein",
     "command_unknown": "Unbekannter Befehl: /%s",
     "command_action_unknown": "Unbekannte Aktion: /%s %s",

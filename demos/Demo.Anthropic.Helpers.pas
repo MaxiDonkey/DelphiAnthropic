@@ -164,6 +164,35 @@ type
 
 implementation
 
+{$REGION 'Dev note'}
+(*
+
+  Shared Anthropic request helpers for the pythia-anthropic VCL demo.
+
+  This unit is the adapter layer between the generic Pythia state buffer and
+  Anthropic SDK parameter objects. It keeps the main service flow readable by
+  centralizing small decisions such as model capability checks, thinking
+  configuration, MCP and skill extraction, file-name normalization, message
+  content blocks and common request settings.
+
+  The helpers intentionally stay stateless. They read TStateBuffer, card JSON
+  or streamed SDK objects, then return plain values or call SDK param setters
+  supplied by the caller. Anything that owns a long-running workflow belongs
+  in Demo.Anthropic.Services or one of the Managed Agents units instead.
+
+  JSON handling should go through the safe reader/writer helpers whenever the
+  code is parsing demo-owned configuration. System.JSON remains here for SDK
+  objects and payload shapes that the Anthropic client API exposes directly.
+
+  File handling is split by purpose:
+    - prompt attachments become Anthropic content blocks;
+    - generated file ids are captured from typed stream events;
+    - output filenames are sanitized before being written under the media
+      folder selected by the Pythia state.
+
+*)
+{$ENDREGION}
+
 uses
   System.Generics.Collections, System.Generics.Defaults, WVPythia.Net.MediaCodec;
 

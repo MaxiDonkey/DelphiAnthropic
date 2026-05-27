@@ -16,7 +16,8 @@
       "media": "Medya",
       "custom": "Özel",
       "settings": "Ayarlar",
-      "model": "Model"
+      "model": "Model",
+      "project": "Proje"
     },
     "thinking": {
       "low": "Düşük",
@@ -52,6 +53,12 @@
       "createAudio": "Ses oluştur",
       "speechToText": "Konuşmayı metne dönüştür",
       "textToSpeech": "Metni konuşmaya dönüştür"
+    },
+    "project": {
+      "add": "Proje ekle",
+      "none": "yok",
+      "noneUsed": "Kullanılan proje yok",
+      "delete": "Sil"
     },
     "chips": {
       "endpoint": "Uç nokta: {title}",
@@ -218,6 +225,13 @@
     "ok": "Tamam",
     "cancel": "İptal"
   },
+  "webDecisionDlg": {
+    "title": "Onay",
+    "message": "Lütfen onaylayın.",
+    "ok": "Tamam",
+    "cancel": "İptal",
+    "close": "Kapat"
+  },
   "displayFile": {
     "fallbackName": "Dosya {index}",
     "badge": {
@@ -254,6 +268,9 @@
   "display": {
     "reasoning": {
       "title": "Akıl yürütme"
+    },
+    "toolGroup": {
+      "label": "Kullanılan araçlar"
     },
     "code": {
       "copy": "Kopyala",
@@ -428,6 +445,16 @@
     "api_key_exists": "%s: API anahtarı mevcut",
     "api_key_modified": "%s: API anahtarı değiştirildi.",
     "api_key_inserted": "%s: API anahtarı eklendi",
+    "web_decision_dlg_title": "Onay",
+    "web_decision_dlg_message": "Lütfen onaylayın.",
+    "web_decision_dlg_ok": "Tamam",
+    "web_decision_dlg_cancel": "İptal",
+    "web_decision_dlg_close": "Kapat",
+    "demo_anthropic_tool_confirmation_title": "Onay",
+    "demo_anthropic_tool_allow": "İzin ver",
+    "demo_anthropic_tool_deny": "Reddet",
+    "demo_anthropic_tool_allow_call": "Bu araç çağrısına izin verilsin mi?",
+    "demo_anthropic_interrupted_by_user": "Kullanıcı tarafından kesintiye uğratıldı.",
     "command_plugin_not_be_null": "Eklenti boş olamaz",
     "command_unknown": "Bilinmeyen komut: /%s",
     "command_action_unknown": "Bilinmeyen eylem: /%s %s",

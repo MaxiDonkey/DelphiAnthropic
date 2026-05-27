@@ -12,14 +12,16 @@
 
     style.textContent = `
     .chat-bubble.reasoning{
-        min-width:180px;
-        max-width:38%;
+        min-width:140px;
+        max-width:140px;
+        /*max-width:38%;*/
         position:relative;
         overflow:hidden;
-        background: var(--reasoning-bg, linear-gradient(145deg,#2a2a2a,#222222));
-        border:1px solid var(--reasoning-border, rgba(255,255,255,0.06));
+        background: var(--bg-main, transparent) !important;
+        border:none !important;
         border-radius:10px;
-        padding:12px 16px;
+        padding: 0 0px 12px 16px;
+        /*padding:12px 16px;*/
         color:var(--reasoning-text,#d8dbe0);
         display:flex;
         align-items:center;
@@ -48,7 +50,7 @@
             transparent
         );
 
-        animation:reasoningShimmer 3.2s infinite;
+        animation:reasoningShimmer 2.2s infinite;
 
     }
 

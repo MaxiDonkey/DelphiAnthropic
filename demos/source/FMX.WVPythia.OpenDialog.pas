@@ -26,6 +26,26 @@ type
     property Dialog: TOpenDialog read FOpenDialog;
   end;
 
+  TFolderDialogHelper = record
+  strict private
+    FDialog: TObject;
+    FTitle: string;
+    FInitialDir: string;
+
+    class function ResolveInitialDir(const S: string): string; static;
+  public
+    class function Use(ADialog: TObject): TFolderDialogHelper; static;
+    class function Create(ADialog: TObject): TFolderDialogHelper; static; inline;
+
+    function Title(const S: string): TFolderDialogHelper; inline;
+    function InitialDir(const S: string): TFolderDialogHelper; inline;
+
+    function Execute(var FolderName: string): Boolean; overload;
+    function Execute: string; overload;
+
+    property Dialog: TObject read FDialog;
+  end;
+
 implementation
 
 { TOpenDialogHelper }
@@ -132,6 +152,89 @@ begin
     Result.FOpenDialog := ADialog
   else
     Result.FOpenDialog := TOpenDialog.Create(Application);
+end;
+
+{ TFolderDialogHelper }
+
+class function TFolderDialogHelper.Create(ADialog: TObject): TFolderDialogHelper;
+begin
+  Result := Use(ADialog);
+end;
+
+function TFolderDialogHelper.Execute: string;
+begin
+  Result := ':none';
+
+  var FolderName := FInitialDir;
+  if Execute(FolderName) then
+    Result := FolderName;
+end;
+
+function TFolderDialogHelper.Execute(var FolderName: string): Boolean;
+var
+  Caption: string;
+  Root: string;
+  Directory: string;
+begin
+  Caption := FTitle;
+  if Caption.IsEmpty then
+    Caption := 'Sélectionner un dossier';
+
+  if FInitialDir.IsEmpty then
+    Root := ResolveInitialDir(FolderName)
+  else
+    Root := FInitialDir;
+
+  Directory := Root;
+
+  // FMX.Dialogs.SelectDirectory impose Root et Directory comme variables distinctes.
+  Result := SelectDirectory(Caption, Root, Directory);
+
+  if Result then
+    FolderName := Directory;
+end;
+
+function TFolderDialogHelper.InitialDir(const S: string): TFolderDialogHelper;
+begin
+  FInitialDir := ResolveInitialDir(S);
+  Result := Self;
+end;
+
+class function TFolderDialogHelper.ResolveInitialDir(const S: string): string;
+var
+  BaseDir: string;
+begin
+  if S.IsEmpty then
+    Exit('');
+
+  if (S = '..') or S.StartsWith('..' + PathDelim) then
+  begin
+    BaseDir := TPath.GetDirectoryName(ParamStr(0));
+    Exit(TPath.GetFullPath(TPath.Combine(BaseDir, S)));
+  end;
+
+  if TDirectory.Exists(S) then
+    Exit(TPath.GetFullPath(S));
+
+  if TFile.Exists(S) then
+    Exit(TPath.GetDirectoryName(TPath.GetFullPath(S)));
+
+  if TPath.HasExtension(S) then
+    Result := TPath.GetDirectoryName(TPath.GetFullPath(S))
+  else
+    Result := TPath.GetFullPath(S);
+end;
+
+function TFolderDialogHelper.Title(const S: string): TFolderDialogHelper;
+begin
+  FTitle := S;
+  Result := Self;
+end;
+
+class function TFolderDialogHelper.Use(ADialog: TObject): TFolderDialogHelper;
+begin
+  Result := Default(TFolderDialogHelper);
+  Result.FDialog := ADialog;
 end;
 
 end.

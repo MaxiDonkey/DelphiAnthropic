@@ -7,13 +7,11 @@
 ___
 
 ### New
-- [changelog v1.3](Changelog.md)
+- [changelog v1.3.2](Changelog.md#2026-may-25-version-132)
+- [Managed Agents walkthrough (part 1)](demos/Agent-sample-doc.md#discovering-the-agent-cards)
 - [Functional demo using **Pythia-WebView2**](demos)
 - [**Managed Agents API**](guides/managed-agents.md#managed-agents-beta)
 - [**Webhooks**](guides/webhooks.md#webhooks) — signature verification (HMAC, constant-time) and strongly typed event dispatch
-- Updated server tool types: `advisor_20260301`, `web_search_20260209`, `web_fetch_20260209`, `code_execution_20260120`
-- [adaptive thinking](guides/thinking.md#adaptive-reasoning)
-- [fast mode](guides/fast-mode.md#fast-mode-research-preview)
 
 ___
 

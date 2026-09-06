@@ -1142,9 +1142,14 @@ class function TApiDeserializer.Parse<T>(const Value: string;
       properties evaluated) and is cycle-safe.
 
     • Exception safety:
-      Post-processing (formatting/binding) may raise (e.g., truncation handler in DEBUG). On any
-      exception after allocation, the partially created instance is freed before re-raising to
-      prevent leaks.
+      Post-processing (formatting/binding/finalizing) may raise - e.g. StreamEventBuilder on an
+      SSE event type unknown to TEventType. On any exception after allocation the partially
+      created instance is freed AND Result is set back to nil, so the caller receives nil for an
+      unparseable payload - never a dangling pointer. The exception is deliberately swallowed,
+      not re-raised: this same routine also parses the NESTED per-event objects inside
+      StreamEventBuilder, where an unknown enum from a newer API version must degrade to a nil
+      sub-object, not drop the whole frame. Callers treat nil as "skip" (the SSE decoder's
+      managers all guard nil chunks).
   *)
 {$ENDREGION}
 var
@@ -1191,9 +1196,12 @@ begin
       end;
   except
     Obj := TObject(Result);
+    // Without this reset the freed object would still be returned - the SSE
+    // decoder then reads it (use-after-free) and frees it again in its own
+    // finally block.
+    Result := nil;
     if Obj <> nil then
       Obj.Free;
-//    raise;
   end;
 end;
 
